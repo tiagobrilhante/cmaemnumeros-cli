@@ -3,11 +3,11 @@
 
     <v-app-bar
       app
-      color="#6b5252"
+      color="#556b2f"
     >
 
       <v-toolbar-title>{{ configSis.nomeSis }}
-        <v-chip small class="ml-4 mr-10"> {{ configSis.labelSis }}</v-chip>
+        <v-chip class="ml-4 mr-10" small> {{ configSis.labelSis }}</v-chip>
       </v-toolbar-title>
 
       <!--home-->
@@ -17,13 +17,13 @@
             rounded="xl"
           >
             <template v-slot:activator="{ on, attrs }">
-              <v-btn rounded
+              <v-btn class="mr-4"
                      color="black"
                      dark
+                     rounded
+                     to="/home"
                      v-bind="attrs"
                      v-on="on"
-                     class="mr-4"
-                     to="/home"
               >
                 <v-icon small>mdi-home</v-icon>
               </v-btn>
@@ -36,15 +36,15 @@
       <template v-if="usuarioEstaLogado">
         <div class="text-center">
           <v-menu
-            open-on-hover
             bottom
-            rounded="xl"
             offset-y
+            open-on-hover
+            rounded="xl"
           >
             <template v-slot:activator="{ on, attrs }">
-              <v-btn rounded
-                     color="black"
+              <v-btn color="black"
                      dark
+                     rounded
                      v-bind="attrs"
                      v-on="on"
               >
@@ -56,7 +56,10 @@
             <v-list>
               <!--- Configuracoes do totem-->
               <v-list-item @click="openDialogAdmConfig">
-                <v-list-item-title><v-icon small class="pr-3">mdi-cog</v-icon>Administrar Configurações do Totem</v-list-item-title>
+                <v-list-item-title>
+                  <v-icon class="pr-3" small>mdi-cog</v-icon>
+                  Administrar Configurações do Totem
+                </v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -67,16 +70,16 @@
       <template v-if="usuarioEstaLogado">
         <div class="text-center">
           <v-menu
-            open-on-hover
             bottom
-            rounded="xl"
             offset-y
+            open-on-hover
+            rounded="xl"
           >
             <template v-slot:activator="{ on, attrs }">
-              <v-btn rounded
+              <v-btn class="ml-5"
                      color="black"
                      dark
-                     class="ml-5"
+                     rounded
                      v-bind="attrs"
                      v-on="on"
               >
@@ -89,27 +92,42 @@
 
               <!-- gerenciamento de usuários-->
               <v-list-item @click="openDialogAdmUser">
-                <v-list-item-title><v-icon small class="pr-3">mdi-account</v-icon> Gerenciamento de Usuários</v-list-item-title>
+                <v-list-item-title>
+                  <v-icon class="pr-3" small>mdi-account</v-icon>
+                  Gerenciamento de Usuários
+                </v-list-item-title>
               </v-list-item>
 
               <!-- Gerenciamento de Quiz-->
               <v-list-item to="/admquiz">
-                <v-list-item-title><v-icon small class="pr-3">mdi-format-list-checks</v-icon> Gerenciamento de Quiz</v-list-item-title>
+                <v-list-item-title>
+                  <v-icon class="pr-3" small>mdi-format-list-checks</v-icon>
+                  Gerenciamento de Quiz
+                </v-list-item-title>
               </v-list-item>
 
               <!-- acompanhamento de histórico-->
               <v-list-item to="/historico">
-                <v-list-item-title><v-icon small class="pr-3">mdi-list-box</v-icon> Acompanhamento de Histórico</v-list-item-title>
+                <v-list-item-title>
+                  <v-icon class="pr-3" small>mdi-list-box</v-icon>
+                  Acompanhamento de Histórico
+                </v-list-item-title>
               </v-list-item>
 
               <!-- edstatísticas de uso-->
               <v-list-item to="/estatisticas">
-                <v-list-item-title><v-icon small class="pr-3">mdi-chart-bar-stacked</v-icon> Estatísticas</v-list-item-title>
+                <v-list-item-title>
+                  <v-icon class="pr-3" small>mdi-chart-bar-stacked</v-icon>
+                  Estatísticas
+                </v-list-item-title>
               </v-list-item>
 
               <!-- Backup-->
               <v-list-item to="/bkupbanco">
-                <v-list-item-title><v-icon small class="pr-3">mdi-database</v-icon> Backup</v-list-item-title>
+                <v-list-item-title>
+                  <v-icon class="pr-3" small>mdi-database</v-icon>
+                  Backup
+                </v-list-item-title>
               </v-list-item>
 
             </v-list>
@@ -122,17 +140,15 @@
       <!-- BARRA DE NAVEGACAO LOGADO-->
       <OpcoesUsuario v-if="usuarioEstaLogado"/>
 
-      <v-btn v-else @click="retornaTotem()">Sair</v-btn>
-
       <!--Dialog para chamada de administrações -->
-      <v-dialog max-width="70%" v-model="dialogGeneric70">
+      <v-dialog v-model="dialogGeneric70" max-width="70%">
 
-        <AdmUser v-if="selectedTypeOfContent ==='AdmUser'" @ajustarVisibilidade="dialogGeneric70 = $event"
-                 @adjustSelectedTypeOfContent="selectedTypeOfContent = $event"/>
+        <AdmUser v-if="selectedTypeOfContent ==='AdmUser'" @adjustSelectedTypeOfContent="selectedTypeOfContent = $event"
+                 @ajustarVisibilidade="dialogGeneric70 = $event"/>
 
-        <AdmConfig v-if="selectedTypeOfContent ==='AdmConfig'" @ajustarVisibilidade="dialogGeneric70 = $event"
-                   @adjustSelectedTypeOfContent="selectedTypeOfContent = $event"
-                   @ajustaTipoContent="refreshPage" />
+        <AdmConfig v-if="selectedTypeOfContent ==='AdmConfig'" @adjustSelectedTypeOfContent="selectedTypeOfContent = $event"
+                   @ajustaTipoContent="refreshPage"
+                   @ajustarVisibilidade="dialogGeneric70 = $event"/>
 
       </v-dialog>
 

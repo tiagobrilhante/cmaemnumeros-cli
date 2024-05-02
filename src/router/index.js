@@ -5,7 +5,6 @@ import Index from '../views/Index.vue'
 import erro500 from '../views/errors/erro500.vue'
 import erroToken from '../views/errors/erroToken.vue'
 // import Reset from '../views/Reset.vue'
-import Login from '../views/Login.vue'
 import store from '@/store'
 import Historico from '../views/administrativo/Historico.vue'
 import Estatisticas from '../views/administrativo/Estatisticas.vue'
@@ -14,6 +13,14 @@ import AdmQuiz from '../views/administrativo/AdmQuiz.vue'
 
 Vue.use(VueRouter)
 const routes = [
+  {
+    path: '',
+    name: 'index',
+    component: Index,
+    meta: {
+      publica: true
+    }
+  },
   {
     path: '/home',
     name: 'home',
@@ -36,14 +43,6 @@ const routes = [
     component: Estatisticas,
     meta: {
       logado: true
-    }
-  },
-  {
-    path: '',
-    name: 'index',
-    component: Index,
-    meta: {
-      publica: true
     }
   },
   {
@@ -74,14 +73,6 @@ const routes = [
     },
     // component: Reset
     component: () => import(/* webpackChunkName: "Reset" */ '../views/administrativo/Reset.vue')
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: Login,
-    meta: {
-      publica: true
-    }
   },
   {
     path: '/bkupbanco',

@@ -1,8 +1,8 @@
 {
-  "name": "EBTotem",
-  "version": "2.8.0",
+  "name": "CMAEmNumeros",
+  "version": "1.0.0",
   "private": true,
-  "description": "Sistema de Totens",
+  "description": "CMA em Números",
   "author": "tiagobrilhante <codebrilhante>",
   "scripts": {
     "build": "node build/build.js",

@@ -1,5 +1,5 @@
 <template>
-  <v-app :style="estilosDiv" class="bgApp" id="inspire">
+  <v-app id="inspire" class="bgApp">
     <router-view/>
     <Footer/>
   </v-app>
@@ -12,48 +12,20 @@ export default {
     Footer
   },
   data () {
-    return {
-      totemConfigs: {}
-    }
+    return {}
   },
   created () {
-    this.getConfigs() // Chama getConfigs quando o componente é criado
   },
-  computed: {
-    estilosDiv () {
-      if (this.totemConfigs.bg_img) {
-        return {
-          backgroundImage: `url(${this.$configSis.urlDownload}${this.totemConfigs.bg_img}) !important`,
-          backgroundRepeat: 'no-repeat !important',
-          backgroundSize: 'cover !important',
-          backgroundColor: `${this.totemConfigs.bg_color}`
-        }
-      } else {
-        return {
-          backgroundColor: `${this.totemConfigs.bg_color}`
-        }
-      }
-    }
-  },
-  methods: {
-    getConfigs () {
-      try {
-        this.$http.get('totemconfig')
-          .then(response => {
-            this.totemConfigs = Object.assign({}, response.data)
-          })
-          .catch(erro => console.log(erro))
-      } catch (e) {
-        console.log(e)
-      }
-    }
-  }
+  computed: {},
+  methods: {}
 }
 </script>
 
 <style>
-  .bgApp {
-    width: 100%;
-    height: 100%;
-  }
+.bgApp {
+  background-image: url('assets/img/cammo3.jpg') !important;
+  background-repeat: repeat;
+  background-size: contain;
+  background-color: #cccccc;
+}
 </style>

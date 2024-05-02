@@ -1,174 +1,177 @@
 <template>
-
   <v-main>
 
-    <!--app bar / NOME DO TOTEM (posso isolar esse componente)-->
-    <v-app-bar
-      app
-      color="rgb(255,255,255,0.4)"
-      @contextmenu.prevent="disableRightClick"
-    >
+    <BarraNavegacao></BarraNavegacao>
 
-      <v-row>
+    <v-container fluid>
 
-        <!--botão para refresh da página-->
-        <v-col align-self="center" cols="2">
-          <v-btn rounded @click="refreshPage">
-            <v-icon>mdi-reload</v-icon>
-          </v-btn>
-        </v-col>
+      <!--form para login-->
+      <v-form @submit.prevent="efetuarLogin">
+        <v-container>
+          <br>
 
-        <!--nome do totem-->
-        <v-col class="text-center">
-          <h1 v-if="selected_lang === 'pt_br'">{{ totemConfigs.nome_totem }} </h1>
-          <h1 v-else-if="selected_lang === 'en'">{{ totemConfigs.nome_totem_en }} </h1>
-          <h1 v-else>{{ totemConfigs.nome_totem_es }} </h1>
-        </v-col>
+          <!--cabeçalho-->
+          <v-row>
 
-        <!-- selecao de idiomas-->
-        <v-col class="text-right" cols="2" v-if="totemConfigs.permite_multi_lang">
+            <v-col cols="8" offset="2">
+              <v-alert class="ma-0" rounded="xl" dense>
 
-          <!-- portugues-->
-          <v-btn :elevation="ajusta_elevation_pt_br" :color="ajusta_color_pt_br" class="mt-1 pt-2 pb-3" rounded  @click="ajusta_linguagem('pt_br')">
-            <v-img
-              :src="require('@/assets/img/bra.png')"
-              alt="Translate to en_us"
-              class="mt-1 img_small"
-            ></v-img>
-          </v-btn>
+                <v-row>
+                  <v-col cols="2" class="text-left align-self-start align-content-start">
+                    <img alt="Logo CMA" :src="require('@/assets/img/logoCMA.png')" width="70px">
+                  </v-col>
+                  <v-col class="text-center" cols="8">
+                    <h1>{{ configSis.nomeSis }}</h1><br>
+                    <h3>{{ configSis.labelSis }}</h3>
+                  </v-col>
+                  <v-col cols="2" class="text-right align-self-end align-content-end">
+                    <img alt="Logo EB" :src="require('@/assets/img/logoEb.png')" width="60px">
+                  </v-col>
+                </v-row>
 
-          <!-- ingles-->
-          <v-btn v-if="totemConfigs.en_habilitado" :elevation="ajusta_elevation_en" class="mt-1 pt-2 pb-3" rounded  :color="ajusta_color_en" @click="ajusta_linguagem('en')">
-            <v-img
-              :src="require('@/assets/img/eua.png')"
-              alt="Translate to en_us"
-              class="mt-1 img_small"
-            ></v-img>
-          </v-btn>
+              </v-alert>
+            </v-col>
+          </v-row>
 
-          <!-- espanhol-->
-          <v-btn v-if="totemConfigs.es_habilitado" :elevation="ajusta_elevation_es" class="mt-1 pt-2 pb-3" rounded  :color="ajusta_color_es" @click="ajusta_linguagem('es')">
-            <v-img
-              :src="require('@/assets/img/spain.png')"
-              alt="Translate to en_us"
-              class="mt-1 img_small"
-            ></v-img>
-          </v-btn>
-        </v-col>
-        <v-col cols="2" v-else />
+          <v-row>
+            <v-col
+              cols="8"
+              offset="2"
+            >
+              <v-card
+                elevation="10"
+                rounded="lg"
+              >
 
-      </v-row>
+                <!--card titel-->
+                <v-card-title>
+                  <v-icon class="mr-4">
+                    fa fa-user
+                  </v-icon>
+                  Login
+                </v-card-title>
 
-    </v-app-bar>
 
-    <!--area de conteúdo-->
-    <div @contextmenu.prevent="disableRightClick">
+                <v-card-text>
+                  <v-container>
 
-      <!-- conteúdo para Eventos-->
-      <Evento v-if="totemConfigs.tipo_totem === 'data'" :selected_lang="selected_lang"
-              :totemConfigs="totemConfigs"></Evento>
+                    <!--email-->
+                    <v-row no-gutters>
+                      <v-col>
+                        <v-text-field
+                          id="email"
+                          v-model="usuario.email"
+                          clearable
+                          dense
+                          label="Email"
+                          name="email"
+                          outlined
+                          placeholder="Insira o seu email"
+                          required
+                        />
+                      </v-col>
+                    </v-row>
 
-      <!-- conteúdo para outros assuntos - CURIOSIDADES-->
-      <Assunto v-else :selected_lang="selected_lang" :totemConfigs="totemConfigs"></Assunto>
+                    <!--Password-->
+                    <v-row no-gutters>
+                      <v-col>
+                        <v-text-field
+                          v-model="usuario.password"
+                          :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+                          :type="show1 ? 'text' : 'password'"
+                          clearable
+                          counter
+                          dense
+                          hint="No mínimo 6 caracteres"
+                          label="Senha"
+                          name="password"
+                          outlined
+                          required
+                          @click:append="show1 = !show1"
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
 
-    </div>
+                    <!--logar e cadastro-->
+                    <v-row no-gutters>
+                      <!--logar-->
+                      <v-col class="text-left">
+                        <v-btn
+                          color="primary"
+                          elevation="2"
+                          type="submit"
+                        >Entrar
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+
+                  </v-container>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-form>
+    </v-container>
 
   </v-main>
 
 </template>
 
 <script>import config from '../http/config'
-import Assunto from '../components/index/Assunto'
-import Evento from '../components/index/Evento'
+import {mapGetters} from 'vuex'
+import BarraNavegacao from '../components/barra-navegacao/BarraNavegacao'
 
 export default {
 
   components: {
-    Assunto,
-    Evento
+    BarraNavegacao
   },
   data () {
     return {
       configSis: config,
-      clicable: true,
       usuario: {},
-      totemConfigs: {},
-      ajusta_elevation_pt_br: 21,
-      ajusta_elevation_en: 0,
-      ajusta_elevation_es: 0,
-      ajusta_color_pt_br: 'black',
-      ajusta_color_en: 'transparent',
-      ajusta_color_es: 'transparent',
-      selected_lang: 'pt_br'
+      show1: false,
+      show2: false,
+      dialogAcesso: false,
+      dialogNewUser: false
     }
   },
-  watch: {
-    selected_lang (val) {
-      this.ajusta_elevation_btn(val)
-    }
-  },
+  computed: {
 
-  computed: {},
+    ...mapGetters(['usuarioEstaLogado', 'usuarioLogado'])
 
-  async mounted () {
-    await this.getConfigs()
-    this.ajusta_elevation_btn(this.selected_lang)
   },
   methods: {
-
-    async getConfigs () {
-      try {
-        this.$http.get('totemconfig')
-          .then(response => {
-            this.totemConfigs = Object.assign({}, response.data)
-          })
-          .catch(erro => console.log(erro))
-      } catch (e) {
-        console.log(e)
-      }
+    retornaTotem () {
+      this.$store.commit('DESLOGAR_USUARIO')
+      this.$router.push({name: 'index'})
     },
 
-    disableRightClick (event) {
-      event.preventDefault() // Impede o comportamento padrão do clique com o botão direito
+    efetuarLogin () {
+      this.$store.dispatch('efetuarLogin', this.usuario)
+        .then(response => {
+          if (response.user.reset) {
+            this.$router.push({name: 'reset'})
+          } else {
+            this.$router.push({name: 'home'})
+          }
+        })
+        .catch(erro => {
+          if (erro.request.status === 401) {
+            this.$toastr.e(
+              'Login ou senha inválidos', 'Erro!'
+            )
+          }
+        })
     },
 
-    refreshPage () {
-      location.reload()
-    },
-
-    ajusta_linguagem (qual) {
-      this.selected_lang = qual
-    },
-
-    ajusta_elevation_btn (qual) {
-      if (qual === 'pt_br') {
-        this.ajusta_elevation_pt_br = 21
-        this.ajusta_elevation_en = 0
-        this.ajusta_elevation_es = 0
-        this.ajusta_color_pt_br = 'black'
-        this.ajusta_color_en = 'transparent'
-        this.ajusta_color_es = 'transparent'
-      } else if (qual === 'en') {
-        this.ajusta_elevation_pt_br = 0
-        this.ajusta_elevation_en = 21
-        this.ajusta_elevation_es = 0
-        this.ajusta_color_pt_br = 'transparent'
-        this.ajusta_color_en = 'black'
-        this.ajusta_color_es = 'transparent'
-      } else {
-        this.ajusta_elevation_pt_br = 0
-        this.ajusta_elevation_en = 0
-        this.ajusta_elevation_es = 21
-        this.ajusta_color_pt_br = 'transparent'
-        this.ajusta_color_en = 'transparent'
-        this.ajusta_color_es = 'black'
-      }
+    openDialogAcesso () {
+      this.dialogAcesso = true
     }
   }
 }
 </script>
 <style>
-.img_small {
-  width: 30px;
-}
 </style>
+

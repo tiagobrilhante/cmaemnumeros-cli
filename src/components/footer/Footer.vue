@@ -3,7 +3,7 @@
   <v-footer
     app
     class="ma-0 pa-0"
-    color="#424240"
+    color="#556b2f"
   >
 
     <!-- Espaço para versoes-->
@@ -29,16 +29,9 @@
         <v-card-title class="justify-center" primary-title>
 
           <v-row>
-            <v-col></v-col>
             <v-col>
               Detalhe de Versões
             </v-col>
-
-            <!-- ppopup de acesso administrativo-->
-            <v-col align-self="center" cols="1">
-              <AcessoAdmPanel @ajustarVisibilidade="handleVisibilidadeEvent" />
-            </v-col>
-
           </v-row>
 
         </v-card-title>
@@ -46,13 +39,9 @@
         <v-card-text>
 
           <v-alert class="text-justify" color="cyan">
-            <p>O Sistema EBTotem, foi criado a pedido do Comando do CMA, para compor uma experiência visual interativa
-              oferecida aos visitantes do espaço cultural Cap Mor Pedro Teixeira.</p>
-            <p>Trata-se de um sistema que foi projetado para propiciar o consumo de conteúdo cultural, usando como base,
-              uma TV e um frame infravermelho que capta a posição do dedo do usuário em relação a tela, simulando o
-              mesmo comportamento de celulares e tablets.</p>
-            <p>O conteúdo cultural é inserido pelos administradores cadastrados no sistema, e vários aspectos do totem,
-              são configuráveis, podendo ser usado para disponibilizar qualquer tipo de conteúdo.</p>
+            <p>O Sistema CMA em Números, foi criado a pedido do Comando do CMA, para compor uma ferramenta de suporte a decisão, utilizando os conceitos de BIG DATA e gerenciamento de estatísticas.</p>
+            <p>Trata-se de um sistema que foi projetado para propiciar o consumo de indicadores relevantes de acordo com as necessidades do Comando, além de estabelecer como esses indicadores se relacionar.</p>
+            <p>O conteúdo é inserido pelos administradores cadastrados no sistema, que possui a capacidade de gerenciar de forma ativa qualquer tipo de métrica necessária ao processo decisório.</p>
             <p><b>Abaixo é possivel acompanhar o histórico de alterações das versões lançadas ao longo do tempo.</b></p>
           </v-alert>
 
@@ -106,7 +95,7 @@
           <b></b>
           <br>
           <p>TC Cav Tiago da Silva <strong>Brilhante</strong></p>
-          <p>O TC Brilhante é o chefe da Seção de Desenvolvimento de Sistemas da 12ª Região Militar</p>
+          <p>O TC Brilhante é o chefe da Seção de Tecnologia da Informação / Seção de Desenvolvimento de Sistemas do Comando Militar da Amazônia</p>
           <p>Atua como desenvolvedor sênior Full-Stack com especialização desenvolvimento WEB.</p>
           <p>Trabalha com as seguintes linguagens:</p>
           <ul>
@@ -144,11 +133,9 @@
 </template>
 
 <script>import config from '../../http/config'
-import AcessoAdmPanel from '../areaAdministrativa/AcessoAdmPanel'
 
 export default {
   components: {
-    AcessoAdmPanel
   },
   data: () => ({
     configSis: config,
@@ -168,10 +155,6 @@ export default {
       if (versao) {
         versao.detalhesVisiveis = !versao.detalhesVisiveis
       }
-    },
-
-    handleVisibilidadeEvent (data) {
-      this.dialogVersoes = data
     }
   }
 }
