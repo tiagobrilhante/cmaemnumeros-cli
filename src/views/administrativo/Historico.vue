@@ -2,8 +2,6 @@
   <v-main class="bgConfig">
     <BarraNavegacao></BarraNavegacao>
 
-    <CabecalhoAA/>
-
     <v-container fluid>
 
       <v-row>
@@ -100,12 +98,11 @@
 
 <script>import config from '../../http/config'
 import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
-import CabecalhoAA from '../../components/areaAdministrativa/CabecalhoAA/CabecalhoAA.vue'
 import {mapGetters} from 'vuex'
 
 export default {
   name: 'historico',
-  components: {BarraNavegacao, CabecalhoAA},
+  components: {BarraNavegacao},
   data: vm => ({
     configSis: config,
     historicos: [],

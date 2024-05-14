@@ -1,5 +1,7 @@
 <template>
   <v-main>
+    <BarraNavegacao></BarraNavegacao>
+
     <v-container fluid>
       <v-row class="mt-5">
         <v-col
@@ -14,8 +16,8 @@
             <v-row>
               <v-col cols="10" offset="1">
                 <div class="text-center pt-5">
-                  <h1>Bem-vindo ao sistema EBTotem!</h1>
-                  <p>Sistema Web de Totem</p>
+                  <h1>Bem-vindo ao sistema CMA em Números!</h1>
+                  <p>Sistema de Gerenciamento de Indicadores do CMA</p>
                   <p>Você precisa alterar a senha para efetuar o primeiro acesso</p>
                 </div>
               </v-col>
@@ -117,8 +119,10 @@
 import {validationMixin} from 'vuelidate'
 import {required} from 'vuelidate/lib/validators'
 import {mapGetters} from 'vuex'
+import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
 
 export default {
+  components: {BarraNavegacao},
   data () {
     return {
       show1: false,

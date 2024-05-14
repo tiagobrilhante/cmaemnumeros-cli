@@ -7,9 +7,11 @@ import erroToken from '../views/errors/erroToken.vue'
 // import Reset from '../views/Reset.vue'
 import store from '@/store'
 import Historico from '../views/administrativo/Historico.vue'
+import GerIndicadores from '../components/gerenciamentoIndicadores/GerenciamentoIndicadores.vue'
 import Estatisticas from '../views/administrativo/Estatisticas.vue'
 import BkupBanco from '../views/administrativo/BkupBanco.vue'
 import AdmQuiz from '../views/administrativo/AdmQuiz.vue'
+import AdmUser from '../components/areaAdministrativa/AdmUser.vue'
 
 Vue.use(VueRouter)
 const routes = [
@@ -30,9 +32,25 @@ const routes = [
     }
   },
   {
+    path: '/admuser',
+    name: 'admuser',
+    component: AdmUser,
+    meta: {
+      logado: true
+    }
+  },
+  {
     path: '/historico',
     name: 'historico',
     component: Historico,
+    meta: {
+      logado: true
+    }
+  },
+  {
+    path: '/gerindicadores',
+    name: 'gerindicadores',
+    component: GerIndicadores,
     meta: {
       logado: true
     }

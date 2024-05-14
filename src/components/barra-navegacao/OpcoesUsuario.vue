@@ -16,7 +16,10 @@
               <v-row>
                 <v-col>
                   <b>Nome: </b> {{ usuarioLogado.nome }}<br>
-                  <b>Email: </b>{{ usuarioLogado.email }}
+                  <b>Posto/Grad: </b> {{ usuarioLogado.posto_grad.pg }}<br>
+                  <b>Nome de Guerra: </b> {{ usuarioLogado.nome_guerra }}<br>
+                  <b>CPF: </b>{{ usuarioLogado.cpf }}<br>
+                  <b>Seção: </b>{{ usuarioLogado.secao.sigla }}<br>
                 </v-col>
               </v-row>
             </v-card-text>
@@ -25,14 +28,27 @@
       </v-row>
 
       <!-- Botão de ajustes de usuário - First Name-->
-      <template v-slot:activator="{ on, attrs }">
+      <template v-slot:activator="{ on, attrs }" v-if="usuarioResetado">
         <v-btn block
                color="secondary"
                dark
                v-bind="attrs"
                v-on="on"
         >
-          <i class="fa fa-user mr-5"></i> {{ usuarioLogado.firstName }}
+          <i class="fa fa-user mr-5"></i> {{ usuarioLogado.posto_grad.pg }} {{ usuarioLogado.nome_guerra}}
+        </v-btn>
+      </template>
+
+      <!-- Botão de ajustes de usuário - First Name-->
+      <template v-slot:activator="{ on, attrs }" v-else>
+        <v-btn block
+               color="secondary"
+               dark
+               v-bind="attrs"
+               v-on="on"
+               to="/"
+        >
+          Sair
         </v-btn>
       </template>
 

@@ -43,7 +43,7 @@
                 rounded="lg"
               >
 
-                <!--card titel-->
+                <!--card title-->
                 <v-card-title>
                   <v-icon class="mr-4">
                     fa fa-user
@@ -51,23 +51,24 @@
                   Login
                 </v-card-title>
 
-
+                <!--card text-->
                 <v-card-text>
                   <v-container>
 
-                    <!--email-->
+                    <!--cpf-->
                     <v-row no-gutters>
                       <v-col>
                         <v-text-field
                           id="email"
-                          v-model="usuario.email"
+                          v-model="usuario.cpf"
                           clearable
                           dense
-                          label="Email"
-                          name="email"
+                          label="CPF"
+                          name="cpf"
                           outlined
-                          placeholder="Insira o seu email"
+                          placeholder="Insira o seu CPF"
                           required
+                          v-mask-cpf
                         />
                       </v-col>
                     </v-row>
@@ -119,7 +120,7 @@
 </template>
 
 <script>import config from '../http/config'
-import {mapGetters} from 'vuex'
+import {cpf} from 'cpf-cnpj-validator'
 import BarraNavegacao from '../components/barra-navegacao/BarraNavegacao'
 
 export default {
@@ -131,47 +132,37 @@ export default {
     return {
       configSis: config,
       usuario: {},
-      show1: false,
-      show2: false,
-      dialogAcesso: false,
-      dialogNewUser: false
+      show1: false
     }
   },
   computed: {
-
-    ...mapGetters(['usuarioEstaLogado', 'usuarioLogado'])
-
   },
   methods: {
-    retornaTotem () {
-      this.$store.commit('DESLOGAR_USUARIO')
-      this.$router.push({name: 'index'})
-    },
-
     efetuarLogin () {
-      this.$store.dispatch('efetuarLogin', this.usuario)
-        .then(response => {
-          if (response.user.reset) {
-            this.$router.push({name: 'reset'})
-          } else {
-            this.$router.push({name: 'home'})
-          }
-        })
-        .catch(erro => {
-          if (erro.request.status === 401) {
-            this.$toastr.e(
-              'Login ou senha inválidos', 'Erro!'
-            )
-          }
-        })
-    },
-
-    openDialogAcesso () {
-      this.dialogAcesso = true
+      if (!cpf.isValid(this.usuario.cpf)) {
+        this.$toastr.e(
+          'CPF invalido', 'Erro!'
+        )
+      } else {
+        this.$store.dispatch('efetuarLogin', this.usuario)
+          .then(response => {
+            if (response.user.reset) {
+              this.$router.push({name: 'reset'})
+            } else {
+              this.$router.push({name: 'home'})
+            }
+          })
+          .catch(erro => {
+            if (erro.request.status === 401) {
+              this.$toastr.e(
+                'Login ou senha inválidos', 'Erro!'
+              )
+            }
+          })
+      }
     }
   }
 }
 </script>
 <style>
 </style>
-

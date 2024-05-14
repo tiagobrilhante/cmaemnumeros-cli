@@ -7,11 +7,11 @@
     >
 
       <v-toolbar-title>{{ configSis.nomeSis }}
-        <v-chip class="ml-4 mr-10" small> {{ configSis.labelSis }}</v-chip>
+        <v-chip class="ml-4 mr-10" small> {{ configSis.labelSis }} </v-chip>
       </v-toolbar-title>
 
       <!--home-->
-      <template v-if="usuarioEstaLogado">
+      <template v-if="usuarioEstaLogado && usuarioResetado">
         <div class="text-center">
           <v-menu
             rounded="xl"
@@ -33,7 +33,7 @@
       </template>
 
       <!--configurações-->
-      <template v-if="usuarioEstaLogado">
+      <template v-if="usuarioEstaLogado && usuarioResetado">
         <div class="text-center">
           <v-menu
             bottom
@@ -47,27 +47,18 @@
                      rounded
                      v-bind="attrs"
                      v-on="on"
+                     to="/gerindicadores"
               >
                 <v-icon class="mr-3" small>mdi-cogs</v-icon>
-                Configurações
+                Configurações de Indicadores
               </v-btn>
             </template>
-
-            <v-list>
-              <!--- Configuracoes do totem-->
-              <v-list-item @click="openDialogAdmConfig">
-                <v-list-item-title>
-                  <v-icon class="pr-3" small>mdi-cog</v-icon>
-                  Administrar Configurações do Totem
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
           </v-menu>
         </div>
       </template>
 
       <!--Ferramentas Administrativas-->
-      <template v-if="usuarioEstaLogado">
+      <template v-if="usuarioEstaLogado && usuarioResetado">
         <div class="text-center">
           <v-menu
             bottom
@@ -91,7 +82,7 @@
             <v-list>
 
               <!-- gerenciamento de usuários-->
-              <v-list-item @click="openDialogAdmUser">
+              <v-list-item to="/admuser">
                 <v-list-item-title>
                   <v-icon class="pr-3" small>mdi-account</v-icon>
                   Gerenciamento de Usuários
@@ -140,26 +131,12 @@
       <!-- BARRA DE NAVEGACAO LOGADO-->
       <OpcoesUsuario v-if="usuarioEstaLogado"/>
 
-      <!--Dialog para chamada de administrações -->
-      <v-dialog v-model="dialogGeneric70" max-width="70%">
-
-        <AdmUser v-if="selectedTypeOfContent ==='AdmUser'" @adjustSelectedTypeOfContent="selectedTypeOfContent = $event"
-                 @ajustarVisibilidade="dialogGeneric70 = $event"/>
-
-        <AdmConfig v-if="selectedTypeOfContent ==='AdmConfig'" @adjustSelectedTypeOfContent="selectedTypeOfContent = $event"
-                   @ajustaTipoContent="refreshPage"
-                   @ajustarVisibilidade="dialogGeneric70 = $event"/>
-
-      </v-dialog>
-
     </v-app-bar>
 
   </div>
 </template>
 
 <script>import OpcoesUsuario from './OpcoesUsuario'
-import AdmUser from '../../components/areaAdministrativa/AdmUser'
-import AdmConfig from '../areaAdministrativa/AdmConfig'
 import config from '../../http/config'
 import {mapGetters} from 'vuex'
 
@@ -171,15 +148,11 @@ export default {
   }),
 
   components: {
-    AdmUser,
-    AdmConfig,
     OpcoesUsuario
   },
 
   computed: {
-
-    ...mapGetters(['usuarioEstaLogado', 'usuarioLogado', 'paginaEmAtulizacao'])
-
+    ...mapGetters(['usuarioEstaLogado', 'usuarioLogado', 'paginaEmAtulizacao', 'usuarioResetado'])
   },
 
   methods: {

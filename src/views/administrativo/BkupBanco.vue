@@ -2,8 +2,6 @@
   <v-main class="bgConfig">
     <BarraNavegacao></BarraNavegacao>
 
-    <CabecalhoAA/>
-
     <v-container fluid>
 
       <v-row>
@@ -77,10 +75,9 @@
 import moment from 'moment'
 import config from '../../http/config'
 import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
-import CabecalhoAA from '../../components/areaAdministrativa/CabecalhoAA/CabecalhoAA.vue'
 
 export default {
-  components: {CabecalhoAA, BarraNavegacao},
+  components: {BarraNavegacao},
   data () {
     return {
       loadingBackup: false,

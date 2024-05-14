@@ -2,8 +2,6 @@
   <v-main class="bgConfig">
     <BarraNavegacao></BarraNavegacao>
 
-    <CabecalhoAA/>
-
     <v-container fluid>
 
       <v-row>
@@ -337,14 +335,13 @@
 </template>
 <script>
 import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
-import CabecalhoAA from '../../components/areaAdministrativa/CabecalhoAA/CabecalhoAA.vue'
 import config from '../../http/config'
 import {mapGetters} from 'vuex'
 
 export default {
 
   name: 'estatisticas',
-  components: {BarraNavegacao, CabecalhoAA},
+  components: {BarraNavegacao},
   data: vm => ({
     configSis: config,
     totemConfigs: {
