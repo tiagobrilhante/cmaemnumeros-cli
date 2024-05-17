@@ -27,6 +27,23 @@
 
       </v-alert>
 
+      <v-alert v-if="usuarioLogado.tipo === 'Administrador'"
+               class="p-5"
+               elevation="21"
+      >
+        <v-row>
+          <v-col>
+            <v-btn :color="ajustaCorBtn('Todos')" class="mr-3" retain-focus-on-click
+                   @click="pegaIndicadoresSecao('Todos')"> Todos
+            </v-btn>
+
+            <v-btn v-for="secao in secoes" :key="secao.id" :color="ajustaCorBtn('secao', secao.sigla)" class="mr-3"
+                   retain-focus-on-click @click="pegaIndicadoresSecao(secao)"> {{ secao.sigla }}
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-alert>
+
       <!--DataTable-->
       <v-data-table
         :headers="headers"
@@ -41,7 +58,7 @@
             flat
           >
             <!-- Título da tabela-->
-            <v-toolbar-title>Tabela de Indicadores Cadastradas</v-toolbar-title>
+            <v-toolbar-title>Tabela de Indicadores Cadastradas - {{ selectedSecao }}</v-toolbar-title>
 
             <v-divider
               class="mx-4"
@@ -63,6 +80,11 @@
 
           </v-toolbar>
 
+        </template>
+
+        <!--Template de categoria -->
+        <template v-slot:item.categoria.nome="{ item }">
+          {{ item.categoria.secao.sigla }} - {{ item.categoria.nome }}
         </template>
 
         <!--Template de green -->
@@ -147,7 +169,7 @@
 
     <!-- melhorar no edit não esta carregando s seção-->
     <!--Dialog para add/edit indicador-->
-    <v-dialog v-model="dialogAddEditIndicadores" max-width="70%">
+    <v-dialog v-model="dialogAddEditIndicadores" max-width="70%" persistent>
       <v-card>
         <v-form @submit.prevent="efetuarCadastroEditIndicador">
 
@@ -176,7 +198,8 @@
 
           <v-card-text>
 
-            <GerenciamentoCategorias v-if="areaGerenciamentoCategorias"></GerenciamentoCategorias>
+            <GerenciamentoCategorias v-if="areaGerenciamentoCategorias"
+                                     @resetaSecao="buscaAjuste($event)"></GerenciamentoCategorias>
 
             <v-container v-else fluid>
 
@@ -184,7 +207,7 @@
               <v-row dense>
 
                 <!-- seção -->
-                <v-col>
+                <v-col v-if="usuarioLogado.tipo === 'Administrador'">
                   <span class="pl-3">Selecione a Seção do Indicador</span>
                   <v-autocomplete
                     v-model="editedIndicador.secao_id"
@@ -201,6 +224,13 @@
                   ></v-autocomplete>
                 </v-col>
 
+                <v-col v-else>
+                  <br>
+                  <v-alert dense elevation="10">
+                    <h2 class="ml-2"><b>Seção: </b> {{ usuarioLogado.secao.sigla }}</h2>
+                  </v-alert>
+                </v-col>
+
                 <!-- Categoria-->
                 <v-col v-if="categoriasPorSecao.length > 0">
                   <span class="pl-3">Selecione a Categoria do Indicador</span>
@@ -211,7 +241,7 @@
                     dense
                     item-text="nome"
                     item-value="id"
-                    label="Selecione a seção responsável pelo Indicador"
+                    label="Selecione categoria do indicador"
                     name="secao"
                     rounded
                     solo
@@ -226,6 +256,14 @@
                   </v-alert>
                 </v-col>
 
+                <!-- alerta em caso de não existir categoria-->
+                <v-col
+                  v-else-if="usuarioLogado.tipo !== 'Administrador' && categoriasPorSecao.length <= 0">
+                  <v-alert class="mt-6" dense rounded="xxl" type="warning">
+                    Ainda não existem categorias cadastradas para essa seção.
+                  </v-alert>
+                </v-col>
+
                 <!--estado incial-->
                 <v-col v-else>
                 </v-col>
@@ -233,7 +271,7 @@
               </v-row>
 
               <!-- nome do indicador e tendencia-->
-              <v-row dense>
+              <v-row v-if="categoriasPorSecao.length > 0" dense>
 
                 <!-- nome_indicador -->
                 <v-col>
@@ -346,7 +384,7 @@
               </v-alert>
 
               <!-- objetivo do indicador-->
-              <v-row>
+              <v-row v-if="categoriasPorSecao.length > 0">
                 <v-col>
                   <span class="pl-3">Objetivo do Indicador (Anual)</span>
                   <v-text-field
@@ -431,7 +469,7 @@ import {mapGetters} from 'vuex'
 export default {
   name: 'gerindicadores',
   components: {BarraNavegacao, GerenciamentoCategorias},
-  data: vm => ({
+  data: () => ({
     configSis: config,
     dialogAddEditIndicadores: false,
     dialogDelete: false,
@@ -467,11 +505,6 @@ export default {
     editedIndex: -1,
     search: '',
     headers: [
-      {
-        text: 'Seção Responsável',
-        align: 'start',
-        value: 'categoria.secao.sigla'
-      },
       {
         text: 'Categoria',
         align: 'start',
@@ -513,7 +546,8 @@ export default {
         align: 'center',
         sortable: false
       }
-    ]
+    ],
+    selectedSecao: 'Todos'
   }),
   computed: {
     ...mapGetters(['usuarioLogado'])
@@ -521,8 +555,13 @@ export default {
   watch: {},
   async mounted () {
     await this.getSecao()
-
-    await this.getIndicadores()
+    if (this.usuarioLogado.tipo === 'Administrador') {
+      await this.getIndicadores('Todos')
+    } else {
+      this.editedIndicador.secao_id = this.usuarioLogado.secao_id
+      await this.getIndicadores(this.usuarioLogado.secao)
+      await this.getCategoriaPorSecao()
+    }
   },
   methods: {
     async getSecao () {
@@ -537,15 +576,29 @@ export default {
       }
     },
 
-    async getIndicadores () {
-      try {
-        this.$http.get('indicadores')
-          .then(response => {
-            this.indicadores = response.data
-          })
-          .catch(erro => console.log(erro))
-      } catch (e) {
-        console.log(e)
+    async getIndicadores (qual) {
+      if (qual === 'Todos') {
+        this.selectedSecao = 'Todos'
+        try {
+          this.$http.get('indicadores')
+            .then(response => {
+              this.indicadores = response.data
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          console.log(e)
+        }
+      } else {
+        this.selectedSecao = qual.sigla
+        try {
+          this.$http.get('indicadores/pega/' + qual.id)
+            .then(response => {
+              this.indicadores = response.data
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          console.log(e)
+        }
       }
     },
 
@@ -554,6 +607,7 @@ export default {
         this.$http.get('categorias/porsecao/' + this.editedIndicador.secao_id)
           .then(response => {
             this.categoriasPorSecao = response.data
+            console.log(this.categoriasPorSecao)
           })
           .catch(erro => console.log(erro))
       } catch (e) {
@@ -582,7 +636,6 @@ export default {
     },
 
     efetuarCadastroEditIndicador () {
-      console.log('estou aqui')
       let arrayVal = this.validadoresCampos()
       if (arrayVal[0] > 0) {
         this.$toastr.e(
@@ -600,8 +653,6 @@ export default {
         objetoParaEnvio['red'] = this.editedIndicador.red
 
         if (this.tipoAcao === 'add') {
-          console.log('entrei em add')
-          console.log(objetoParaEnvio)
           // aqui eu vou adicionar o usuario
           try {
             this.$http.post('indicadores', objetoParaEnvio)
@@ -712,6 +763,37 @@ export default {
         this.editedIndicador = this.defaultIndicador
         this.editedIndex = -1
       })
+    },
+
+    pegaIndicadoresSecao (secao) {
+      if (secao === 'Todos') {
+        this.getIndicadores('Todos')
+      } else {
+        this.getIndicadores(secao)
+      }
+    },
+
+    buscaAjuste (evento) {
+      if (evento === 'Usuário') {
+        this.editedIndicador.secao_id = this.usuarioLogado.secao_id
+        this.getCategoriaPorSecao()
+      } else {
+        this.pegaIndicadoresSecao('Todos')
+      }
+    },
+
+    ajustaCorBtn (tipo, id) {
+      if (tipo === 'Todos' && this.selectedSecao === 'Todos') {
+        return 'secondary'
+      } else if (this.selectedSecao !== 'Todos' && tipo === 'secao') {
+        if (this.selectedSecao === id) {
+          return 'secondary'
+        } else {
+          return 'primary'
+        }
+      } else {
+        return 'primary'
+      }
     }
   }
 }

@@ -7,7 +7,7 @@
     >
 
       <v-toolbar-title>{{ configSis.nomeSis }}
-        <v-chip class="ml-4 mr-10" small> {{ configSis.labelSis }} </v-chip>
+        <v-chip class="ml-4 mr-10" small> {{ configSis.labelSis }}</v-chip>
       </v-toolbar-title>
 
       <!--home-->
@@ -45,9 +45,9 @@
               <v-btn color="black"
                      dark
                      rounded
+                     to="/gerindicadores"
                      v-bind="attrs"
                      v-on="on"
-                     to="/gerindicadores"
               >
                 <v-icon class="mr-3" small>mdi-cogs</v-icon>
                 Configurações de Indicadores
@@ -58,7 +58,7 @@
       </template>
 
       <!--Ferramentas Administrativas-->
-      <template v-if="usuarioEstaLogado && usuarioResetado">
+      <template v-if="usuarioEstaLogado && usuarioResetado && usuarioLogado.tipo === 'Administrador'">
         <div class="text-center">
           <v-menu
             bottom
@@ -90,36 +90,44 @@
               </v-list-item>
 
               <!-- Gerenciamento de Quiz-->
+              <!--
               <v-list-item to="/admquiz">
                 <v-list-item-title>
                   <v-icon class="pr-3" small>mdi-format-list-checks</v-icon>
                   Gerenciamento de Quiz
                 </v-list-item-title>
               </v-list-item>
+              -->
 
               <!-- acompanhamento de histórico-->
+              <!--
               <v-list-item to="/historico">
                 <v-list-item-title>
                   <v-icon class="pr-3" small>mdi-list-box</v-icon>
                   Acompanhamento de Histórico
                 </v-list-item-title>
               </v-list-item>
+              -->
 
               <!-- edstatísticas de uso-->
+              <!--
               <v-list-item to="/estatisticas">
                 <v-list-item-title>
                   <v-icon class="pr-3" small>mdi-chart-bar-stacked</v-icon>
                   Estatísticas
                 </v-list-item-title>
               </v-list-item>
+              -->
 
               <!-- Backup-->
+              <!--
               <v-list-item to="/bkupbanco">
                 <v-list-item-title>
                   <v-icon class="pr-3" small>mdi-database</v-icon>
                   Backup
                 </v-list-item-title>
               </v-list-item>
+              -->
 
             </v-list>
           </v-menu>

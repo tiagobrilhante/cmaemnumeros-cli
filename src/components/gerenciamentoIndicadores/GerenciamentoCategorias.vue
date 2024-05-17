@@ -102,7 +102,7 @@
     </v-data-table>
 
     <!--Dialog para add/edit Categoria-->
-    <v-dialog v-model="dialogAddEditCategoria" max-width="50%">
+    <v-dialog v-model="dialogAddEditCategoria" max-width="50%" persistent>
       <v-card>
         <v-form @submit.prevent="efetuarCadastroEditCategoria">
 
@@ -133,8 +133,8 @@
                 <v-autocomplete
                   v-model="editedCategoria.secao_id"
                   :items="secoes"
+                  :readonly="somenteLeitura"
                   class="ml-3"
-                  clearable
                   dense
                   item-text="sigla"
                   item-value="id"
@@ -226,6 +226,7 @@ export default {
         sortable: false
       }
     ],
+    somenteLeitura: false,
     dialogAddEditCategoria: false,
     dialogDelete: false,
     tipoAcao: '',
@@ -253,21 +254,44 @@ export default {
   },
   methods: {
     async getCategorias () {
-      try {
-        this.$http.get('categorias')
-          .then(response => {
-            this.categorias = response.data
-          })
-          .catch(erro => console.log(erro))
-      } catch (e) {
-        console.log(e)
+      if (this.usuarioLogado.tipo === 'Administrador') {
+        try {
+          this.$http.get('categorias')
+            .then(response => {
+              this.categorias = response.data
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          console.log(e)
+        }
+      } else {
+        try {
+          this.$http.get('categorias/porsecao/' + this.usuarioLogado.secao_id)
+            .then(response => {
+              this.categorias = response.data
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          console.log(e)
+        }
       }
     },
     async getSecao () {
       try {
         this.$http.get('secao')
           .then(response => {
-            this.secoes = response.data
+            if (this.usuarioLogado.tipo === 'Usuário') {
+              for (let i = 0; i < response.data.length; i++) {
+                if (response.data[i].id === this.usuarioLogado.secao_id) {
+                  this.secoes = [response.data[i]]
+                  this.editedCategoria.secao_id = response.data[i]
+                  this.somenteLeitura = true
+                }
+              }
+            } else {
+              this.secoes = response.data
+              this.somenteLeitura = false
+            }
           })
           .catch(erro => console.log(erro))
       } catch (e) {
@@ -277,15 +301,25 @@ export default {
 
     openDialogAddEditCategoria (tipo, item) {
       this.tipoAcao = tipo
-      console.log('tipo: ' + tipo)
       if (tipo === 'add') {
         this.editedCategoria = Object.assign({}, this.defaultUser)
+        if (this.usuarioLogado.tipo === 'Usuário') {
+          this.editedCategoria.secao_id = this.usuarioLogado.secao_id
+          this.somenteLeitura = true
+        } else {
+          this.somenteLeitura = false
+        }
       } else {
-        this.editedCategoria = Object.assign({}, item)
-        this.editedIndex = this.categorias.indexOf(item)
-
-        console.log('index' + this.editedIndex)
-        console.log(this.editedCategoria)
+        if (this.usuarioLogado.tipo === 'Usuário') {
+          this.editedCategoria = Object.assign({}, item)
+          this.editedIndex = this.categorias.indexOf(item)
+          this.editedCategoria.secao_id = this.usuarioLogado.secao_id
+          this.somenteLeitura = true
+        } else {
+          this.editedCategoria = Object.assign({}, item)
+          this.editedIndex = this.categorias.indexOf(item)
+          this.somenteLeitura = false
+        }
       }
       this.dialogAddEditCategoria = true
     },
@@ -315,6 +349,7 @@ export default {
                 this.$toastr.s(
                   'Categoria Cadastrada com sucesso', 'Sucesso!'
                 )
+                this.$emit('resetaSecao', this.usuarioLogado.tipo)
               })
               .catch(erro => console.log(erro))
           } catch (e) {
@@ -336,6 +371,7 @@ export default {
                   this.editedIndex = -1
                 })
                 this.dialogAddEditCategoria = false
+                this.$emit('resetaSecao', this.usuarioLogado.tipo)
               })
               .catch(erro => console.log(erro))
           } catch (e) {
@@ -378,6 +414,7 @@ export default {
           this.$toastr.s(
             'Categoria removida com sucesso', 'Sucesso!'
           )
+          this.$emit('resetaSecao', this.usuarioLogado.tipo)
         }, err => {
           console.log(err)
           this.$toastr.e(
