@@ -77,14 +77,14 @@
 
       </v-row>
 
-      <!-- pick de indicadores por seção-->
+      <!-- seletor por seção-->
       <v-alert v-if="usuarioLogado.tipo === 'Administrador'"
                class="p-5"
                elevation="21"
       >
         <v-row>
           <v-col>
-            <v-btn v-for="secao in secoes" :key="secao.id" class="primary mr-3" retain-focus-on-click
+            <v-btn v-for="secao in secoes" :key="secao.id" :color="ajustaCorBtn(secao.id)" class="mr-3"
                    @click="pegaIndicadoresSecao(secao)"> {{ secao.sigla }}
             </v-btn>
           </v-col>
@@ -106,7 +106,6 @@
               :class="getMonthButtonClass(mes)"
               :disabled="checaMesDisabled(index)"
               block
-              retain-focus-on-click
               @click="escolheMesIndicador(mes)"
             >
               {{ mes }}
@@ -236,7 +235,6 @@ export default {
     // tenho que melhorar isso e passar o mes e ano
     async getSecoes () {
       if (this.usuarioLogado.tipo === 'Administrador') {
-        console.log('estou aqui administrador')
         try {
           this.$http.get('secao/simples')
             .then(response => {
@@ -248,7 +246,6 @@ export default {
           console.log(e)
         }
       } else {
-        console.log('estou aqui outros')
         try {
           this.$http.get('secao/unitaria/' + this.usuarioLogado.secao_id)
             .then(response => {
@@ -269,14 +266,10 @@ export default {
           ano: ano,
           secao_id: secaoId
         }
-
-        console.log(objetoParaEnvio)
         try {
           this.$http.post('indicadores/secao', objetoParaEnvio)
             .then(response => {
               this.selectedSecao = response.data
-              console.log(response.data)
-              // Limpa os inputs antigos
               this.awaitData = false
             })
             .catch(erro => console.log(erro))
@@ -288,7 +281,6 @@ export default {
 
     pegaIndicadoresSecao (secao) {
       this.awaitData = true
-      console.log('ano corrente dentro de pega por secao: ' + this.anoCorrente)
       this.getIndicadoresVigentes(secao.id, this.mesCorrente, this.anoCorrente, 'consulta')
     },
 
@@ -320,9 +312,7 @@ export default {
     gravaValores () {
       try {
         this.$http.post('valorindicador', this.selectedSecao)
-          .then((response) => {
-            console.log(response.data)
-            // this.selectedSecao = response.data
+          .then(() => {
             this.$toastr.s(
               'Indicadores lançados com sucesso', 'Sucesso!'
             )
@@ -417,34 +407,45 @@ export default {
     },
 
     getColorForIndicator (indicador) {
-      if (indicador.indicador_valor.length > 0) {
-        const value = parseFloat(indicador.indicador_valor[0].valor)
-        if (!isNaN(value)) {
-          const lowerYellow = Math.min(indicador.yellow_1, indicador.yellow_2)
-          const higherYellow = Math.max(indicador.yellow_1, indicador.yellow_2)
+      if (indicador.meta) {
+        if (indicador.indicador_valor.length > 0) {
+          const value = parseFloat(indicador.indicador_valor[0].valor)
+          if (!isNaN(value)) {
+            const lowerYellow = Math.min(indicador.yellow_1, indicador.yellow_2)
+            const higherYellow = Math.max(indicador.yellow_1, indicador.yellow_2)
 
-          if (indicador.tendencia === 'Quanto maior melhor') {
-            if (value >= indicador.green) {
-              return 'green' // Verde, se maior ou igual ao limite green
-            } else if (value >= lowerYellow && value <= higherYellow) {
-              return 'yellow' // Amarelo entre yellow_2 e green
+            if (indicador.tendencia === 'Quanto maior melhor') {
+              if (value >= indicador.green) {
+                return 'green' // Verde, se maior ou igual ao limite green
+              } else if (value >= lowerYellow && value <= higherYellow) {
+                return 'yellow' // Amarelo entre yellow_2 e green
+              } else {
+                return 'red' // Vermelho para valores abaixo de yellow_2
+              }
             } else {
-              return 'red' // Vermelho para valores abaixo de yellow_2
-            }
-          } else {
-            if (value <= indicador.green) {
-              return 'green' // Verde, se maior ou igual ao limite green
-            } else if (value >= lowerYellow && value <= higherYellow) {
-              return 'yellow' // Amarelo entre yellow_2 e green
-            } else {
-              return 'red' // Vermelho para valores abaixo de yellow_2
+              if (value <= indicador.green) {
+                return 'green' // Verde, se maior ou igual ao limite green
+              } else if (value >= lowerYellow && value <= higherYellow) {
+                return 'yellow' // Amarelo entre yellow_2 e green
+              } else {
+                return 'red' // Vermelho para valores abaixo de yellow_2
+              }
             }
           }
         }
+        return 'grey' // Cor padrão se o valor não for válido
+      } else {
+        return 'blue'
       }
-      return 'grey' // Cor padrão se o valor não for válido
-    }
+    },
 
+    ajustaCorBtn (id) {
+      if (this.selectedSecao.id === id) {
+        return 'secondary'
+      } else {
+        return 'primary'
+      }
+    }
   }
 }
 </script>

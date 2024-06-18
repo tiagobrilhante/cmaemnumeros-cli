@@ -3,12 +3,17 @@
     <BarraNavegacao></BarraNavegacao>
 
     <v-container fluid>
+
       <!--Banner-->
       <v-alert
         class="p-5"
         elevation="21"
       >
+
+        <!-- nome e btn add novo indicador-->
         <v-row>
+
+          <!--nome-->
           <v-col cols="9">
             <h2>
               <v-icon
@@ -20,13 +25,17 @@
             </h2>
 
           </v-col>
+
+          <!-- btn add novo indicador-->
           <v-col class="text-right" cols="3">
-            <v-btn class="primary" @click="openDialogAddEditIndicador('add')">Adicionar Novo</v-btn>
+            <v-btn class="primary" @click="openDialogAddEditIndicador('add')">Adicionar Novo Indicador</v-btn>
           </v-col>
+
         </v-row>
 
       </v-alert>
 
+      <!-- seletor por seção-->
       <v-alert v-if="usuarioLogado.tipo === 'Administrador'"
                class="p-5"
                elevation="21"
@@ -38,7 +47,7 @@
             </v-btn>
 
             <v-btn v-for="secao in secoes" :key="secao.id" :color="ajustaCorBtn('secao', secao.sigla)" class="mr-3"
-                   retain-focus-on-click @click="pegaIndicadoresSecao(secao)"> {{ secao.sigla }}
+                   @click="pegaIndicadoresSecao(secao)"> {{ secao.sigla }}
             </v-btn>
           </v-col>
         </v-row>
@@ -87,13 +96,26 @@
           {{ item.categoria.secao.sigla }} - {{ item.categoria.nome }}
         </template>
 
+        <!--Template de tendencia -->
+        <template v-slot:item.tendencia="{ item }">
+          <span v-if="item.tendencia === null || item.tendencia === ''">Sem meta</span>
+          <span v-else>{{ item.tendencia }}</span>
+        </template>
+
+        <!--Template de objetivo -->
+        <template v-slot:item.objetivo="{ item }">
+          <span v-if="item.objetivo === null || item.objetivo === ''">Sem objetivo</span>
+          <span v-else>{{ item.objetivo }}</span>
+        </template>
+
         <!--Template de green -->
         <template v-slot:item.green="{ item }">
 
-          <v-chip
-            class="ml-0"
-            color="green"
-            text-color="black">
+          <span v-if="item.green === null || item.green === ''"> - </span>
+          <v-chip v-else
+                  class="ml-0"
+                  color="green"
+                  text-color="black">
             {{ item.green }}
           </v-chip>
 
@@ -102,6 +124,9 @@
         <!--Template de yellow -->
         <template v-slot:item.yellow_1="{ item }">
 
+          <span
+            v-if="(item.yellow_1 === null || item.yellow_1 === '') || (item.yellow_2 === null || item.yellow_2 === '')"> - </span>
+          <span v-else>
           <v-chip
             color="yellow"
             text-color="black">
@@ -113,14 +138,16 @@
           >
             {{ item.yellow_2 }}
           </v-chip>
+          </span>
 
         </template>
 
         <!--Template de red -->
         <template v-slot:item.red="{ item }">
 
+          <span v-if="item.red === null || item.red === ''"> - </span>
           <v-chip
-            color="red"
+            color="red" v-else
             text-color="white">
             {{ item.red }}
           </v-chip>
@@ -165,6 +192,7 @@
         </template>
 
       </v-data-table>
+
     </v-container>
 
     <!-- melhorar no edit não esta carregando s seção-->
@@ -212,7 +240,6 @@
                   <v-autocomplete
                     v-model="editedIndicador.secao_id"
                     :items="secoes"
-                    clearable
                     dense
                     item-text="sigla"
                     item-value="id"
@@ -224,6 +251,7 @@
                   ></v-autocomplete>
                 </v-col>
 
+                <!--caso não seja um administrador-->
                 <v-col v-else>
                   <br>
                   <v-alert dense elevation="10">
@@ -270,7 +298,7 @@
 
               </v-row>
 
-              <!-- nome do indicador e tendencia-->
+              <!-- nome do indicador e possui meta-->
               <v-row v-if="categoriasPorSecao.length > 0" dense>
 
                 <!-- nome_indicador -->
@@ -285,6 +313,18 @@
                   ></v-text-field>
                 </v-col>
 
+                <v-col>
+                  <v-checkbox
+                    v-model="editedIndicador.meta"
+                    class="ml-6"
+                    label="Possui meta associada"
+                  ></v-checkbox>
+                </v-col>
+
+              </v-row>
+
+              <!-- tendência e objetivo-->
+              <v-row v-if="categoriasPorSecao.length > 0 && editedIndicador.meta">
                 <!-- tendência-->
                 <v-col>
                   <span class="pl-3">Tendência</span>
@@ -299,6 +339,18 @@
                   ></v-select>
                 </v-col>
 
+                <!--objetivo-->
+                <v-col>
+                  <span class="pl-3">Objetivo do Indicador (Anual)</span>
+                  <v-text-field
+                    v-model="editedIndicador.objetivo"
+                    dense
+                    label="Objetivo Anual do indicador"
+                    rounded
+                    solo
+                    type="number"
+                  ></v-text-field>
+                </v-col>
               </v-row>
 
               <!-- Cards de acompanhamento - verde - amarelo - vermelho -->
@@ -383,26 +435,6 @@
 
               </v-alert>
 
-              <!-- objetivo do indicador-->
-              <v-row v-if="categoriasPorSecao.length > 0">
-                <v-col>
-                  <span class="pl-3">Objetivo do Indicador (Anual)</span>
-                  <v-text-field
-                    v-model="editedIndicador.objetivo"
-                    dense
-                    label="Objetivo Anual do indicador"
-                    rounded
-                    solo
-                    type="number"
-                  ></v-text-field>
-                </v-col>
-
-                <!-- ajuste de col-->
-                <v-col>
-
-                </v-col>
-              </v-row>
-
             </v-container>
 
           </v-card-text>
@@ -478,6 +510,7 @@ export default {
       'secao_id': '',
       'categoria_id': '',
       'nome': '',
+      'meta': true,
       'tendencia': '',
       'objetivo': '',
       'green': '',
@@ -489,6 +522,7 @@ export default {
       'secao_id': '',
       'categoria_id': '',
       'nome': '',
+      'meta': '',
       'tendencia': '',
       'objetivo': '',
       'green': '',
@@ -645,12 +679,22 @@ export default {
         let objetoParaEnvio = {}
         objetoParaEnvio['nome'] = this.editedIndicador.nome
         objetoParaEnvio['categoria_id'] = this.editedIndicador.categoria_id
-        objetoParaEnvio['tendencia'] = this.editedIndicador.tendencia
-        objetoParaEnvio['objetivo'] = this.editedIndicador.objetivo
-        objetoParaEnvio['green'] = this.editedIndicador.green
-        objetoParaEnvio['yellow_1'] = this.editedIndicador.yellow_1
-        objetoParaEnvio['yellow_2'] = this.editedIndicador.yellow_2
-        objetoParaEnvio['red'] = this.editedIndicador.red
+        objetoParaEnvio['meta'] = this.editedIndicador.meta
+        if (this.editedIndicador.meta) {
+          objetoParaEnvio['tendencia'] = this.editedIndicador.tendencia
+          objetoParaEnvio['objetivo'] = this.editedIndicador.objetivo
+          objetoParaEnvio['green'] = this.editedIndicador.green
+          objetoParaEnvio['yellow_1'] = this.editedIndicador.yellow_1
+          objetoParaEnvio['yellow_2'] = this.editedIndicador.yellow_2
+          objetoParaEnvio['red'] = this.editedIndicador.red
+        } else {
+          objetoParaEnvio['tendencia'] = null
+          objetoParaEnvio['objetivo'] = null
+          objetoParaEnvio['green'] = null
+          objetoParaEnvio['yellow_1'] = null
+          objetoParaEnvio['yellow_2'] = null
+          objetoParaEnvio['red'] = null
+        }
 
         if (this.tipoAcao === 'add') {
           // aqui eu vou adicionar o usuario
@@ -710,25 +754,28 @@ export default {
         msgRetornoErro += '<li>Selecione uma Categoria.</li>'
         contador++
       }
-      if (this.editedIndicador.tendencia === '') {
-        msgRetornoErro += '<li>A tendência não pode ser vazia.</li>'
-        contador++
-      }
-      if (this.editedIndicador.objetivo === '') {
-        msgRetornoErro += '<li>O Objetivo não pode ser vazio.</li>'
-        contador++
-      }
-      if (this.editedIndicador.green === '') {
-        msgRetornoErro += '<li>O índice satisfatório não pode ser vazio.</li>'
-        contador++
-      }
-      if (this.editedIndicador.yellow_1 === '' || this.editedIndicador.yellow_2 === '') {
-        msgRetornoErro += '<li>O índice em alerta deve apresentar 2 valores.</li>'
-        contador++
-      }
-      if (this.editedIndicador.red === '') {
-        msgRetornoErro += '<li>O índice em perigo não pode ser vazio.</li>'
-        contador++
+
+      if (this.editedIndicador.meta) {
+        if (this.editedIndicador.tendencia === '') {
+          msgRetornoErro += '<li>A tendência não pode ser vazia.</li>'
+          contador++
+        }
+        if (this.editedIndicador.objetivo === '') {
+          msgRetornoErro += '<li>O Objetivo não pode ser vazio.</li>'
+          contador++
+        }
+        if (this.editedIndicador.green === '') {
+          msgRetornoErro += '<li>O índice satisfatório não pode ser vazio.</li>'
+          contador++
+        }
+        if (this.editedIndicador.yellow_1 === '' || this.editedIndicador.yellow_2 === '') {
+          msgRetornoErro += '<li>O índice em alerta deve apresentar 2 valores.</li>'
+          contador++
+        }
+        if (this.editedIndicador.red === '') {
+          msgRetornoErro += '<li>O índice em perigo não pode ser vazio.</li>'
+          contador++
+        }
       }
       msgRetornoErro = '<ul>' + msgRetornoErro + '</ul>'
       return [contador, msgRetornoErro]

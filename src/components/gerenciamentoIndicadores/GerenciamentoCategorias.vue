@@ -5,7 +5,10 @@
     <v-alert
       elevation="21"
     >
+      <!-- nome e btn add nova categoria-->
       <v-row>
+
+        <!--nome-->
         <v-col cols="9">
           <h2>
             <v-icon
@@ -17,9 +20,12 @@
           </h2>
 
         </v-col>
+
+        <!-- btn add categoria-->
         <v-col class="text-right" cols="3">
           <v-btn class="primary" @click="openDialogAddEditCategoria('add')">Adicionar Nova Categoria</v-btn>
         </v-col>
+
       </v-row>
 
     </v-alert>

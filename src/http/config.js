@@ -1,6 +1,5 @@
 const urlDownload = 'http://localhost:8000/'
-// const urlDownload = 'http://totemapi2.cma.eb.mil.br/'
-// const urlDownload = 'http://totemapi.12rm.eb.mil.br/'
+// const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
 
 const baseURL = urlDownload + 'api/'
 
