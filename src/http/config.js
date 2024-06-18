@@ -5,10 +5,21 @@ const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.0.1',
+    release: '025',
+    latest: true,
+    data: '08/06/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Implementada a tela de resumo de informações do ano',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.0 A',
     release: '001 (alpha)',
-    latest: true,
-    data: '02/05/2025',
+    latest: false,
+    data: '02/05/2024',
     detalhesVisiveis: false,
     detalhes: [
       'É iniciado o processo de desenvolvimento do Sistema CMA em Números em 02 de Maio de 2024',
