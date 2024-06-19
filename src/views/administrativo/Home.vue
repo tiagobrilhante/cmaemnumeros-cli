@@ -247,14 +247,29 @@
 
               <!-- separador-->
               <v-col class="text-right">
-                <v-btn color="success" @click="showTable">Voltar ao Formulário</v-btn>
+                <v-btn color="success" @click="showTable">Formulário</v-btn>
               </v-col>
 
             </v-row>
 
           </v-alert>
 
-          <v-alert color="white">
+          <!-- seletor por seção-->
+          <v-alert v-if="usuarioLogado.tipo === 'Administrador'"
+                   class="p-5"
+                   elevation="21"
+          >
+            <v-row>
+              <v-col>
+                <v-btn v-for="secao in secoes" :key="secao.id" :color="ajustaCorBtn(secao.id)" class="mr-3"
+                       @click="pegaIndicadoresSecao(secao)"> {{ secao.sigla }}
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-alert>
+
+          <!-- dados Tabelares-->
+          <v-alert v-if="tabelaDados.length !== 0" color="white">
             Dados Acumulados - {{ selectedSecao.sigla }}
             <v-data-table
               :headers="headersDados"
@@ -469,6 +484,7 @@
 
             </v-data-table>
           </v-alert>
+
         </v-col>
       </v-row>
     </v-container>
@@ -557,8 +573,15 @@ export default {
     this.getCurrentDate()
 
     this.asyncMounted()
+
+    this.checaTipoUsuario()
   },
   methods: {
+    checaTipoUsuario () {
+      if (this.usuarioLogado.tipo === 'Administrador') {
+        this.showTable()
+      }
+    },
 
     async asyncMounted () {
       await this.getSecoes()
@@ -630,6 +653,7 @@ export default {
 
     pegaIndicadoresSecao (secao) {
       this.awaitData = true
+      this.tabelaDados = []
       this.getIndicadoresVigentes(secao.id, this.mesCorrente, this.anoCorrente, 'consulta')
     },
 
