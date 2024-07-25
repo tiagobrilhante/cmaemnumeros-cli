@@ -147,7 +147,7 @@
 
           <span v-if="item.red === null || item.red === ''"> - </span>
           <v-chip
-            color="red" v-else
+            v-else color="red"
             text-color="white">
             {{ item.red }}
           </v-chip>
@@ -233,7 +233,6 @@
 
               <!-- secao e categoria-->
               <v-row dense>
-
                 <!-- seção -->
                 <v-col v-if="usuarioLogado.tipo === 'Administrador'">
                   <span class="pl-3">Selecione a Seção do Indicador</span>
@@ -245,6 +244,7 @@
                     item-value="id"
                     label="Selecione a seção responsável pelo Indicador"
                     name="secao"
+                    return-object
                     rounded
                     solo
                     @change="getCategoriaPorSecao"
@@ -600,7 +600,7 @@ export default {
   methods: {
     async getSecao () {
       try {
-        this.$http.get('secao')
+        this.$http.get('secao/simples')
           .then(response => {
             this.secoes = response.data
           })
@@ -637,27 +637,39 @@ export default {
     },
 
     async getCategoriaPorSecao () {
-      try {
-        this.$http.get('categorias/porsecao/' + this.editedIndicador.secao_id)
-          .then(response => {
-            this.categoriasPorSecao = response.data
-            console.log(this.categoriasPorSecao)
-          })
-          .catch(erro => console.log(erro))
-      } catch (e) {
-        console.log(e)
+      if (this.editedIndicador.secao_id) {
+        try {
+          const response = await this.$http.get('categorias/porsecao/' + this.editedIndicador.secao_id.id)
+          this.categoriasPorSecao = response.data
+        } catch (error) {
+          console.error('Erro ao buscar categorias por seção:', error)
+        }
       }
     },
 
-    openDialogAddEditIndicador (tipo, item) {
+    async openDialogAddEditIndicador (tipo, item) {
       this.tipoAcao = tipo
       if (tipo === 'add') {
         this.editedIndicador = Object.assign({}, this.defaultIndicador)
+        this.dialogAddEditIndicadores = true
       } else {
         this.editedIndicador = Object.assign({}, item)
         this.editedIndex = this.indicadores.indexOf(item)
+        this.editedIndicador.secao_id = item.categoria.secao_id
+        this.editedIndicador.categoria_id = item.categoria_id
+        this.categoriasPorSecao = [item.categoria]
+
+        try {
+          this.$http.get('categorias/porsecao/' + item.categoria.secao_id)
+            .then(response => {
+              this.categoriasPorSecao = response.data
+              this.dialogAddEditIndicadores = true
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          console.log(e)
+        }
       }
-      this.dialogAddEditIndicadores = true
     },
 
     showHideGerencimantoCategoria () {

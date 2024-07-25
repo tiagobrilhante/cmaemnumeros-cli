@@ -78,6 +78,10 @@
 
       </v-row>
 
+      <v-alert class="pt-0 pb-0" dense elevation="21">
+        <PesquisaIndicador/>
+      </v-alert>
+
       <!-- seletor por seção-->
       <v-alert v-if="usuarioLogado.tipo === 'Administrador'"
                class="p-5"
@@ -255,6 +259,10 @@
 
             </v-row>
 
+          </v-alert>
+
+          <v-alert class="pt-0 pb-0" dense elevation="21">
+            <PesquisaIndicador/>
           </v-alert>
 
           <!-- seletor por seção-->
@@ -515,12 +523,13 @@ import config from '../../http/config'
 // import moment from 'moment-timezone'
 import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
 import CategoriaView from '../../components/categoria/CategoriaView.vue'
+import PesquisaIndicador from '../../components/gerenciamentoIndicadores/PesquisaIndicador.vue'
 import Grafico from './Grafico.vue'
 
 export default {
   name: 'home',
   mixins: [logoutMixin],
-  components: {BarraNavegacao, Grafico, CategoriaView},
+  components: {BarraNavegacao, Grafico, CategoriaView, PesquisaIndicador},
   data: () => ({
     configSis: config,
     anoCorrente: 0,

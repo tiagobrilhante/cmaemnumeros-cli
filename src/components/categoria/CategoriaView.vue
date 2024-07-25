@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <v-data-table
       v-for="categoria in meusDados"
       :key="categoria.categoria.id"
@@ -322,15 +321,20 @@ export default {
 
   methods: {
     async pegaPorCategoria () {
-      let objetoParaEnvio = {}
-      objetoParaEnvio['ano'] = this.anoCorrente
-      objetoParaEnvio['secao_id'] = this.selectedSecao.id
+      let objetoParaEnvio = {
+        ano: this.anoCorrente,
+        secao_id: this.selectedSecao.id
+      }
+
       try {
-        this.$http.post('valorindicador/porcat', objetoParaEnvio)
-          .then(response => {
-            this.meusDados = response.data
+        const response = await this.$http.post('valorindicador/porcat', objetoParaEnvio)
+        const dadosOrdenados = response.data.map(categoria => {
+          categoria.indicadores.forEach(indicador => {
+            indicador.valor.sort((a, b) => a.mes - b.mes)
           })
-          .catch(erro => console.log(erro))
+          return categoria
+        })
+        this.meusDados = dadosOrdenados
       } catch (e) {
         console.log(e)
       }
