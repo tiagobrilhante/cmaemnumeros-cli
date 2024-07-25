@@ -354,7 +354,7 @@
               </v-row>
 
               <!-- Cards de acompanhamento - verde - amarelo - vermelho -->
-              <v-alert v-if="editedIndicador.tendencia" elevation="8">
+              <v-alert v-if="editedIndicador.tendencia && editedIndicador.meta" elevation="8">
                 <h3 class="text-center">Cards de acompanhamento</h3> <br>
 
                 <!-- verde - amarelo - vermelho -->

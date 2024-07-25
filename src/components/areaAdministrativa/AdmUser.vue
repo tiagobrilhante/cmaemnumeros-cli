@@ -29,7 +29,13 @@
         </v-row>
 
       </v-alert>
-
+<!--
+      <v-row>
+        <v-col>
+          <v-btn @click="fazLimpeza">Não Clique aqui</v-btn>
+        </v-col>
+      </v-row>
+-->
       <!--DataTable-->
       <v-data-table
         :headers="headers"
@@ -669,6 +675,22 @@ export default {
             this.dialogReset = false
             this.$toastr.s(
               'Senha do Usuário resetada com sucesso', 'Sucesso!'
+            )
+          })
+          .catch(erro => console.log(erro))
+      } catch (e) {
+        this.$toastr.e(
+          'Houve um erro na tentativa de execução: <br>' + e, 'Erro!'
+        )
+      }
+    },
+
+    fazLimpeza () {
+      try {
+        this.$http.get('ferramenta/corretor')
+          .then(() => {
+            this.$toastr.s(
+              'Correção feita com sucesso', 'Sucesso!'
             )
           })
           .catch(erro => console.log(erro))

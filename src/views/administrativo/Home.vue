@@ -11,7 +11,6 @@
       <v-row>
 
         <v-col>
-
           <!--Banner (cabecalho e btn de navegação ano-->
           <v-alert
             class="p-5"
@@ -46,17 +45,17 @@
                   <!-- exibe ano selecionado-->
                   <v-col>
                     <v-alert class="mt-0 mb-0 pt-0 pb-0" dense elevation="10">
-                      <h2>{{ this.anoCorrente }}</h2>
+                      <h2>{{ anoCorrente }}</h2>
                     </v-alert>
                   </v-col>
 
                   <!-- aimenta ano-->
                   <v-col class="text-left">
-                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="primary" @click="changeYear('up')">
+                    <v-btn v-if="anoBase !== anoCorrente" class="primary" @click="changeYear('up')">
                       <v-icon>mdi-chevron-right</v-icon>
                     </v-btn>
 
-                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="success" @click="changeYear('corrente')">
+                    <v-btn v-if="anoBase !== anoCorrente" class="success" @click="changeYear('corrente')">
                       <v-icon>mdi-calendar-today</v-icon>
                     </v-btn>
 
@@ -147,6 +146,10 @@
                       {{ indicador.indicador_valor[0].atualizado }}
                     </span>
                   </v-alert>
+                  <v-btn :loading="loadingBtn" block class="primary" @click="gravaValores">
+                    <v-icon class="mr-5">mdi-content-save-move</v-icon>
+                    Gravar Valores
+                  </v-btn>
 
                 </v-card>
 
@@ -168,7 +171,7 @@
 
               </v-col>
               <v-col>
-                <v-btn block class="primary" x-large @click="gravaValores">
+                <v-btn :loading="loadingBtn" block class="primary" x-large @click="gravaValores">
                   <v-icon class="mr-5" large>mdi-content-save-move</v-icon>
                   Gravar Valores
                 </v-btn>
@@ -270,8 +273,19 @@
 
           <!-- dados Tabelares-->
           <v-alert v-if="tabelaDados.length !== 0" color="white">
-            Dados Acumulados - {{ selectedSecao.sigla }}
+            <h2>Dados Acumulados - {{ selectedSecao.sigla }}</h2>
+
+            <v-row class="mt-2 mb-2">
+              <v-col>
+                <v-btn :color="corGeral" @click="seletorVisualizacao('geral')">Visualização Geral</v-btn>
+                <v-btn :color="corCategoria" class="ml-3" @click="seletorVisualizacao('categoria')">Visualização Por
+                  Categoria
+                </v-btn>
+              </v-col>
+            </v-row>
+
             <v-data-table
+              v-if="visualizaGeral"
               :headers="headersDados"
               :items="tabelaDados"
               :items-per-page="-1"
@@ -483,6 +497,9 @@
               </template>
 
             </v-data-table>
+
+            <CategoriaView v-else :anoCorrente="anoCorrente" :selectedSecao="selectedSecao"></CategoriaView>
+
           </v-alert>
 
         </v-col>
@@ -497,12 +514,13 @@ import {mapGetters} from 'vuex'
 import config from '../../http/config'
 // import moment from 'moment-timezone'
 import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
+import CategoriaView from '../../components/categoria/CategoriaView.vue'
 import Grafico from './Grafico.vue'
 
 export default {
   name: 'home',
   mixins: [logoutMixin],
-  components: {BarraNavegacao, Grafico},
+  components: {BarraNavegacao, Grafico, CategoriaView},
   data: () => ({
     configSis: config,
     anoCorrente: 0,
@@ -537,7 +555,13 @@ export default {
     getResumo: [],
     search: '',
     mostraForm: true,
-    mostraTabela: false
+    mostraTabela: false,
+    visualizaGeral: true,
+    visualizaCategoria: false,
+    secaoCorrente: '',
+    corGeral: 'secondary',
+    corCategoria: 'warning',
+    loadingBtn: false
   }),
   computed: {
     ...mapGetters(['usuarioLogado']),
@@ -561,7 +585,6 @@ export default {
           result.push(row)
         })
       })
-
       return result
     }
   },
@@ -615,7 +638,6 @@ export default {
     },
 
     async getIndicadoresVigentes (secaoId, mes, ano, tipo, objeto) {
-      this.selectedSecao = {}
       if (tipo === 'consulta') {
         let objetoParaEnvio = {
           mes: mes,
@@ -653,8 +675,13 @@ export default {
 
     pegaIndicadoresSecao (secao) {
       this.awaitData = true
-      this.tabelaDados = []
-      this.getIndicadoresVigentes(secao.id, this.mesCorrente, this.anoCorrente, 'consulta')
+      this.getIndicadoresVigentes(secao.id, this.mesCorrente, this.anoCorrente, 'consulta').then(() => {
+        // Após a atualização dos dados, `tabelaDados` será recalculado automaticamente
+        this.awaitData = false
+      }).catch(error => {
+        console.error('Erro ao buscar indicadores:', error)
+        this.awaitData = false
+      })
     },
 
     getIndicadorValor (indicador) {
@@ -684,9 +711,11 @@ export default {
     },
 
     gravaValores () {
+      this.loadingBtn = true
       try {
         this.$http.post('valorindicador', this.selectedSecao)
           .then(() => {
+            this.loadingBtn = false
             this.$toastr.s(
               'Indicadores lançados com sucesso', 'Sucesso!'
             )
@@ -712,11 +741,14 @@ export default {
         this.anoCorrente++
       } else if (direction === 'corrente') {
         this.anoCorrente = this.anoBase
+        this.mesCorrente = this.meses[this.getPreviousMonth() - 1]
       } else {
         this.anoCorrente--
       }
 
-      this.pegaIndicadoresSecao(this.selectedSecao)
+      this.$nextTick(() => {
+        this.pegaIndicadoresSecao(this.selectedSecao)
+      })
     },
 
     formatDateTime (isoString) {
@@ -882,6 +914,33 @@ export default {
         this.mostraForm = true
         this.mostraTabela = false
       }
+    },
+
+    seletorVisualizacao (tipo) {
+      if (tipo === 'geral') {
+        this.visualizaGeral = true
+        this.visualizaCategoria = false
+      } else if (tipo === 'categoria') {
+        this.visualizaGeral = false
+        this.visualizaCategoria = true
+      }
+      this.verificaCorVisualizacao()
+    },
+
+    verificaCorVisualizacao () {
+      if (this.visualizaGeral) {
+        this.corGeral = 'secondary'
+        this.corCategoria = 'warning'
+      } else {
+        this.corGeral = 'warning'
+        this.corCategoria = 'secondary'
+      }
+    },
+
+    getPreviousMonth () {
+      const currentDate = new Date()
+      currentDate.setMonth(currentDate.getMonth())
+      return currentDate.getMonth()// JavaScript months are 0-indexed, so add 1 for a human-readable format
     }
   }
 }
@@ -897,5 +956,9 @@ export default {
   background-color: #b6c378 !important; /* Cor de fundo para a linha agrupada */
   font-weight: bold; /* Texto em negrito */
   cursor: pointer; /* Cursor para indicar que é clicável */
+}
+
+.bgred {
+  background-color: red !important;
 }
 </style>
