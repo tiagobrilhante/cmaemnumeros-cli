@@ -8,9 +8,8 @@ import erroToken from '../views/errors/erroToken.vue'
 import store from '@/store'
 import Historico from '../views/administrativo/Historico.vue'
 import GerIndicadores from '../components/gerenciamentoIndicadores/GerenciamentoIndicadores.vue'
-import Estatisticas from '../views/administrativo/Estatisticas.vue'
 import BkupBanco from '../views/administrativo/BkupBanco.vue'
-import AdmQuiz from '../views/administrativo/AdmQuiz.vue'
+import FerramentasAdmin from '../views/administrativo/FerramentasAdmin.vue'
 import AdmUser from '../components/areaAdministrativa/AdmUser.vue'
 
 Vue.use(VueRouter)
@@ -40,6 +39,14 @@ const routes = [
     }
   },
   {
+    path: '/ferramentas',
+    name: 'ferramentasAdm',
+    component: FerramentasAdmin,
+    meta: {
+      logado: true
+    }
+  },
+  {
     path: '/historico',
     name: 'historico',
     component: Historico,
@@ -51,14 +58,6 @@ const routes = [
     path: '/gerindicadores',
     name: 'gerindicadores',
     component: GerIndicadores,
-    meta: {
-      logado: true
-    }
-  },
-  {
-    path: '/estatisticas',
-    name: 'estatisticas',
-    component: Estatisticas,
     meta: {
       logado: true
     }
@@ -96,14 +95,6 @@ const routes = [
     path: '/bkupbanco',
     name: 'BkupBanco',
     component: BkupBanco,
-    meta: {
-      logado: true
-    }
-  },
-  {
-    path: '/admquiz',
-    name: 'AdmQuiz',
-    component: AdmQuiz,
     meta: {
       logado: true
     }

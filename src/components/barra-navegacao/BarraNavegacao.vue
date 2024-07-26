@@ -89,35 +89,13 @@
                 </v-list-item-title>
               </v-list-item>
 
-              <!-- Gerenciamento de Quiz-->
-              <!--
-              <v-list-item to="/admquiz">
+              <!-- Ferramentas do sistema-->
+              <v-list-item to="/ferramentas">
                 <v-list-item-title>
-                  <v-icon class="pr-3" small>mdi-format-list-checks</v-icon>
-                  Gerenciamento de Quiz
+                  <v-icon class="pr-3" small>mdi-cog</v-icon>
+                  Ferramentas de Administrador
                 </v-list-item-title>
               </v-list-item>
-              -->
-
-              <!-- acompanhamento de histórico-->
-              <!--
-              <v-list-item to="/historico">
-                <v-list-item-title>
-                  <v-icon class="pr-3" small>mdi-list-box</v-icon>
-                  Acompanhamento de Histórico
-                </v-list-item-title>
-              </v-list-item>
-              -->
-
-              <!-- edstatísticas de uso-->
-              <!--
-              <v-list-item to="/estatisticas">
-                <v-list-item-title>
-                  <v-icon class="pr-3" small>mdi-chart-bar-stacked</v-icon>
-                  Estatísticas
-                </v-list-item-title>
-              </v-list-item>
-              -->
 
               <!-- Backup-->
               <!--
