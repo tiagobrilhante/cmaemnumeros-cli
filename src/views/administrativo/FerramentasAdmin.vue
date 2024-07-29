@@ -79,7 +79,7 @@
                         registro(s)</h2></v-col>
                       <v-col class="text-right">
                         <v-btn class="warning" @click="dialogDeleteRegistroTodos = true">
-                          <v-icon small class="mr-4">mdi-alert-outline</v-icon>
+                          <v-icon class="mr-4" small>mdi-alert-outline</v-icon>
                           Limpe todos os registros duplicados de uma vez
                         </v-btn>
                       </v-col>
@@ -120,6 +120,10 @@
 
                       </template>
                     </v-data-table>
+                  </v-alert>
+
+                  <v-alert v-if="dadodDuplicadosInexistentes" class="mt-5" elevation="21">
+                    <h3>Não existem dados duplicados no banco</h3>
                   </v-alert>
                 </v-alert>
               </v-col>
@@ -242,7 +246,8 @@ export default {
     ],
     dialogDeleteRegistro: false,
     dialogDeleteRegistroTodos: false,
-    selectedRegistro: {}
+    selectedRegistro: {},
+    dadodDuplicadosInexistentes: false
   }),
   computed: {
     ...mapGetters(['usuarioLogado'])
@@ -273,6 +278,10 @@ export default {
           .then(response => {
             console.log(response.data)
             this.resultadoIntegridade = response.data
+
+            if (this.resultadoIntegridade.length === 0) {
+              this.dadodDuplicadosInexistentes = true
+            }
           })
           .catch(erro => console.log(erro))
       } catch (e) {
@@ -289,6 +298,7 @@ export default {
     },
 
     filtraAno (event, tipo) {
+      this.dadodDuplicadosInexistentes = false
       this.resultadoIntegridade = []
       if (event && event.target) {
         let value = event.target.value
@@ -335,6 +345,7 @@ export default {
       this.ano_verifica_inicio = ''
       this.ano_verifica_fim = ''
       this.resultadoIntegridade = []
+      this.dadodDuplicadosInexistentes = false
     },
 
     doDeleteItem () {
@@ -354,8 +365,12 @@ export default {
     },
 
     fazLimpeza () {
+      let objetoParaEnvio = {
+        ano_inicio: this.ano_verifica_inicio,
+        ano_fim: this.ano_verifica_fim
+      }
       try {
-        this.$http.get('ferramenta/corretor')
+        this.$http.post('ferramenta/corretor', objetoParaEnvio)
           .then(() => {
             this.closeDelete()
             this.dialogDeleteRegistroTodos = false

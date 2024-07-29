@@ -16,7 +16,7 @@
         <v-toolbar class="green lighten-3"
                    flat
         >
-          <!-- Título da tabela-->
+          <!-- Título da tabela e gera gráfico-->
           <v-toolbar-title>
             {{ categoria.categoria.nome }}
           </v-toolbar-title>
@@ -31,12 +31,29 @@
 
       </template>
 
+      <!-- nome do inicador-->
       <template v-slot:item.indicador="{ item }">
 
         {{ item.indicador.nome }}
 
       </template>
 
+      <!-- Add a new row for generating graphs -->
+      <template v-slot:body.append>
+        <tr>
+          <td class="text-center">
+            Gerar Gráfico<br>
+            Mensal
+          </td>
+          <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
+            <v-btn v-if="mostraBtnMes(categoria, index)" color="secondary" x-small
+                   @click="generateMonthGraph(categoria, index)">{{ month }}
+            </v-btn>
+          </td>
+        </tr>
+      </template>
+
+      <!-- chips de informação-->
       <template v-slot:item.mes_1="{ item }">
             <span v-if="item.valor && item.valor.length > 0">
                <v-chip v-if="item.indicador.meta === 1 && item.valor[0].valor !== ''"
@@ -232,13 +249,14 @@
     </v-data-table>
 
     <!-- dialog para ver gráfico-->
-    <v-dialog v-model="dialogVerGrafico" width="90%">
+    <v-dialog v-model="dialogVerGrafico" :width="leDialogGraphWidth">
       <v-card>
         <v-card-title>
-          Gráfico (Anual)
+          Gráfico ({{ garphTipo }})
         </v-card-title>
         <v-card-text>
-          <GeraGraphAno v-if="dialogVerGrafico" :dadosGraph="dadosGraph" :nomeCategoria="nomeCategoria"/>
+          <GeraGraphAno v-if="dialogVerGrafico" :dadosGraph="dadosGraph" :garphTipo="garphTipo"
+                        :lelabels="labelpie" :nomeCategoria="nomeCategoria"/>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -265,7 +283,7 @@ export default {
   components: {GeraGraphAno},
   data: () => ({
     headersDados: [
-      {text: 'Indicador', align: 'start', value: 'indicador'},
+      {text: 'Indicador', align: 'center', value: 'indicador'},
       {text: 'Janeiro', align: 'start', value: 'mes_1'},
       {text: 'Fevereiro', align: 'start', value: 'mes_2'},
       {text: 'Março', align: 'start', value: 'mes_3'},
@@ -285,7 +303,11 @@ export default {
     dialogVerGrafico: false,
     selectedCategoria: {},
     dadosGraph: [],
-    nomeCategoria: ''
+    nomeCategoria: '',
+    arrayMonthSmall: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+    garphTipo: '',
+    labelpie: [],
+    leDialogGraphWidth: '90%'
   }),
 
   props: {
@@ -400,6 +422,8 @@ export default {
 
     openGraphDialog (categoria) {
       this.selectedCategoria = categoria
+      this.garphTipo = 'Anual'
+      this.leDialogGraphWidth = '90%'
 
       // Ajustar a informação antes de passar
       let ajustes = []
@@ -424,6 +448,49 @@ export default {
       this.nomeCategoria = this.selectedCategoria.categoria.nome
 
       this.dialogVerGrafico = true
+    },
+
+    generateMonthGraph (categoria, indexMonth) {
+      this.selectedCategoria = categoria
+      this.garphTipo = 'Mensal'
+      this.leDialogGraphWidth = '50%'
+
+      let labels = []
+      let series = []
+      let mes = indexMonth + 1
+
+      for (let i = 0; i < categoria.indicadores.length; i++) {
+        labels.push(categoria.indicadores[i].indicador.nome)
+
+        for (let j = 0; j < categoria.indicadores[i].valor.length; j++) {
+          if (categoria.indicadores[i].valor[j].mes === mes) {
+            series.push(categoria.indicadores[i].valor[j].valor)
+          }
+        }
+      }
+
+      this.dadosGraph = series
+      this.labelpie = labels
+      this.nomeCategoria = this.selectedCategoria.categoria.nome
+
+      this.dialogVerGrafico = true
+    },
+
+    mostraBtnMes (categoria, indexMes) {
+      let mes = indexMes + 1
+      let labels = []
+      let series = []
+
+      for (let i = 0; i < categoria.indicadores.length; i++) {
+        labels.push(categoria.indicadores[i].indicador.nome)
+
+        for (let j = 0; j < categoria.indicadores[i].valor.length; j++) {
+          if (categoria.indicadores[i].valor[j].mes === mes) {
+            series.push(categoria.indicadores[i].valor[j].valor)
+          }
+        }
+      }
+      return series.length > 0
     }
   }
 }
