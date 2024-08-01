@@ -5,9 +5,32 @@ const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.3.1',
+    release: '177',
+    latest: true,
+    data: '01/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Iniciada a implementação do relatório de pendências',
+      'Corrigido o bug que mantinha o estado do botão de colapsar/expandir categorias, ao mudar de seção (na visão em categorias)',
+      'Correção de bugs'
+    ]
+  },
+  {
+    id: '1.3.0',
+    release: '170',
+    latest: false,
+    data: '01/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Agora é possivel observar quantos dados estão faltosos na visão de categorias. (ainda não coerente com periodicidade de lançamento)',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.2.9',
     release: '152',
-    latest: true,
+    latest: false,
     data: '01/08/2024',
     detalhesVisiveis: false,
     detalhes: [

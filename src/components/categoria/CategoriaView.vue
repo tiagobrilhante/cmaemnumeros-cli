@@ -1,8 +1,7 @@
 <template>
   <div>
-
     <v-alert v-if="meusDados.length > 0" color="blue lighten-2">
-      <v-btn :color="colorTextBtn" small @click="expandeTodes">{{ textoBtnExpandirOcultar }}</v-btn>
+      <v-btn :color="colorTextBtn" :loading = "loaderBtnExpandir" small @click="expandeTodes">{{ textoBtnExpandirOcultar }}</v-btn>
     </v-alert>
 
     <v-alert v-else color="yellow lighten-2">
@@ -24,10 +23,10 @@
           <h3>
             <v-icon class="mr-5" @click="categoria.expanded = true">mdi-plus</v-icon>
             {{ categoria.categoria.nome }}
-            <v-icon class="ml-10" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
+            <v-icon class="ml-5" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
           </h3>
         </v-col>
-        <v-col cols="2">
+        <v-col cols="1">
 
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
@@ -41,6 +40,24 @@
             <span>Indicadores</span>
           </v-tooltip>
           {{ categoria.indicadores.length }}
+
+        </v-col>
+        <v-col cols="1">
+          <v-tooltip v-if="retornaDadosFaltosos(categoria) !== 'Nenhum dado faltoso'" top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                v-bind="attrs"
+                v-on="on"
+              >
+                mdi-alert
+              </v-icon>
+            </template>
+            <span>Dados Previstos / Dados Faltosos</span>
+          </v-tooltip>
+
+          <span v-if="retornaDadosFaltosos(categoria) !== 'Nenhum dado faltoso'">{{
+              retornaDadosFaltosos(categoria)
+            }}</span>
 
         </v-col>
         <v-col class="text-right" cols="2">
@@ -505,7 +522,8 @@ export default {
     dialogDetailsTotal: false,
     tipoDeTotalVigente: '',
     textoBtnExpandirOcultar: 'Expandir Todos',
-    colorTextBtn: 'primary'
+    colorTextBtn: 'primary',
+    loaderBtnExpandir: false
   }),
 
   props: {
@@ -534,6 +552,15 @@ export default {
         // Chama o método de busca sempre que a propriedade selectedSecao mudar
         this.pegaPorCategoria()
       }
+    },
+    meusDados: {
+      handler (newVal) {
+        if (newVal.length === 0) {
+          this.textoBtnExpandirOcultar = 'Expandir Todos'
+          this.colorTextBtn = 'primary'
+        }
+      },
+      deep: true
     }
   },
 
@@ -821,6 +848,7 @@ export default {
     },
 
     expandeTodes () {
+      this.loaderBtnExpandir = true
       if (this.textoBtnExpandirOcultar === 'Expandir Todos') {
         for (let i = 0; i < this.meusDados.length; i++) {
           this.meusDados[i].expanded = true
@@ -828,6 +856,7 @@ export default {
 
         this.textoBtnExpandirOcultar = 'Colapsar Todos'
         this.colorTextBtn = 'warning'
+        this.loaderBtnExpandir = false
       } else {
         for (let i = 0; i < this.meusDados.length; i++) {
           this.meusDados[i].expanded = false
@@ -835,6 +864,35 @@ export default {
 
         this.textoBtnExpandirOcultar = 'Expandir Todos'
         this.colorTextBtn = 'primary'
+        this.loaderBtnExpandir = false
+      }
+    },
+
+    getCurrentMonth () {
+      const date = new Date()
+      const month = date.getMonth() + 1 // getMonth() returns 0-11, so add 1
+      return month.toString().padStart(2) // Ensure two digits
+    },
+
+    retornaDadosFaltosos (categoria) {
+      const currentMonth = new Date().getMonth() // Get current month
+      let missingCount = 0
+      let totalExpected = 0
+
+      for (let i = 0; i < categoria.indicadores.length; i++) {
+        for (let month = 1; month <= currentMonth; month++) {
+          totalExpected++
+          const hasValue = categoria.indicadores[i].valor.some(v => v.mes === month)
+          if (!hasValue) {
+            missingCount++
+          }
+        }
+      }
+
+      if (missingCount === 0) {
+        return 'Nenhum dado faltoso'
+      } else {
+        return `${totalExpected} / ${missingCount}`
       }
     }
   }

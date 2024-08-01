@@ -685,6 +685,7 @@ export default {
     },
 
     pegaIndicadoresSecao (secao) {
+      this.selectedSecao = {}
       this.awaitData = true
       this.getIndicadoresVigentes(secao.id, this.mesCorrente, this.anoCorrente, 'consulta').then(() => {
         // Após a atualização dos dados, `tabelaDados` será recalculado automaticamente

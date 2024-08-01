@@ -6,6 +6,8 @@
     <v-container fluid>
       <v-row>
         <v-col>
+
+          <!-- header -->
           <v-alert elevation="21">
             <h2>
               <v-icon
@@ -17,6 +19,7 @@
             </h2>
           </v-alert>
 
+          <!-- análise de integridade do banco-->
           <v-alert elevation="21">
             <h3>Análise de integridade do Banco de Dados</h3>
             <v-row>
@@ -129,6 +132,8 @@
               </v-col>
             </v-row>
           </v-alert>
+
+          <RelatorioPendencias class="mt-0"></RelatorioPendencias>
         </v-col>
       </v-row>
     </v-container>
@@ -188,6 +193,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
   </v-main>
 </template>
 
@@ -196,11 +202,12 @@ import {mapGetters} from 'vuex'
 import config from '../../http/config'
 // import moment from 'moment-timezone'
 import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
+import RelatorioPendencias from '../../components/areaAdministrativa/RelatorioPendencias.vue'
 
 export default {
   name: 'ferramentasAdm',
   mixins: [logoutMixin],
-  components: {BarraNavegacao},
+  components: {BarraNavegacao, RelatorioPendencias},
   data: () => ({
     configSis: config,
     ano_verifica_inicio: '',
