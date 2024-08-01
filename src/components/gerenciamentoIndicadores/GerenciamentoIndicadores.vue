@@ -14,7 +14,7 @@
         <v-row>
 
           <!--nome-->
-          <v-col cols="9">
+          <v-col cols="6">
             <h2>
               <v-icon
                 class="mr-4"
@@ -27,7 +27,8 @@
           </v-col>
 
           <!-- btn add novo indicador-->
-          <v-col class="text-right" cols="3">
+          <v-col class="text-right" cols="6">
+            <v-btn class="success" @click="dialogGerenciaCategoria = true">Gerenciar Categorias</v-btn>
             <v-btn class="primary" @click="openDialogAddEditIndicador('add')">Adicionar Novo Indicador</v-btn>
           </v-col>
 
@@ -46,7 +47,8 @@
                    @click="pegaIndicadoresSecao('Todos')"> Todos
             </v-btn>
 
-            <v-btn v-for="secao in secoes" :key="secao.id" :color="ajustaCorBtn('secao', secao.sigla)" class="mr-3"
+            <v-btn v-for="secao in secoes" v-if="secoes.length > 0" :key="secao.id"
+                   :color="ajustaCorBtn('secao', secao.sigla)" class="mr-3"
                    @click="pegaIndicadoresSecao(secao)"> {{ secao.sigla }}
             </v-btn>
           </v-col>
@@ -55,11 +57,16 @@
 
       <!--DataTable-->
       <v-data-table
+        :footer-props="{
+          'items-per-page-options': [50, 100, 200, -1]
+        }"
         :headers="headers"
         :items="indicadores"
+        :loading="indicadores.length === 0"
         :search="search"
         class="elevation-21 mt-4"
-        sort-by="categoria.secao.sigla"
+        group-by="categoria.nome"
+        :items-per-page="porPag"
       >
         <!-- template para titulo e search-->
         <template v-slot:top>
@@ -67,7 +74,7 @@
             flat
           >
             <!-- Título da tabela-->
-            <v-toolbar-title>Tabela de Indicadores Cadastradas - {{ selectedSecao }}</v-toolbar-title>
+            <v-toolbar-title>Tabela de Indicadores Cadastrados - {{ selectedSecao }}</v-toolbar-title>
 
             <v-divider
               class="mx-4"
@@ -93,7 +100,9 @@
 
         <!--Template de categoria -->
         <template v-slot:item.categoria.nome="{ item }">
-          {{ item.categoria.secao.sigla }} - {{ item.categoria.nome }}
+          <span v-if="item.categoria.secao !== null && item.categoria.secao !== undefined">{{
+              item.categoria.secao.sigla
+            }} - {{ item.categoria.nome }}</span> <span v-else>-</span>
         </template>
 
         <!--Template de tendencia -->
@@ -197,7 +206,7 @@
 
     <!-- melhorar no edit não esta carregando s seção-->
     <!--Dialog para add/edit indicador-->
-    <v-dialog v-model="dialogAddEditIndicadores" max-width="70%" persistent>
+    <v-dialog v-model="dialogAddEditIndicadores" max-width="80%" persistent>
       <v-card>
         <v-form @submit.prevent="efetuarCadastroEditIndicador">
 
@@ -490,6 +499,25 @@
       </v-card>
     </v-dialog>
 
+    <!--Dialog para gerenciar categorias-->
+    <v-dialog v-model="dialogGerenciaCategoria" max-width="85%">
+      <v-card>
+        <v-card-title class="justify-center" primary-title>
+          Gerenciamento de Categorias
+        </v-card-title>
+        <v-card-text>
+          <GerenciamentoCategorias v-if="dialogGerenciaCategoria"
+                                   @resetaSecao="buscaAjuste($event)"></GerenciamentoCategorias>
+        </v-card-text>
+        <v-card-actions class="pb-5">
+          <v-spacer></v-spacer>
+          <v-btn color="grey lighten-1" @click="dialogGerenciaCategoria = false">Fechar</v-btn>
+          <span class="pl-5 pr-5"></span>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </v-main>
 </template>
 
@@ -581,7 +609,9 @@ export default {
         sortable: false
       }
     ],
-    selectedSecao: 'Todos'
+    selectedSecao: 'Todos',
+    dialogGerenciaCategoria: false,
+    porPag: 50
   }),
   computed: {
     ...mapGetters(['usuarioLogado'])
@@ -637,9 +667,15 @@ export default {
     },
 
     async getCategoriaPorSecao () {
+      let tratamentoEnvio = ''
+      if (this.usuarioLogado.tipo === 'Administrador' || this.usuarioLogado.tipo === 'Auditor') {
+        tratamentoEnvio = this.editedIndicador.secao_id.id
+      } else {
+        tratamentoEnvio = this.editedIndicador.secao_id
+      }
       if (this.editedIndicador.secao_id) {
         try {
-          const response = await this.$http.get('categorias/porsecao/' + this.editedIndicador.secao_id.id)
+          const response = await this.$http.get('categorias/porsecao/' + tratamentoEnvio)
           this.categoriasPorSecao = response.data
         } catch (error) {
           console.error('Erro ao buscar categorias por seção:', error)

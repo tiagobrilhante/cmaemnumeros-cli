@@ -36,6 +36,7 @@
       :items="categorias"
       :search="search"
       class="elevation-21 mt-4"
+      group-by="secao.sigla"
       sort-by="nome"
     >
       <!-- template para titulo e search-->
@@ -68,6 +69,10 @@
 
       </template>
 
+      <!--Template para ativo -->
+      <template v-slot:item.ativo="{ item }">
+        <span v-if="item.ativo">Sim</span><span v-else>Não</span>
+      </template>
       <!--Template de botões para editar, excluir -->
       <template v-slot:item.actions="{ item }">
 
@@ -108,7 +113,7 @@
     </v-data-table>
 
     <!--Dialog para add/edit Categoria-->
-    <v-dialog v-model="dialogAddEditCategoria" max-width="50%" persistent>
+    <v-dialog v-model="dialogAddEditCategoria" max-width="70%" persistent>
       <v-card>
         <v-form @submit.prevent="efetuarCadastroEditCategoria">
 
@@ -117,10 +122,12 @@
           </v-card-title>
 
           <v-card-text>
-            <!--Nome-->
-            <v-row>
+            <!--Nome e seção-->
+            <v-row dense>
+
+              <!-- nome-->
               <v-col>
-                <span class="pl-3">Nome da Categoria(Obrigatório)</span>
+                <span class="pl-3">Nome da Categoria (Obrigatório)</span>
                 <v-text-field
                   v-model="editedCategoria.nome"
                   class="ml-3"
@@ -130,10 +137,8 @@
                   solo
                 ></v-text-field>
               </v-col>
-            </v-row>
 
-            <!--Secao-->
-            <v-row>
+              <!-- seção-->
               <v-col>
                 <span class="pl-3">Seção (Obrigatório)</span>
                 <v-autocomplete
@@ -149,6 +154,127 @@
                   rounded
                   solo
                 ></v-autocomplete>
+              </v-col>
+
+            </v-row>
+
+            <!--Natureza do dado e periodicidade-->
+            <v-row dense>
+
+              <!-- natureza-->
+              <v-col>
+                <span class="pl-3">Natureza do dado a ser armazenado (Obrigatório)</span>
+                <v-autocomplete
+                  v-model="editedCategoria.natureza"
+                  :items="naturezas"
+                  class="ml-3"
+                  dense
+                  label="Selecione a natureza do dado"
+                  name="netureza"
+                  rounded
+                  solo
+                ></v-autocomplete>
+              </v-col>
+
+              <!-- periodicidade-->
+              <v-col>
+                <span class="pl-3">Periodicidade do lançamento (Obrigatório)</span>
+                <v-select
+                  v-model="editedCategoria.periodicidade"
+                  :items="periodicidadeOptions"
+                  class="ml-3"
+                  dense
+                  label="Selecione a periodicidade do lançamento"
+                  name="secao"
+                  rounded
+                  solo
+                ></v-select>
+              </v-col>
+            </v-row>
+
+            <!-- status-->
+            <v-row>
+              <v-col>
+                <v-alert color="blue lighten-3" dense rounded="xxl">
+
+                  <v-row>
+                    <v-col><h4>Selecione se a categoria está ativa:</h4>
+                      <v-checkbox
+                        hide-details
+                        v-model="editedCategoria.ativo"
+                        label="Ativo"
+                      ></v-checkbox>
+                    </v-col>
+                    <v-col class="mt-4 mb-auto">
+                      <v-alert dense elevation="12">
+                        Caso desmarque essa opção, a categoria não será exibida no formulário de cadastramento de
+                        indicadores.
+                      </v-alert>
+                    </v-col>
+                  </v-row>
+
+                </v-alert>
+              </v-col>
+            </v-row>
+
+            <!--Gerenciamento de total-->
+            <v-row dense>
+              <v-col>
+                <v-alert color="green lighten-3">
+                  <h3>Mapeamento de Total</h3>
+
+                  <!-- mapeamento total anual e mensal-->
+                  <v-row dense>
+
+                    <!-- mapeamento total anual-->
+                    <v-col>
+                      <span class="pl-3">Anual</span>
+                      <v-autocomplete
+                        v-model="editedCategoria.mapeamento_total_anual"
+                        :items="tipos_mapeamento_total"
+                        class="ml-3"
+                        dense
+                        label="Selecione a forma de mapeamento do total (Anual)"
+                        name="mapeamento_total_anual"
+                        rounded
+                        solo
+                      ></v-autocomplete>
+                    </v-col>
+
+                    <!-- mapeamento total mensal-->
+                    <v-col>
+                      <span class="pl-3">Mensal</span>
+                      <v-autocomplete
+                        v-model="editedCategoria.mapeamento_total_mensal"
+                        :items="tipos_mapeamento_total"
+                        class="ml-3"
+                        dense
+                        label="Selecione a forma de mapeamento do total (Mensal)"
+                        name="mapeamento_total_mensal"
+                        rounded
+                        solo
+                      ></v-autocomplete>
+                    </v-col>
+
+                  </v-row>
+
+                  <!-- explicação-->
+                  <v-alert>
+                    <p>O mapeamento de Totais refletem como os dados serão acumulados ao tongo do tempo:</p>
+                    <img :src="require('@/assets/img/explicatotal.png')" alt="Logo CMA" width="100%">
+                    <p>O mapeamento de totais são divididos da seguinte forma:</p>
+                    <ul>
+                      <li>Somatório: O resultado total será a soma de todos os lançamentos (na linha ou na coluna)</li>
+                      <li>Média: O resultado total será a soma de todos os lançamentos dividido pelo número de
+                        lançamentos (na linha ou na coluna)
+                      </li>
+                      <li>Máximo: O resultado total será o maior valor existente (na linha ou na coluna)</li>
+                      <li>Mínimo: O resultado total será o menor valor existente (na linha ou na coluna)</li>
+                    </ul>
+                  </v-alert>
+
+                </v-alert>
+
               </v-col>
             </v-row>
 
@@ -226,6 +352,31 @@ export default {
         value: 'secao.sigla'
       },
       {
+        text: 'Natureza do Dado',
+        align: 'start',
+        value: 'natureza'
+      },
+      {
+        text: 'Periodicidade',
+        align: 'start',
+        value: 'periodicidade'
+      },
+      {
+        text: 'Total (M)',
+        align: 'start',
+        value: 'mapeamento_total_mensal'
+      },
+      {
+        text: 'Total (A)',
+        align: 'start',
+        value: 'mapeamento_total_anual'
+      },
+      {
+        text: 'Ativo?',
+        align: 'start',
+        value: 'ativo'
+      },
+      {
         text: 'Actions',
         value: 'actions',
         align: 'center',
@@ -239,16 +390,45 @@ export default {
     defaultCategoria: {
       'nome': '',
       'secao_id': '',
-      'secao': {}
+      'natureza': '',
+      'secao': {},
+      'periodicidade': '',
+      'mapeamento_total_anual': '',
+      'mapeamento_total_mensal': '',
+      'ativo': true
     },
     editedCategoria: {
       'nome': '',
       'secao_id': '',
-      'secao': {}
+      'natureza': '',
+      'secao': {},
+      'periodicidade': '',
+      'mapeamento_total_anual': '',
+      'mapeamento_total_mensal': '',
+      'ativo': true
     },
     categorias: [],
     secoes: [],
-    editedIndex: -1
+    editedIndex: -1,
+    /*
+    - Pessoas               ### INT
+    - Quantidade (Inteiro)  ### INT
+    - Quantidade (Decimal)  ### FLOAT
+    - Peso (Kg)             ### FLOAT
+    - Peso (Ton)            ### FLOAT
+    - Distância (Km)        ### FLOAT
+    - Distância (Metros)    ### FLOAT
+    - Tempo (Minutos)       ### FLOAT
+    - Tempo (Horas)         ### FLOAT
+    - Tempo (Dias)          ### FLOAT
+    - Tempo (Meses)         ### FLOAT
+    - Tempo (Anos)          ### FLOAT
+    - Monetário (R$)        ### FLOAT
+    - Porcentagem (%)       ### FLOAT
+     */
+    naturezas: ['Pessoas', 'Quantidade (Inteiro)', 'Quantidade (Decimal)', 'Peso (Kg)', 'Peso (Ton)', 'Distância (Km)', 'Distância (Metros)', 'Tempo (Minutos)', 'Tempo (Horas)', 'Tempo (Dias)', 'Tempo (Meses)', 'Tempo (Anos)', 'Monetário (R$)', 'Porcentagem (%)'],
+    periodicidadeOptions: ['Mensal', 'Anual', 'Eventual'],
+    tipos_mapeamento_total: ['Somatório', 'Média', 'Máximo', 'Mínimo']
   }),
   computed: {
     ...mapGetters(['usuarioLogado'])
@@ -308,7 +488,7 @@ export default {
     openDialogAddEditCategoria (tipo, item) {
       this.tipoAcao = tipo
       if (tipo === 'add') {
-        this.editedCategoria = Object.assign({}, this.defaultUser)
+        this.editedCategoria = Object.assign({}, this.defaultCategoria)
         if (this.usuarioLogado.tipo === 'Usuário') {
           this.editedCategoria.secao_id = this.usuarioLogado.secao_id
           this.somenteLeitura = true
@@ -340,6 +520,11 @@ export default {
         let objetoParaEnvio = {}
         objetoParaEnvio['nome'] = this.editedCategoria.nome
         objetoParaEnvio['secao_id'] = this.editedCategoria.secao_id
+        objetoParaEnvio['natureza'] = this.editedCategoria.natureza
+        objetoParaEnvio['periodicidade'] = this.editedCategoria.periodicidade
+        objetoParaEnvio['mapeamento_total_anual'] = this.editedCategoria.mapeamento_total_anual
+        objetoParaEnvio['mapeamento_total_mensal'] = this.editedCategoria.mapeamento_total_mensal
+        objetoParaEnvio['ativo'] = this.editedCategoria.ativo
 
         if (this.tipoAcao === 'add') {
           // aqui eu vou adicionar o usuario
@@ -399,6 +584,20 @@ export default {
       }
       if (this.editedCategoria.secao_id === '') {
         msgRetornoErro += '<li>Selecione uma seção.</li>'
+        contador++
+      }
+      if (this.editedCategoria.natureza === '') {
+        msgRetornoErro += '<li>Selecione a natureza do dado a ser armazenado.</li>'
+        contador++
+      }
+
+      if (this.editedCategoria.mapeamento_total_anual === '') {
+        msgRetornoErro += '<li>Selecione o Mapeamento de Total Anual.</li>'
+        contador++
+      }
+
+      if (this.editedCategoria.mapeamento_total_mensal === '') {
+        msgRetornoErro += '<li>Selecione o Mapeamento de Total Mensal.</li>'
         contador++
       }
       msgRetornoErro = '<ul>' + msgRetornoErro + '</ul>'

@@ -1,6 +1,6 @@
-# totem-cli
+# cmaemnumeros-cli
 
-> Cliente para totem de informações em VUE.JS
+> Cliente para o CMA em Números em VUE.JS
 
 ## Build Setup
 

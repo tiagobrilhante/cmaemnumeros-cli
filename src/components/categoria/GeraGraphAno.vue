@@ -109,7 +109,26 @@ export default {
           }
         }
       }],
-      meuNome: ''
+      meuNome: '',
+      plotOptions: {
+        pie: {
+          dataLabels: {
+            offset: -5,
+            minAngleToShowLabel: 10,
+            formatter: function (val, opts) {
+              const absoluteValue = opts.w.config.series[opts.seriesIndex]
+              return opts.w.globals.labels[opts.seriesIndex] + ': ' + val.toFixed(2) + '% (' + absoluteValue + ')'
+            }
+          }
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: function (val, opts) {
+          const absoluteValue = opts.w.config.series[opts.seriesIndex]
+          return opts.w.globals.labels[opts.seriesIndex] + ': ' + val.toFixed(2) + '% (' + absoluteValue + ')'
+        }
+      }
     }
   }),
   props: {

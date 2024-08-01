@@ -208,6 +208,11 @@ export default {
     resultadoIntegridade: [],
     headersIntegridade: [
       {
+        text: 'Id',
+        align: 'start',
+        value: 'id'
+      },
+      {
         text: 'Mês',
         align: 'start',
         value: 'mes'
@@ -236,6 +241,16 @@ export default {
         text: 'Seção responsável',
         align: 'start',
         value: 'indicador.categoria.secao.sigla'
+      },
+      {
+        text: 'Criado em',
+        align: 'start',
+        value: 'created_at'
+      },
+      {
+        text: 'Alterado em',
+        align: 'start',
+        value: 'updated_at'
       },
       {
         text: 'Actions',
@@ -276,9 +291,7 @@ export default {
       try {
         this.$http.post('ferramenta/integridade', objetoParaEnvio)
           .then(response => {
-            console.log(response.data)
             this.resultadoIntegridade = response.data
-
             if (this.resultadoIntegridade.length === 0) {
               this.dadodDuplicadosInexistentes = true
             }

@@ -127,7 +127,7 @@
             <!-- nesse caso eu pego a categoria-->
             <v-row v-if="selectedSecao.categoria.length > 0">
 
-              <v-col v-for="categoria in selectedSecao.categoria" :key="categoria.id" cols="3">
+              <v-col v-for="categoria in selectedSecao.categoria" :key="categoria.id" cols="3" v-if="categoria.ativo">
                 <v-card class="pl-2 pr-2 pb-1" color="blue lighten-4" elevation="11">
                   <h4 class="mb-2">{{ categoria.nome }}</h4>
 
@@ -261,6 +261,7 @@
 
           </v-alert>
 
+          <!-- pesquisa de indicador-->
           <v-alert class="pt-0 pb-0" dense elevation="21">
             <PesquisaIndicador/>
           </v-alert>
@@ -283,12 +284,13 @@
           <v-alert v-if="tabelaDados.length !== 0" color="white">
             <h2>Dados Acumulados - {{ selectedSecao.sigla }}</h2>
 
+            <!-- seletor de visualização-->
             <v-row class="mt-2 mb-2">
               <v-col>
-                <v-btn :color="corGeral" @click="seletorVisualizacao('geral')">Visualização Geral</v-btn>
                 <v-btn :color="corCategoria" class="ml-3" @click="seletorVisualizacao('categoria')">Visualização Por
                   Categoria
                 </v-btn>
+                <v-btn :color="corGeral" @click="seletorVisualizacao('geral')">Visualização Geral</v-btn>
               </v-col>
             </v-row>
 
@@ -565,11 +567,11 @@ export default {
     search: '',
     mostraForm: true,
     mostraTabela: false,
-    visualizaGeral: true,
-    visualizaCategoria: false,
+    visualizaGeral: false,
+    visualizaCategoria: true,
     secaoCorrente: '',
-    corGeral: 'secondary',
-    corCategoria: 'warning',
+    corGeral: 'warning',
+    corCategoria: 'secondary',
     loadingBtn: false
   }),
   computed: {
@@ -654,7 +656,7 @@ export default {
           secao_id: secaoId
         }
         try {
-          this.$http.post('indicadores/secao', objetoParaEnvio)
+          this.$http.post('indicadores/secao/refinado', objetoParaEnvio)
             .then(response => {
               this.selectedSecao = response.data
               this.awaitData = false

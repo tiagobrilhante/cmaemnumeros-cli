@@ -1,252 +1,353 @@
 <template>
   <div>
-    <v-data-table
-      v-for="categoria in meusDados"
-      :key="categoria.categoria.id"
-      :headers="headersDados"
-      :items="categoria.indicadores"
-      :items-per-page="-1"
-      class="elevation-21 mt-4"
-      disable-pagination
-      hide-default-footer
-    >
 
-      <!-- template para titulo e search-->
-      <template v-slot:top>
-        <v-toolbar class="green lighten-3"
-                   flat
-        >
-          <!-- Título da tabela e gera gráfico-->
-          <v-toolbar-title>
+    <v-alert v-if="meusDados.length > 0" color="blue lighten-2">
+      <v-btn :color="colorTextBtn" small @click="expandeTodes">{{ textoBtnExpandirOcultar }}</v-btn>
+    </v-alert>
+
+    <v-alert v-else color="yellow lighten-2">
+      <v-progress-circular
+        class="mr-10"
+        color="primary"
+        indeterminate
+      ></v-progress-circular>
+      Aguarde o carregamento de dados...
+    </v-alert>
+
+    <!-- expandir e colapsar-->
+    <v-alert v-for="categoria in meusDados" v-if="categoria.indicadores.length > 0 && categoria.categoria.ativo"
+             :key="categoria.categoria.id" color="green lighten-2"
+             elevation="12">
+
+      <v-row v-if="categoria.expanded === false">
+        <v-col>
+          <h3>
+            <v-icon class="mr-5" @click="categoria.expanded = true">mdi-plus</v-icon>
             {{ categoria.categoria.nome }}
-          </v-toolbar-title>
+            <v-icon class="ml-10" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
+          </h3>
+        </v-col>
+        <v-col cols="2">
 
-          <v-row>
-            <v-col class="text-right">
-              <v-btn class="primary" small @click="openGraphDialog(categoria)">Gerar Gráfico</v-btn>
-            </v-col>
-          </v-row>
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                v-bind="attrs"
+                v-on="on"
+              >
+                mdi-list-box-outline
+              </v-icon>
+            </template>
+            <span>Indicadores</span>
+          </v-tooltip>
+          {{ categoria.indicadores.length }}
 
-        </v-toolbar>
+        </v-col>
+        <v-col class="text-right" cols="2">
+          <v-btn class="primary" small @click="openGraphDialog(categoria)">
+            <v-icon class="mr-4" small>mdi-chart-bar</v-icon>
+            Gerar Gráfico Anual
+          </v-btn>
+        </v-col>
+      </v-row>
 
-      </template>
+      <v-data-table
+        v-if="categoria.indicadores.length > 0 && categoria.categoria.ativo"
+        v-show="categoria.expanded"
+        :headers="headersDados"
+        :items="categoria.indicadores"
+        :items-per-page="-1"
+        class="elevation-21"
+        disable-pagination
+        hide-default-footer
+      >
 
-      <!-- nome do inicador-->
-      <template v-slot:item.indicador="{ item }">
+        <!-- template para titulo e search-->
+        <template v-slot:top>
+          <v-toolbar class="green lighten-3"
+                     flat
+          >
+            <!-- Título da tabela e gera gráfico-->
+            <v-toolbar-title>
+              <v-icon class="mr-5" @click="categoria.expanded = false">mdi-minus</v-icon>
+              {{ categoria.categoria.nome }}
+              <v-icon class="ml-10" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
+            </v-toolbar-title>
 
-        {{ item.indicador.nome }}
+            <v-row>
+              <v-col class="text-right">
+                <v-btn class="primary" small @click="openGraphDialog(categoria)">
+                  <v-icon class="mr-4" small>mdi-chart-bar</v-icon>
+                  Gerar Gráfico Anual
+                </v-btn>
+              </v-col>
+            </v-row>
 
-      </template>
+          </v-toolbar>
 
-      <!-- Add a new row for generating graphs -->
-      <template v-slot:body.append>
-        <tr>
-          <td class="text-center">
-            Gerar Gráfico<br>
-            Mensal
+        </template>
+
+        <!-- nome do inicador-->
+        <template v-slot:item.indicador="{ item }">
+
+          {{ item.indicador.nome }}
+          <v-icon small @click="openDialogDetailsIndicador(item.indicador)">mdi-magnify</v-icon>
+
+        </template>
+
+        <!-- linhas para totais mensais e gerar gráficos -->
+        <template v-if="categoria.indicadores.length > 1" v-slot:body.append>
+          <tr class="cyan lighten-2">
+            <td class="text-center">
+              Total (M)
+              <v-icon small @click="handleTotalAnoClick(categoria, 'mes')">mdi-information</v-icon>
+            </td>
+            <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
+              {{ pegaSomaMes(categoria, index + 1) }}
+            </td>
+            <td class="text-center">
+              -
+            </td>
+          </tr>
+          <tr class="yellow lighten-4">
+            <td class="text-center">
+              Gerar Gráfico<br>
+              Mensal
+            </td>
+            <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
+              <v-btn v-if="mostraBtnMes(categoria, index)" color="secondary" x-small
+                     @click="generateMonthGraph(categoria, index)">{{ month }}
+              </v-btn>
+            </td>
+            <td class="text-center">
+              <v-btn color="secondary" x-small @click="generateMonthGraph(categoria, 99)">Geral
+              </v-btn>
+            </td>
+          </tr>
+        </template>
+
+        <!-- chips de informação-->
+
+        <!-- Janeiro-->
+        <template v-slot:item.mes_1="{ item }">
+        <span v-if="item.valor && retornaValorCorreto(item.valor, 1) !== undefined">
+               <v-chip v-if="item.indicador.meta === 1"
+                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 1))"
+               >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 1)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 1)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 1) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 1) }}</span>
+            </span>
+          <span v-else class="text-center">-</span>
+        </template>
+
+        <!-- Fevereiro-->
+        <template v-slot:item.mes_2="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 2) !== undefined">
+               <v-chip v-if="item.indicador.meta === 1"
+                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 2))"
+               >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 2)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 2)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 2) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 2) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Março-->
+        <template v-slot:item.mes_3="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 3) !== undefined">
+               <v-chip v-if="item.indicador.meta === 1"
+                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 3))"
+               >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 3)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 3)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 3) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 3) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Abril-->
+        <template v-slot:item.mes_4="{ item }">
+            <span v-if="item.valor  && retornaValorCorreto(item.valor, 4) !== undefined">
+              <v-chip v-if="item.indicador.meta === 1"
+                      :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 4))"
+              >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 4)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 4)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 4) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 4) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Maio-->
+        <template v-slot:item.mes_5="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 5) !== undefined">
+               <v-chip v-if="item.indicador.meta === 1"
+                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 5))"
+               >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 5)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 5)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 5) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 5) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Junho-->
+        <template v-slot:item.mes_6="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 6) !== undefined">
+               <v-chip v-if="item.indicador.meta === 1"
+                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 6))"
+               >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 6)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 6)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 6) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 6) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Julho-->
+        <template v-slot:item.mes_7="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 7) !== undefined">
+              <v-chip v-if="item.indicador.meta === 1"
+                      :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 7))"
+              >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 7)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 7)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 7) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 7) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Agosto-->
+        <template v-slot:item.mes_8="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 8) !== undefined">
+               <v-chip v-if="item.indicador.meta === 1"
+                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 8))"
+               >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 8)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 8)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 8) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 8) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Setembro-->
+        <template v-slot:item.mes_9="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 9) !== undefined">
+              <v-chip v-if="item.indicador.meta === 1"
+                      :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 9))"
+              >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 9)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 9)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 9) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 9) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Outubro-->
+        <template v-slot:item.mes_10="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 10) !== undefined">
+               <v-chip v-if="item.indicador.meta === 1"
+                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 10))"
+               >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 10)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 10)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 10) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 10) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Novembro-->
+        <template v-slot:item.mes_11="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 11) !== undefined">
+               <v-chip v-if="item.indicador.meta === 1"
+                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 11))"
+               >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 11)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 11)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 11) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 11) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- Dezembro-->
+        <template v-slot:item.mes_12="{ item }">
+            <span v-if="item.valor && retornaValorCorreto(item.valor, 12) !== undefined">
+               <v-chip v-if="item.indicador.meta === 1"
+                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 12))"
+               >
+                  <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 12)) === 'red'"
+                        class="white--text">{{
+                      retornaValorCorreto(item.valor, 12)
+                    }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 12) }}</span>
+            </v-chip>
+              <span v-else>{{ retornaValorCorreto(item.valor, 12) }}</span>
+            </span>
+          <span v-else>-</span>
+        </template>
+
+        <!-- total-->
+        <template v-slot:item.total_ano="{ item }">
+
+          <td :class="getStatusClass('Active')" class="text-center">
+            {{ getTotalAno(item, categoria) }}
           </td>
-          <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
-            <v-btn v-if="mostraBtnMes(categoria, index)" color="secondary" x-small
-                   @click="generateMonthGraph(categoria, index)">{{ month }}
-            </v-btn>
-          </td>
-        </tr>
-      </template>
+        </template>
 
-      <!-- chips de informação-->
-      <template v-slot:item.mes_1="{ item }">
-            <span v-if="item.valor && item.valor.length > 0">
-               <v-chip v-if="item.indicador.meta === 1 && item.valor[0].valor !== ''"
-                       :color="getColorForIndicatorTable(item.indicador, item.valor[0].valor)"
-               >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[0].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[0].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[0].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[0].valor }}</span>
-            </span>
-        <span v-else class="text-center">-</span>
-      </template>
+        <template v-slot:header.total_ano="{ header }">
+          <v-icon small @click="handleTotalAnoClick(categoria, 'ano')">mdi-information</v-icon>
+          {{ header.text }}
+        </template>
 
-      <template v-slot:item.mes_2="{ item }">
-            <span v-if="item.valor && item.valor.length > 1">
-               <v-chip v-if="item.indicador.meta === 1 && item.valor[1].valor !== ''"
-                       :color="getColorForIndicatorTable(item.indicador, item.valor[1].valor)"
-               >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[1].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[1].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[1].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[1].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
+      </v-data-table>
 
-      <template v-slot:item.mes_3="{ item }">
-            <span v-if="item.valor && item.valor.length > 2">
-               <v-chip v-if="item.indicador.meta === 1 && item.valor[2].valor !== ''"
-                       :color="getColorForIndicatorTable(item.indicador, item.valor[2].valor)"
-               >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[2].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[2].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[2].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[2].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-      <template v-slot:item.mes_4="{ item }">
-            <span v-if="item.valor && item.valor.length > 3">
-              <v-chip v-if="item.indicador.meta === 1 && item.valor[3].valor !== ''"
-                      :color="getColorForIndicatorTable(item.indicador, item.valor[3].valor)"
-              >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[3].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[3].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[3].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[3].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-      <template v-slot:item.mes_5="{ item }">
-            <span v-if="item.valor && item.valor.length > 4">
-               <v-chip v-if="item.indicador.meta === 1 && item.valor[4].valor !== ''"
-                       :color="getColorForIndicatorTable(item.indicador, item.valor[4].valor)"
-               >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[4].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[4].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[4].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[4].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-      <template v-slot:item.mes_6="{ item }">
-            <span v-if="item.valor && item.valor.length > 5">
-               <v-chip v-if="item.indicador.meta === 1 && item.valor[5].valor !== ''"
-                       :color="getColorForIndicatorTable(item.indicador, item.valor[5].valor)"
-               >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[5].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[5].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[5].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[5].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-      <template v-slot:item.mes_7="{ item }">
-            <span v-if="item.valor && item.valor.length > 6">
-              <v-chip v-if="item.indicador.meta === 1 && item.valor[6].valor !== ''"
-                      :color="getColorForIndicatorTable(item.indicador, item.valor[6].valor)"
-              >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[6].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[6].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[6].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[6].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-      <template v-slot:item.mes_8="{ item }">
-            <span v-if="item.valor && item.valor.length > 7">
-               <v-chip v-if="item.indicador.meta === 1 && item.valor[7].valor !== ''"
-                       :color="getColorForIndicatorTable(item.indicador, item.valor[7].valor)"
-               >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[7].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[7].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[7].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[7].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-      <template v-slot:item.mes_9="{ item }">
-            <span v-if="item.valor && item.valor.length > 8">
-              <v-chip v-if="item.indicador.meta === 1 && item.valor[8].valor !== ''"
-                      :color="getColorForIndicatorTable(item.indicador, item.valor[8].valor)"
-              >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[8].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[8].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[8].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[8].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-      <template v-slot:item.mes_10="{ item }">
-            <span v-if="item.valor && item.valor.length > 9">
-               <v-chip v-if="item.indicador.meta === 1 && item.valor[9].valor !== ''"
-                       :color="getColorForIndicatorTable(item.indicador, item.valor[9].valor)"
-               >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[9].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[9].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[9].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[9].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-      <template v-slot:item.mes_11="{ item }">
-            <span v-if="item.valor && item.valor.length > 10">
-               <v-chip v-if="item.indicador.meta === 1 && item.valor[10].valor !== ''"
-                       :color="getColorForIndicatorTable(item.indicador, item.valor[10].valor)"
-               >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[10].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[10].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[10].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[10].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-      <template v-slot:item.mes_12="{ item }">
-            <span v-if="item.valor && item.valor.length > 11">
-               <v-chip v-if="item.indicador.meta === 1 && item.valor[11].valor !== ''"
-                       :color="getColorForIndicatorTable(item.indicador, item.valor[11].valor)"
-               >
-                  <span v-if="getColorForIndicatorTable(item.indicador, item.valor[11].valor) === 'red'"
-                        class="white--text">{{
-                      item.valor[11].valor
-                    }}</span>
-              <span v-else class="black--text">{{ item.valor[11].valor }}</span>
-            </v-chip>
-              <span v-else>{{ item.valor[11].valor }}</span>
-            </span>
-        <span v-else>-</span>
-      </template>
-
-    </v-data-table>
+    </v-alert>
 
     <!-- dialog para ver gráfico-->
     <v-dialog v-model="dialogVerGrafico" :width="leDialogGraphWidth">
@@ -270,6 +371,95 @@
       </v-card>
     </v-dialog>
 
+    <!-- dialog de detalhes de uma categoria-->
+    <v-dialog v-model="dialogDetailsCategoria" width="30%">
+      <v-card>
+        <v-card-title>
+          Detalhes da categoria
+        </v-card-title>
+        <v-card-text>
+          <v-row v-if="categoriaDetalhe.categoria">
+            <v-col>
+              <b>Nome: </b> {{ categoriaDetalhe.categoria.nome }}<br>
+              <b>Natureza: </b> {{ categoriaDetalhe.categoria.natureza }}<br>
+              <b>Periodicidade: </b> {{ categoriaDetalhe.categoria.periodicidade }}<br>
+              <b>Mapeamento de Total (Mensal)</b> {{ categoriaDetalhe.categoria.mapeamento_total_mensal }}<br>
+              <b>Mapeamento de Total (Anual)</b> {{ categoriaDetalhe.categoria.mapeamento_total_anual }}<br>
+
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="secondary"
+            @click="dialogDetailsCategoria = false"
+          >
+            Fechar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- dialog de detalhes de um indicador-->
+    <v-dialog v-model="dialogDetailsIndicador" width="30%">
+      <v-card>
+        <v-card-title>
+          Detalhes do indicador
+        </v-card-title>
+        <v-card-text>
+          <v-row v-if="indicadorDetalhe">
+            <v-col>
+              <b>Nome: </b> {{ indicadorDetalhe.nome }}<br>
+              <b>Meta: </b> <span v-if="indicadorDetalhe.meta">Sim</span><span v-else>Não</span><br>
+              <div v-if="indicadorDetalhe.meta">
+                <b>Tendência: </b> {{ indicadorDetalhe.tendencia }}<br>
+                <b>Objetivo: </b> {{ indicadorDetalhe.objetivo }}<br>
+                <b>Verde: </b> {{ indicadorDetalhe.green }}<br>
+                <b>Amarelo: </b> entre {{ indicadorDetalhe.yellow_1 }} e {{ indicadorDetalhe.yellow_2 }}<br>
+                <b>Vermelho: </b> {{ indicadorDetalhe.red }}
+              </div>
+
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="secondary"
+            @click="dialogDetailsIndicador = false"
+          >
+            Fechar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- dialog de detalhes sobre um total-->
+    <v-dialog v-model="dialogDetailsTotal" width="30%">
+      <v-card>
+        <v-card-title>
+          Tipo de Total Vigente
+        </v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col>
+              {{ tipoDeTotalVigente }}
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="secondary"
+            @click="dialogDetailsTotal = false"
+          >
+            Fechar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </div>
 </template>
 
@@ -283,23 +473,23 @@ export default {
   components: {GeraGraphAno},
   data: () => ({
     headersDados: [
-      {text: 'Indicador', align: 'center', value: 'indicador'},
-      {text: 'Janeiro', align: 'start', value: 'mes_1'},
-      {text: 'Fevereiro', align: 'start', value: 'mes_2'},
-      {text: 'Março', align: 'start', value: 'mes_3'},
-      {text: 'Abril', align: 'start', value: 'mes_4'},
-      {text: 'Maio', align: 'start', value: 'mes_5'},
-      {text: 'Junho', align: 'start', value: 'mes_6'},
-      {text: 'Julho', align: 'start', value: 'mes_7'},
-      {text: 'Agosto', align: 'start', value: 'mes_8'},
-      {text: 'Setembro', align: 'start', value: 'mes_9'},
-      {text: 'Outubro', align: 'start', value: 'mes_10'},
-      {text: 'Novembro', align: 'start', value: 'mes_11'},
-      {text: 'Dezembro', align: 'start', value: 'mes_12'},
-      {text: 'Total', align: 'start', value: 'tempvalue'}
+      {text: 'Indicador', align: 'center', value: 'indicador', sortable: false},
+      {text: 'Janeiro', align: 'start', value: 'mes_1', sortable: false},
+      {text: 'Fevereiro', align: 'start', value: 'mes_2', sortable: false},
+      {text: 'Março', align: 'start', value: 'mes_3', sortable: false},
+      {text: 'Abril', align: 'start', value: 'mes_4', sortable: false},
+      {text: 'Maio', align: 'start', value: 'mes_5', sortable: false},
+      {text: 'Junho', align: 'start', value: 'mes_6', sortable: false},
+      {text: 'Julho', align: 'start', value: 'mes_7', sortable: false},
+      {text: 'Agosto', align: 'start', value: 'mes_8', sortable: false},
+      {text: 'Setembro', align: 'start', value: 'mes_9', sortable: false},
+      {text: 'Outubro', align: 'start', value: 'mes_10', sortable: false},
+      {text: 'Novembro', align: 'start', value: 'mes_11', sortable: false},
+      {text: 'Dezembro', align: 'start', value: 'mes_12', sortable: false},
+      {text: 'Total (A)', align: 'center', value: 'total_ano', sortable: false, class: 'grey lighten-2'}
     ],
+    tempvalue: '-',
     meusDados: [],
-    tempvalue: '',
     dialogVerGrafico: false,
     selectedCategoria: {},
     dadosGraph: [],
@@ -307,7 +497,15 @@ export default {
     arrayMonthSmall: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
     garphTipo: '',
     labelpie: [],
-    leDialogGraphWidth: '90%'
+    leDialogGraphWidth: '90%',
+    dialogDetailsCategoria: false,
+    categoriaDetalhe: {},
+    dialogDetailsIndicador: false,
+    indicadorDetalhe: {},
+    dialogDetailsTotal: false,
+    tipoDeTotalVigente: '',
+    textoBtnExpandirOcultar: 'Expandir Todos',
+    colorTextBtn: 'primary'
   }),
 
   props: {
@@ -318,8 +516,10 @@ export default {
   computed: {
     ...mapGetters(['usuarioLogado'])
   },
+
   created () {
   },
+
   watch: {
     selectedSecao: {
       deep: true, // Observa mudanças profundas no objeto
@@ -354,6 +554,7 @@ export default {
           categoria.indicadores.forEach(indicador => {
             indicador.valor.sort((a, b) => a.mes - b.mes)
           })
+          categoria.expanded = false
           return categoria
         })
         this.meusDados = dadosOrdenados
@@ -457,23 +658,38 @@ export default {
 
       let labels = []
       let series = []
-      let mes = indexMonth + 1
 
-      for (let i = 0; i < categoria.indicadores.length; i++) {
-        labels.push(categoria.indicadores[i].indicador.nome)
+      if (indexMonth === 99) {
+        for (let i = 0; i < categoria.indicadores.length; i++) {
+          labels.push(categoria.indicadores[i].indicador.nome)
+          series.push(this.getTotalAno(categoria.indicadores[i], this.selectedCategoria))
+        }
 
-        for (let j = 0; j < categoria.indicadores[i].valor.length; j++) {
-          if (categoria.indicadores[i].valor[j].mes === mes) {
-            series.push(categoria.indicadores[i].valor[j].valor)
+        this.dadosGraph = series
+        this.labelpie = labels
+        this.garphTipo = 'Geral - ' + this.anoCorrente
+        this.nomeCategoria = this.selectedCategoria.categoria.nome
+
+        this.dialogVerGrafico = true
+      } else {
+        let mes = indexMonth + 1
+
+        for (let i = 0; i < categoria.indicadores.length; i++) {
+          labels.push(categoria.indicadores[i].indicador.nome)
+
+          for (let j = 0; j < categoria.indicadores[i].valor.length; j++) {
+            if (categoria.indicadores[i].valor[j].mes === mes) {
+              series.push(categoria.indicadores[i].valor[j].valor)
+            }
           }
         }
+
+        this.dadosGraph = series
+        this.labelpie = labels
+        this.nomeCategoria = this.selectedCategoria.categoria.nome
+
+        this.dialogVerGrafico = true
       }
-
-      this.dadosGraph = series
-      this.labelpie = labels
-      this.nomeCategoria = this.selectedCategoria.categoria.nome
-
-      this.dialogVerGrafico = true
     },
 
     mostraBtnMes (categoria, indexMes) {
@@ -491,11 +707,146 @@ export default {
         }
       }
       return series.length > 0
+    },
+
+    openDialogDetailsCategoria (categoria) {
+      this.categoriaDetalhe = categoria
+      this.dialogDetailsCategoria = true
+    },
+
+    openDialogDetailsIndicador (indicador) {
+      this.indicadorDetalhe = indicador
+      this.dialogDetailsIndicador = true
+    },
+
+    retornaValorCorreto (item, mes) {
+      for (let i = 0; i < item.length; i++) {
+        if (item[i].mes === mes) {
+          return item[i].valor
+        }
+      }
+    },
+
+    pegaSomaMes (categoria, mes) {
+      let arrayTrabalho = []
+
+      for (let i = 0; i < categoria.indicadores.length; i++) {
+        for (let j = 0; j < categoria.indicadores[i].valor.length; j++) {
+          if (categoria.indicadores[i].valor[j].mes === mes) {
+            arrayTrabalho.push(categoria.indicadores[i].valor[j].valor)
+          }
+        }
+      }
+      if (categoria.categoria.mapeamento_total_mensal === 'Somatório') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return arrayTrabalho.reduce((a, b) => a + b, 0)
+        }
+      } else if (categoria.categoria.mapeamento_total_mensal === 'Média') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          const average = arrayTrabalho.reduce((a, b) => a + b, 0) / arrayTrabalho.length
+          return Number.isInteger(average) ? average : average.toFixed(2)
+        }
+      } else if (categoria.categoria.mapeamento_total_mensal === 'Mínimo') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return Math.min(...arrayTrabalho)
+        }
+      } else if (categoria.categoria.mapeamento_total_mensal === 'Máximo') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return Math.max(...arrayTrabalho)
+        }
+      }
+    },
+
+    getTotalAno (indicador, categoria) {
+      let arrayTrabalho = []
+
+      for (let i = 0; i < indicador.valor.length; i++) {
+        arrayTrabalho.push(indicador.valor[i].valor)
+      }
+
+      if (categoria.categoria.mapeamento_total_anual === 'Somatório') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return arrayTrabalho.reduce((a, b) => a + b, 0)
+        }
+      } else if (categoria.categoria.mapeamento_total_anual === 'Média') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          const average = arrayTrabalho.reduce((a, b) => a + b, 0) / arrayTrabalho.length
+          return Number.isInteger(average) ? average : parseFloat(average.toFixed(2))
+        }
+      } else if (categoria.categoria.mapeamento_total_anual === 'Mínimo') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return Math.min(...arrayTrabalho)
+        }
+      } else if (categoria.categoria.mapeamento_total_anual === 'Máximo') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return Math.max(...arrayTrabalho)
+        }
+      }
+
+      return arrayTrabalho
+    },
+
+    handleTotalAnoClick (categoria, tipo) {
+      this.dialogDetailsTotal = true
+      if (tipo === 'ano') {
+        this.tipoDeTotalVigente = categoria.categoria.mapeamento_total_anual
+      } else {
+        this.tipoDeTotalVigente = categoria.categoria.mapeamento_total_mensal
+      }
+    },
+
+    getStatusClass (status) {
+      if (status === 'Active') {
+        return 'status-active'
+      } else if (status === 'Inactive') {
+        return 'status-inactive'
+      }
+      return ''
+    },
+
+    expandeTodes () {
+      if (this.textoBtnExpandirOcultar === 'Expandir Todos') {
+        for (let i = 0; i < this.meusDados.length; i++) {
+          this.meusDados[i].expanded = true
+        }
+
+        this.textoBtnExpandirOcultar = 'Colapsar Todos'
+        this.colorTextBtn = 'warning'
+      } else {
+        for (let i = 0; i < this.meusDados.length; i++) {
+          this.meusDados[i].expanded = false
+        }
+
+        this.textoBtnExpandirOcultar = 'Expandir Todos'
+        this.colorTextBtn = 'primary'
+      }
     }
   }
 }
 
 </script>
 <style>
+.status-active {
+  background-color: #d4edda; /* Verde claro */
+}
 
+.status-inactive {
+  background-color: #f8d7da; /* Vermelho claro */
+}
 </style>

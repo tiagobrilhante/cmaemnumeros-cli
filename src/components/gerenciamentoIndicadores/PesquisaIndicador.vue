@@ -18,18 +18,19 @@
               @keydown.enter="fazBusca('agora')"
             ></v-text-field>
           </v-col>
-          <v-col class="mt-2 text-left">Digite alguma palavra chave para identificação da categoria e aperte ENTER</v-col>
+          <v-col class="mt-2 text-left">Digite alguma palavra chave para identificação da categoria e aperte ENTER
+          </v-col>
         </v-row>
       </v-col>
     </v-row>
 
     <!-- dialog para ver resultados-->
-    <v-dialog v-model="dialogVerResultados" width="90%" persistent>
+    <v-dialog v-model="dialogVerResultados" persistent width="90%">
       <v-card>
         <v-card-title>
           <v-row>
             <v-col cols="10">Resultado da busca pelo termo: {{ this.search }}</v-col>
-            <v-col cols="2" class="text-right">
+            <v-col class="text-right" cols="2">
               <v-btn
                 class="link"
                 @click="dialogVerResultados = false"
@@ -42,7 +43,7 @@
         </v-card-title>
         <v-card-text>
 
-          <v-row>
+          <v-row v-if="resultadoBusca.length > 0">
             <v-col></v-col>
             <!--btn Navega Ano-->
             <v-col class="text-center">
@@ -83,6 +84,7 @@
 
           <v-data-table
             v-for="categoria in resultadoBusca"
+            v-if="categoria.indicadores.length > 0"
             :key="categoria.id"
             :headers="headersDados"
             :items="categoria.indicadores"
@@ -99,7 +101,8 @@
               >
                 <!-- Título da tabela-->
                 <v-toolbar-title>
-                  {{ categoria.nome }} - <b>Seção Responsável: {{categoria.secao.sigla}}</b>
+                  {{ categoria.nome }} - <b>Seção Responsável: {{ categoria.secao.sigla }}</b>
+                  <v-icon class="ml-10" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
                 </v-toolbar-title>
 
                 <v-row>
@@ -118,199 +121,259 @@
 
             </template>
 
+            <!-- linhas para totais mensais e gerar gráficos -->
+            <template v-slot:body.append>
+              <tr class="cyan lighten-2" v-if="categoria.indicadores.length > 1">
+                <td class="text-center">
+                  Total (M)
+                  <v-icon small @click="handleTotalAnoClick(categoria, 'mes')">mdi-information</v-icon>
+                </td>
+                <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
+                  {{ pegaSomaMes(categoria, index + 1) }}
+                </td>
+                <td>
+                  -
+                </td>
+              </tr>
+              <tr class="yellow lighten-4">
+                <td class="text-center">
+                  Gerar Gráfico<br>
+                  Mensal
+                </td>
+                <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
+                  <v-btn v-if="mostraBtnMes(categoria, index)" color="secondary" x-small
+                         @click="generateMonthGraph(categoria, index)">{{ month }}
+                  </v-btn>
+                </td>
+                <td></td>
+              </tr>
+            </template>
+
+            <!-- Janeiro-->
             <template v-slot:item.mes_1="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 0">
-               <v-chip v-if="item.meta === 1 && item.indicador_valor[0].valor !== ''"
-                       :color="getColorForIndicatorTable(item, item.indicador_valor[0].valor)"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 1) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 1))"
                >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[0].valor) === 'red'"
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 1)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[0].valor
+                      retornaValorCorreto(item.indicador_valor, 1)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[0].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 1) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[0].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 1) }}</span>
             </span>
               <span v-else class="text-center">-</span>
             </template>
 
+            <!-- Fevereiro-->
             <template v-slot:item.mes_2="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 1">
-               <v-chip v-if="item.meta === 1 && item.indicador_valor[1].valor !== ''"
-                       :color="getColorForIndicatorTable(item, item.indicador_valor[1].valor)"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 2) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 2))"
                >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[1].valor) === 'red'"
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 2)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[1].valor
+                      retornaValorCorreto(item.indicador_valor, 2)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[1].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 2) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[1].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 2) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- Março-->
             <template v-slot:item.mes_3="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 2">
-               <v-chip v-if="item.meta === 1 && item.indicador_valor[2].valor !== ''"
-                       :color="getColorForIndicatorTable(item, item.indicador_valor[2].valor)"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 3) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 3))"
                >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[2].valor) === 'red'"
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 3)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[2].valor
+                      retornaValorCorreto(item.indicador_valor, 3)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[2].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 3) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[2].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 3) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- Abril-->
             <template v-slot:item.mes_4="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 3">
-              <v-chip v-if="item.meta === 1 && item.indicador_valor[3].valor !== ''"
-                      :color="getColorForIndicatorTable(item, item.indicador_valor[3].valor)"
-              >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[3].valor) === 'red'"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 4) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 4))"
+               >
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 4)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[3].valor
+                      retornaValorCorreto(item.indicador_valor, 4)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[3].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 4) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[3].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 4) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- Maio-->
             <template v-slot:item.mes_5="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 4">
-               <v-chip v-if="item.meta === 1 && item.indicador_valor[4].valor !== ''"
-                       :color="getColorForIndicatorTable(item, item.indicador_valor[4].valor)"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 5) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 5))"
                >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[4].valor) === 'red'"
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 5)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[4].valor
+                      retornaValorCorreto(item.indicador_valor, 5)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[4].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 5) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[4].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 5) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- junho-->
             <template v-slot:item.mes_6="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 5">
-               <v-chip v-if="item.meta === 1 && item.indicador_valor[5].valor !== ''"
-                       :color="getColorForIndicatorTable(item, item.indicador_valor[5].valor)"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 6) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 6))"
                >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[5].valor) === 'red'"
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 6)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[5].valor
+                      retornaValorCorreto(item.indicador_valor, 6)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[5].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 6) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[5].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 6) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- julho-->
             <template v-slot:item.mes_7="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 6">
-              <v-chip v-if="item.meta === 1 && item.indicador_valor[6].valor !== ''"
-                      :color="getColorForIndicatorTable(item, item.indicador_valor[6].valor)"
-              >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[6].valor) === 'red'"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 7) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 7))"
+               >
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 7)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[6].valor
+                      retornaValorCorreto(item.indicador_valor, 7)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[6].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 7) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[6].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 7) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- Agosto-->
             <template v-slot:item.mes_8="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 7">
-               <v-chip v-if="item.meta === 1 && item.indicador_valor[7].valor !== ''"
-                       :color="getColorForIndicatorTable(item, item.indicador_valor[7].valor)"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 8) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 8))"
                >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[7].valor) === 'red'"
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 8)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[7].valor
+                      retornaValorCorreto(item.indicador_valor, 8)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[7].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 8) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[7].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 8) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- Setembro-->
             <template v-slot:item.mes_9="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 8">
-              <v-chip v-if="item.meta === 1 && item.indicador_valor[8].valor !== ''"
-                      :color="getColorForIndicatorTable(item, item.indicador_valor[8].valor)"
-              >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[8].valor) === 'red'"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 9) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 9))"
+               >
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 9)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[8].valor
+                      retornaValorCorreto(item.indicador_valor, 9)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[8].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 9) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[8].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 9) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- Outubro-->
             <template v-slot:item.mes_10="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 9">
-               <v-chip v-if="item.meta === 1 && item.indicador_valor[9].valor !== ''"
-                       :color="getColorForIndicatorTable(item, item.indicador_valor[9].valor)"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 10) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 10))"
                >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[9].valor) === 'red'"
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 10)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[9].valor
+                      retornaValorCorreto(item.indicador_valor, 10)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[9].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 10) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[9].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 10) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- Novembro-->
             <template v-slot:item.mes_11="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 10">
-               <v-chip v-if="item.meta === 1 && item.indicador_valor[10].valor !== ''"
-                       :color="getColorForIndicatorTable(item, item.indicador_valor[10].valor)"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 11) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 11))"
                >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[10].valor) === 'red'"
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 11)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[10].valor
+                      retornaValorCorreto(item.indicador_valor, 11)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[10].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 11) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[10].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 11) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
             </template>
 
+            <!-- Dezembro-->
             <template v-slot:item.mes_12="{ item }">
-            <span v-if="item.indicador_valor && item.indicador_valor.length > 11">
-               <v-chip v-if="item.meta === 1 && item.indicador_valor[11].valor !== ''"
-                       :color="getColorForIndicatorTable(item, item.indicador_valor[11].valor)"
+        <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 12) !== undefined">
+               <v-chip v-if="item.meta === 1"
+                       :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 12))"
                >
-                  <span v-if="getColorForIndicatorTable(item, item.indicador_valor[11].valor) === 'red'"
+                  <span v-if="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 12)) === 'red'"
                         class="white--text">{{
-                      item.indicador_valor[11].valor
+                      retornaValorCorreto(item.indicador_valor, 12)
                     }}</span>
-              <span v-else class="black--text">{{ item.indicador_valor[11].valor }}</span>
+              <span v-else class="black--text">{{ retornaValorCorreto(item.indicador_valor, 12) }}</span>
             </v-chip>
-              <span v-else>{{ item.indicador_valor[11].valor }}</span>
+              <span v-else>{{ retornaValorCorreto(item.indicador_valor, 12) }}</span>
             </span>
-              <span v-else>-</span>
+              <span v-else class="text-center">-</span>
+            </template>
+
+            <!-- total-->
+            <template v-slot:item.total_ano="{ item }">
+              <td :class="getStatusClass('Active')" class="text-center">
+                {{ getTotalAno(item, categoria) }}
+              </td>
+            </template>
+
+            <template v-slot:header.total_ano="{ header }">
+              <v-icon small @click="handleTotalAnoClick(categoria, 'ano')">mdi-information</v-icon>
+              {{ header.text }}
             </template>
 
           </v-data-table>
+
+          <v-alert v-if="resultadoBusca.length === 0" class="mt-5" type="info">
+            <v-row>
+              <v-col>
+                <h3>Nenhum resultado encontrado</h3>
+              </v-col>
+            </v-row>
+          </v-alert>
 
         </v-card-text>
         <v-card-actions>
@@ -326,19 +389,110 @@
     </v-dialog>
 
     <!-- dialog para ver gráfico-->
-    <v-dialog v-model="dialogVerGrafico" width="90%">
+    <v-dialog v-model="dialogVerGrafico" :width="leDialogGraphWidth">
       <v-card>
         <v-card-title>
           Gráfico (Anual)
         </v-card-title>
         <v-card-text>
-          <GeraGraphAno v-if="dialogVerGrafico" :dadosGraph="dadosGraph" :nomeCategoria="nomeCategoria"/>
+
+          <GeraGraphAno v-if="dialogVerGrafico" :dadosGraph="dadosGraph" :garphTipo="garphTipo"
+                        :lelabels="labelpie" :nomeCategoria="nomeCategoria"/>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
             color="secondary"
             @click="dialogVerGrafico = false"
+          >
+            Fechar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- dialog de detalhes de uma categoria-->
+    <v-dialog v-model="dialogDetailsCategoria" width="30%">
+      <v-card>
+        <v-card-title>
+          Detalhes da categoria
+        </v-card-title>
+        <v-card-text>
+          <v-row v-if="categoriaDetalhe">
+            <v-col>
+              <b>Nome: </b> {{ categoriaDetalhe.nome }}<br>
+              <b>Natureza: </b> {{ categoriaDetalhe.natureza }}<br>
+              <b>Periodicidade: </b> {{ categoriaDetalhe.periodicidade }}<br>
+              <b>Mapeamento de Total (Mensal)</b> {{ categoriaDetalhe.mapeamento_total_mensal }}<br>
+              <b>Mapeamento de Total (Anual)</b> {{ categoriaDetalhe.mapeamento_total_anual }}<br>
+
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="secondary"
+            @click="dialogDetailsCategoria = false"
+          >
+            Fechar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- dialog de detalhes de um indicador-->
+    <v-dialog v-model="dialogDetailsIndicador" width="30%">
+      <v-card>
+        <v-card-title>
+          Detalhes do indicador
+        </v-card-title>
+        <v-card-text>
+          <v-row v-if="indicadorDetalhe">
+            <v-col>
+              <b>Nome: </b> {{ indicadorDetalhe.nome }}<br>
+              <b>Meta: </b> <span v-if="indicadorDetalhe.meta">Sim</span><span v-else>Não</span><br>
+              <div v-if="indicadorDetalhe.meta">
+                <b>Tendência: </b> {{ indicadorDetalhe.tendencia }}<br>
+                <b>Objetivo: </b> {{ indicadorDetalhe.objetivo }}<br>
+                <b>Verde: </b> {{ indicadorDetalhe.green }}<br>
+                <b>Amarelo: </b> entre {{ indicadorDetalhe.yellow_1 }} e {{ indicadorDetalhe.yellow_2 }}<br>
+                <b>Vermelho: </b> {{ indicadorDetalhe.red }}
+              </div>
+
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="secondary"
+            @click="dialogDetailsIndicador = false"
+          >
+            Fechar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- dialog de detalhes sobre um total-->
+    <v-dialog v-model="dialogDetailsTotal" width="30%">
+      <v-card>
+        <v-card-title>
+          Tipo de Total Vigente
+        </v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col>
+              {{ tipoDeTotalVigente }}
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="secondary"
+            @click="dialogDetailsTotal = false"
           >
             Fechar
           </v-btn>
@@ -361,20 +515,20 @@ export default {
     dialogVerResultados: false,
     resultadoBusca: [],
     headersDados: [
-      {text: 'Indicador', align: 'start', value: 'indicador'},
-      {text: 'Janeiro', align: 'start', value: 'mes_1'},
-      {text: 'Fevereiro', align: 'start', value: 'mes_2'},
-      {text: 'Março', align: 'start', value: 'mes_3'},
-      {text: 'Abril', align: 'start', value: 'mes_4'},
-      {text: 'Maio', align: 'start', value: 'mes_5'},
-      {text: 'Junho', align: 'start', value: 'mes_6'},
-      {text: 'Julho', align: 'start', value: 'mes_7'},
-      {text: 'Agosto', align: 'start', value: 'mes_8'},
-      {text: 'Setembro', align: 'start', value: 'mes_9'},
-      {text: 'Outubro', align: 'start', value: 'mes_10'},
-      {text: 'Novembro', align: 'start', value: 'mes_11'},
-      {text: 'Dezembro', align: 'start', value: 'mes_12'},
-      {text: 'Total', align: 'start', value: 'tempvalue'}
+      {text: 'Indicador', align: 'start', value: 'indicador', sortable: false},
+      {text: 'Janeiro', align: 'start', value: 'mes_1', sortable: false},
+      {text: 'Fevereiro', align: 'start', value: 'mes_2', sortable: false},
+      {text: 'Março', align: 'start', value: 'mes_3', sortable: false},
+      {text: 'Abril', align: 'start', value: 'mes_4', sortable: false},
+      {text: 'Maio', align: 'start', value: 'mes_5', sortable: false},
+      {text: 'Junho', align: 'start', value: 'mes_6', sortable: false},
+      {text: 'Julho', align: 'start', value: 'mes_7', sortable: false},
+      {text: 'Agosto', align: 'start', value: 'mes_8', sortable: false},
+      {text: 'Setembro', align: 'start', value: 'mes_9', sortable: false},
+      {text: 'Outubro', align: 'start', value: 'mes_10', sortable: false},
+      {text: 'Novembro', align: 'start', value: 'mes_11', sortable: false},
+      {text: 'Dezembro', align: 'start', value: 'mes_12', sortable: false},
+      {text: 'Total (A)', align: 'start', value: 'total_ano', sortable: false, class: 'grey lighten-2'}
     ],
     awaitData: true,
     anoCorrente: 0,
@@ -382,7 +536,17 @@ export default {
     selectedCategoria: {},
     dialogVerGrafico: false,
     dadosGraph: [],
-    nomeCategoria: ''
+    nomeCategoria: '',
+    arrayMonthSmall: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+    garphTipo: '',
+    labelpie: [],
+    leDialogGraphWidth: '90%',
+    categoriaDetalhe: {},
+    dialogDetailsCategoria: false,
+    dialogDetailsIndicador: false,
+    indicadorDetalhe: {},
+    dialogDetailsTotal: false,
+    tipoDeTotalVigente: ''
   }),
   props: {},
 
@@ -415,6 +579,7 @@ export default {
             .then(response => {
               this.resultadoBusca = response.data
               this.dialogVerResultados = true
+              this.search = ''
             })
             .catch(erro => console.log(erro))
         } catch (e) {
@@ -486,6 +651,9 @@ export default {
 
     openGraphDialog (categoria) {
       this.selectedCategoria = categoria
+      this.garphTipo = 'Anual'
+      this.leDialogGraphWidth = '90%'
+
       // Ajustar a informação antes de passar
       let ajustes = []
 
@@ -506,9 +674,52 @@ export default {
       }
 
       this.dadosGraph = ajustes
-      this.nomeCategoria = this.selectedCategoria.nome + ' - ' + this.anoCorrente
+      this.nomeCategoria = this.selectedCategoria.nome
 
       this.dialogVerGrafico = true
+    },
+
+    generateMonthGraph (categoria, indexMonth) {
+      this.selectedCategoria = categoria
+      this.garphTipo = 'Mensal'
+      this.leDialogGraphWidth = '50%'
+
+      let labels = []
+      let series = []
+      let mes = indexMonth + 1
+
+      for (let i = 0; i < categoria.indicadores.length; i++) {
+        labels.push(categoria.indicadores[i].nome)
+
+        for (let j = 0; j < categoria.indicadores[i].indicador_valor.length; j++) {
+          if (categoria.indicadores[i].indicador_valor[j].mes === mes) {
+            series.push(categoria.indicadores[i].indicador_valor[j].valor)
+          }
+        }
+      }
+
+      this.dadosGraph = series
+      this.labelpie = labels
+      this.nomeCategoria = this.selectedCategoria.nome
+
+      this.dialogVerGrafico = true
+    },
+
+    mostraBtnMes (categoria, indexMes) {
+      let mes = indexMes + 1
+      let labels = []
+      let series = []
+
+      for (let i = 0; i < categoria.indicadores.length; i++) {
+        labels.push(categoria.indicadores[i].nome)
+
+        for (let j = 0; j < categoria.indicadores[i].indicador_valor.length; j++) {
+          if (categoria.indicadores[i].indicador_valor[j].mes === mes) {
+            series.push(categoria.indicadores[i].indicador_valor[j].valor)
+          }
+        }
+      }
+      return series.length > 0
     },
 
     changeYear (direction) {
@@ -530,9 +741,124 @@ export default {
       const currentDate = new Date()
       this.anoBase = currentDate.getFullYear()
       this.anoCorrente = currentDate.getFullYear()
+    },
+
+    openDialogDetailsCategoria (categoria) {
+      this.categoriaDetalhe = categoria
+      this.dialogDetailsCategoria = true
+    },
+
+    pegaSomaMes (categoria, mes) {
+      let arrayTrabalho = []
+
+      for (let i = 0; i < categoria.indicadores.length; i++) {
+        for (let j = 0; j < categoria.indicadores[i].indicador_valor.length; j++) {
+          if (categoria.indicadores[i].indicador_valor[j].mes === mes) {
+            arrayTrabalho.push(categoria.indicadores[i].indicador_valor[j].valor)
+          }
+        }
+      }
+
+      if (categoria.mapeamento_total_mensal === 'Somatório') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return arrayTrabalho.reduce((a, b) => a + b, 0)
+        }
+      } else if (categoria.mapeamento_total_mensal === 'Média') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          const average = arrayTrabalho.reduce((a, b) => a + b, 0) / arrayTrabalho.length
+          return Number.isInteger(average) ? average : average.toFixed(2)
+        }
+      } else if (categoria.mapeamento_total_mensal === 'Mínimo') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return Math.min(...arrayTrabalho)
+        }
+      } else if (categoria.mapeamento_total_mensal === 'Máximo') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return Math.max(...arrayTrabalho)
+        }
+      }
+
+      return arrayTrabalho
+    },
+
+    getTotalAno (indicador, categoria) {
+      let arrayTrabalho = []
+
+      for (let i = 0; i < indicador.indicador_valor.length; i++) {
+        arrayTrabalho.push(indicador.indicador_valor[i].valor)
+      }
+
+      if (categoria.mapeamento_total_anual === 'Somatório') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return arrayTrabalho.reduce((a, b) => a + b, 0)
+        }
+      } else if (categoria.mapeamento_total_anual === 'Média') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          const average = arrayTrabalho.reduce((a, b) => a + b, 0) / arrayTrabalho.length
+          return Number.isInteger(average) ? average : average.toFixed(2)
+        }
+      } else if (categoria.mapeamento_total_anual === 'Mínimo') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return Math.min(...arrayTrabalho)
+        }
+      } else if (categoria.mapeamento_total_anual === 'Máximo') {
+        if (arrayTrabalho.length === 0) {
+          return '-'
+        } else {
+          return Math.max(...arrayTrabalho)
+        }
+      }
+      return arrayTrabalho
+    },
+
+    handleTotalAnoClick (categoria, tipo) {
+      this.dialogDetailsTotal = true
+      if (tipo === 'ano') {
+        this.tipoDeTotalVigente = categoria.mapeamento_total_anual
+      } else {
+        this.tipoDeTotalVigente = categoria.mapeamento_total_mensal
+      }
+    },
+
+    retornaValorCorreto (item, mes) {
+      for (let i = 0; i < item.length; i++) {
+        if (item[i].mes === mes) {
+          return item[i].valor
+        }
+      }
+    },
+
+    getStatusClass (status) {
+      if (status === 'Active') {
+        return 'status-active'
+      } else if (status === 'Inactive') {
+        return 'status-inactive'
+      }
+      return ''
     }
   }
 }
 </script>
 <style>
+.status-active {
+  background-color: #d4edda; /* Verde claro */
+}
+
+.status-inactive {
+  background-color: #f8d7da; /* Vermelho claro */
+}
 </style>
