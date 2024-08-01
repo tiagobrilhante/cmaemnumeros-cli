@@ -703,7 +703,7 @@ export default {
     },
 
     updateIndicadorValor (indicador, valor) {
-      if (valor === null || valor === '') {
+      if ((valor === null || valor === '') && indicador.indicador_valor[0].id === null) {
         this.$set(indicador, 'indicador_valor', [])
       } else {
         if (indicador.indicador_valor.length > 0) {
@@ -722,14 +722,17 @@ export default {
     },
 
     gravaValores () {
+      this.selectedSecao.ano = this.anoCorrente
+      this.selectedSecao.mes = this.mesCorrente
       this.loadingBtn = true
       try {
         this.$http.post('valorindicador', this.selectedSecao)
-          .then(() => {
+          .then((response) => {
             this.loadingBtn = false
             this.$toastr.s(
               'Indicadores lançados com sucesso', 'Sucesso!'
             )
+            this.selectedSecao = response.data
           })
           .catch(erro => console.log(erro))
       } catch (e) {

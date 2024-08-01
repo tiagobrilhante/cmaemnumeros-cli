@@ -861,6 +861,7 @@ export default {
     },
 
     pegaIndicadoresSecao (secao) {
+      this.indicadores = []
       if (secao === 'Todos') {
         this.getIndicadores('Todos')
       } else {
@@ -896,5 +897,11 @@ export default {
 <style>
 .bgConfig {
   background-color: #CFE0BC !important;
+}
+
+.v-row-group__header {
+  background-color: #b6c378 !important; /* Cor de fundo para a linha agrupada */
+  font-weight: bold; /* Texto em negrito */
+  cursor: pointer; /* Cursor para indicar que é clicável */
 }
 </style>

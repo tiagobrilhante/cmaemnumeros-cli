@@ -94,7 +94,7 @@
             hide-default-footer
           >
 
-            <!-- template para titulo e search-->
+            <!-- template para titulo e abrir grafico anual-->
             <template v-slot:top>
               <v-toolbar class="green lighten-3"
                          flat
@@ -105,6 +105,7 @@
                   <v-icon class="ml-10" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
                 </v-toolbar-title>
 
+                <!-- abre grafico anual-->
                 <v-row>
                   <v-col class="text-right">
                     <v-btn class="primary" small @click="openGraphDialog(categoria)">Gerar Gráfico</v-btn>
@@ -115,6 +116,7 @@
 
             </template>
 
+            <!-- template para o nome do indicador-->
             <template v-slot:item.indicador="{ item }">
 
               {{ item.nome }}
@@ -122,8 +124,8 @@
             </template>
 
             <!-- linhas para totais mensais e gerar gráficos -->
-            <template v-slot:body.append>
-              <tr class="cyan lighten-2" v-if="categoria.indicadores.length > 1">
+            <template v-if="categoria.indicadores.length > 1" v-slot:body.append>
+              <tr class="cyan lighten-2">
                 <td class="text-center">
                   Total (M)
                   <v-icon small @click="handleTotalAnoClick(categoria, 'mes')">mdi-information</v-icon>
@@ -131,7 +133,7 @@
                 <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
                   {{ pegaSomaMes(categoria, index + 1) }}
                 </td>
-                <td>
+                <td class="text-center">
                   -
                 </td>
               </tr>

@@ -33,11 +33,13 @@
     <!--DataTable-->
     <v-data-table
       :headers="headers"
+      :item-class="getItemClass"
       :items="categorias"
       :search="search"
       class="elevation-21 mt-4"
       group-by="secao.sigla"
       sort-by="nome"
+      :loading="categorias.length === 0"
     >
       <!-- template para titulo e search-->
       <template v-slot:top>
@@ -66,6 +68,14 @@
           ></v-text-field>
 
         </v-toolbar>
+
+        <v-container fluid>
+        <v-row dense>
+          <v-col>
+            Legenda: <v-chip small class="ml-5 row-inactive">Inativo</v-chip>  <v-chip small class="ml-5 bgcat">Categorias</v-chip>
+          </v-col>
+        </v-row>
+        </v-container>
 
       </template>
 
@@ -200,8 +210,8 @@
                   <v-row>
                     <v-col><h4>Selecione se a categoria está ativa:</h4>
                       <v-checkbox
-                        hide-details
                         v-model="editedCategoria.ativo"
+                        hide-details
                         label="Ativo"
                       ></v-checkbox>
                     </v-col>
@@ -634,9 +644,26 @@ export default {
         this.editedCategoria = Object.assign({}, this.defaultCategoria)
         this.editedIndex = -1
       })
+    },
+
+    getItemClass (item) {
+      return item.ativo ? '' : 'row-inactive'
     }
   }
 }
 </script>
 <style>
+.row-inactive {
+  background-color: #E89380 !important;
+}
+
+.v-row-group__header {
+  background-color: #b6c378 !important; /* Cor de fundo para a linha agrupada */
+  font-weight: bold; /* Texto em negrito */
+  cursor: pointer; /* Cursor para indicar que é clicável */
+}
+
+.bgcat {
+  background-color: #b6c378 !important;
+}
 </style>

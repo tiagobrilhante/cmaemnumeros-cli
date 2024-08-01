@@ -5,9 +5,31 @@ const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.2.9',
+    release: '152',
+    latest: true,
+    data: '01/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Ajustado o bug que resetava um indicador quando fosse removido todo o valor do input caso existisse',
+      'Correção de bugs'
+    ]
+  },
+  {
+    id: '1.2.8',
+    release: '152',
+    latest: false,
+    data: '01/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'corrigido o bug que gerava valores duplicados no indicador',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.2.7',
     release: '132',
-    latest: true,
+    latest: false,
     data: '01/08/2024',
     detalhesVisiveis: false,
     detalhes: [
