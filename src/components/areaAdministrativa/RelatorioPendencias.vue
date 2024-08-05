@@ -2,7 +2,7 @@
   <v-row dense>
     <v-col>
       <v-alert elevation="12">
-        <h3>Relatório de Pendências (Em construção)</h3>
+        <h3>Relatório de Pendências</h3>
         <v-alert class="text-justify" color="red lighten-3">
 
           <!-- mes e ano limite-->
@@ -46,6 +46,75 @@
               <v-btn block class="secondary" rounded @click="fazPesquisa">Realizar Busca</v-btn>
             </v-col>
           </v-row>
+
+          <!-- tabela-->
+          <v-data-table
+            v-if="prePesquisa"
+            :headers="headersDados"
+            :items="resultadoBusca"
+            :items-per-page="-1"
+            :loading="resultadoBusca.length === 0"
+            :search="search"
+            class="elevation-21 mt-8"
+            disable-pagination
+            hide-default-footer
+          >
+
+            <!-- template para titulo e search-->
+            <template v-slot:top>
+              <v-toolbar
+                flat
+              >
+                <!-- Título da tabela-->
+                <v-toolbar-title>Relatório de Pendências</v-toolbar-title>
+
+                <v-divider
+                  class="mx-4"
+                  inset
+                  vertical
+                ></v-divider>
+
+                <v-spacer></v-spacer>
+
+                <!--Pesquisar-->
+                <v-text-field
+                  v-model="search"
+                  append-icon="mdi-magnify"
+                  hide-details
+                  label="Pesquisar"
+                  placeholder="Pesquisar"
+                  single-line
+                ></v-text-field>
+
+              </v-toolbar>
+
+            </template>
+
+            <template v-slot:item.secao="{ item }">
+
+              <h2>{{ item.secao }}</h2>
+            </template>
+
+            <!-- categorias-->
+            <template v-slot:item.categorias_pendentes="{ item }">
+              <h3>
+                <ul>
+                  <li v-for="categoria in item.categorias_pendentes" :key="categoria.id">
+                    {{ categoria.categoria }}
+                    <ul>
+                      <li v-for="indicador in categoria.indicadores_pendentes" :key="indicador.id">
+                        {{ indicador.indicador }}
+                        <ul>
+                          <li v-for="mes in indicador.meses_pendentes" :key="mes"> {{ transformaMes(mes) }}</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </h3>
+            </template>
+          </v-data-table>
+
         </v-alert>
       </v-alert>
     </v-col>
@@ -64,7 +133,24 @@ export default {
     mesLimite: '',
     mesOptions: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro',
       'Outubro', 'Novembro', 'Dezembro'],
-    ano_verifica_fim: ''
+    ano_verifica_fim: '',
+    resultadoBusca: [],
+    headersDados: [
+      {
+        text: 'Seção',
+        align: 'center',
+        value: 'secao',
+        sortable: false
+      },
+      {
+        text: 'Categorias / Indicadores / Meses Pendentes',
+        align: 'left',
+        value: 'categorias_pendentes',
+        sortable: false
+      }
+    ],
+    prePesquisa: false,
+    search: ''
   }),
 
   computed: {
@@ -117,7 +203,20 @@ export default {
     },
 
     fazPesquisa () {
-      console.log('do it')
+      this.prePesquisa = true
+      let objetoParaEnvio = {}
+      objetoParaEnvio['mes_limite'] = this.mesLimite
+      objetoParaEnvio['ano'] = this.ano_verifica_fim
+
+      try {
+        this.$http.post('ferramenta/relatoriopendencias', objetoParaEnvio)
+          .then(response => {
+            this.resultadoBusca = response.data
+          })
+          .catch(erro => console.log(erro))
+      } catch (e) {
+        console.log(e)
+      }
     }
   }
 }

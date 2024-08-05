@@ -81,9 +81,8 @@
       <v-alert class="pt-0 pb-0" dense elevation="21">
         <PesquisaIndicador/>
       </v-alert>
-
       <!-- seletor por seção-->
-      <v-alert v-if="usuarioLogado.tipo === 'Administrador'"
+      <v-alert v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Auditor'"
                class="p-5"
                elevation="21"
       >
@@ -95,7 +94,6 @@
           </v-col>
         </v-row>
       </v-alert>
-
       <!--Seletor de mês e inserção de dados-->
       <v-alert
         class="p-5"
@@ -105,6 +103,9 @@
 
           <!-- seletor de mês-->
           <v-col cols="1">
+            <v-alert color="blue lighten-2" elevation="5">
+              <h3 class="text-center">Mês</h3>
+            </v-alert>
             <v-btn
               v-for="(mes, index) in meses"
               :key="index"
@@ -120,15 +121,40 @@
           <!--area de lançamento preciso  ARRUMAR ISSO AQUI-->
           <v-col v-if="!awaitData">
 
-            <!-- informa o mês e o ano de referência-->
-            <h3 class="text-center mb-5">{{ selectedSecao.sigla }} - Referência: {{ this.mesCorrente }} de
-              {{ this.anoCorrente }}</h3>
+            <v-alert color="green lighten-2" elevation="5">
+              <!-- informa o mês e o ano de referência-->
+              <h3 class="text-center">{{ selectedSecao.sigla }} - Referência: {{ this.mesCorrente }} de
+                {{ this.anoCorrente }}</h3>
+            </v-alert>
+
+            <!-- alertas de pendências-->
+            <v-alert elevation="5" type="warning" dismissible>
+              <v-row>
+                <v-col cols="2"><h3>Alertas</h3></v-col>
+                <v-col>Pendências: {{ resultadoBusca[0].categorias_pendentes.length }}
+
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        class="ml-2 pb-1"
+                        v-bind="attrs"
+                        @click="openDialogMostraPendencia()"
+                        v-on="on"
+                      >
+                        mdi-information
+                      </v-icon>
+                    </template>
+                    <span>Exibir informações sobre as pendências</span>
+                  </v-tooltip>
+                </v-col>
+              </v-row>
+            </v-alert>
 
             <!-- nesse caso eu pego a categoria-->
             <v-row v-if="selectedSecao.categoria.length > 0">
 
-              <v-col v-for="categoria in selectedSecao.categoria" :key="categoria.id" cols="3" v-if="categoria.ativo">
-                <v-card class="pl-2 pr-2 pb-1" color="blue lighten-4" elevation="11">
+              <v-col v-for="categoria in selectedSecao.categoria" v-if="categoria.ativo" :key="categoria.id" cols="3">
+                <v-card class="pl-2 pr-2 pb-1" color="blue lighten-4" elevation="21">
                   <h4 class="mb-2">{{ categoria.nome }}</h4>
 
                   <v-alert v-for="indicador in categoria.indicadores" :key="indicador.id"
@@ -170,6 +196,7 @@
               </v-col>
             </v-row>
 
+            <!-- gravar valores-->
             <v-row v-if="selectedSecao.categoria.length > 0">
               <v-col>
 
@@ -254,7 +281,7 @@
 
               <!-- separador-->
               <v-col class="text-right">
-                <v-btn color="success" @click="showTable">Formulário</v-btn>
+                <v-btn v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Usuário'" color="success" @click="showTable">Formulário</v-btn>
               </v-col>
 
             </v-row>
@@ -267,7 +294,7 @@
           </v-alert>
 
           <!-- seletor por seção-->
-          <v-alert v-if="usuarioLogado.tipo === 'Administrador'"
+          <v-alert v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Auditor'"
                    class="p-5"
                    elevation="21"
           >
@@ -279,11 +306,15 @@
               </v-col>
             </v-row>
           </v-alert>
-
           <!-- dados Tabelares-->
           <v-alert v-if="tabelaDados.length !== 0" color="white">
-            <h2>Dados Acumulados - {{ selectedSecao.sigla }}</h2>
-
+            <v-container fluid>
+              <v-row>
+                <v-col>
+                  <h2>Dados Acumulados - {{ selectedSecao.sigla }}</h2>
+                </v-col>
+              </v-row>
+            </v-container>
             <!-- seletor de visualização-->
             <v-row class="mt-2 mb-2">
               <v-col>
@@ -294,220 +325,227 @@
               </v-col>
             </v-row>
 
-            <v-data-table
-              v-if="visualizaGeral"
-              :headers="headersDados"
-              :items="tabelaDados"
-              :items-per-page="-1"
-              :search="search"
-              class="elevation-21 mt-4"
-              disable-pagination
-              group-by="categoria"
-            >
+            <!--dados tabelares de visualizaçãp geral-->
+            <v-container v-if="visualizaGeral" fluid>
+              <v-row>
+                <v-col>
+                  <v-data-table
+                    :headers="headersDados"
+                    :items="tabelaDados"
+                    :items-per-page="-1"
+                    :search="search"
+                    class="elevation-21 mt-4"
+                    disable-pagination
+                    group-by="categoria"
+                  >
 
-              <!-- template para titulo e search-->
-              <template v-slot:top>
-                <v-toolbar
-                  flat
-                >
-                  <!-- Título da tabela-->
-                  <v-toolbar-title>Tabela de Indicadores Cadastrados</v-toolbar-title>
+                    <!-- template para titulo e search-->
+                    <template v-slot:top>
+                      <v-toolbar
+                        flat
+                      >
+                        <!-- Título da tabela-->
+                        <v-toolbar-title>Tabela de Indicadores Cadastrados</v-toolbar-title>
 
-                  <v-divider
-                    class="mx-4"
-                    inset
-                    vertical
-                  ></v-divider>
+                        <v-divider
+                          class="mx-4"
+                          inset
+                          vertical
+                        ></v-divider>
 
-                  <v-spacer></v-spacer>
+                        <v-spacer></v-spacer>
 
-                  <!--Pesquisar-->
-                  <v-text-field
-                    v-model="search"
-                    append-icon="mdi-magnify"
-                    hide-details
-                    label="Pesquisar"
-                    placeholder="Pesquisar"
-                    single-line
-                  ></v-text-field>
+                        <!--Pesquisar-->
+                        <v-text-field
+                          v-model="search"
+                          append-icon="mdi-magnify"
+                          hide-details
+                          label="Pesquisar"
+                          placeholder="Pesquisar"
+                          single-line
+                        ></v-text-field>
 
-                </v-toolbar>
+                      </v-toolbar>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_1="{ item }">
+                    <template v-slot:item.mes_1="{ item }">
 
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_1 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_1)"
-                >
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_1 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_1)"
+                      >
 
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_1) === 'red'"
                         class="white--text">{{
                       item.mes_1
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_1 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_1 }}</span>
+                        <span v-else class="black--text">{{ item.mes_1 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_1 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_2="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_2 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_2)"
-                >
+                    <template v-slot:item.mes_2="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_2 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_2)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_2) === 'red'"
                         class="white--text">{{
                       item.mes_2
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_2 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_2 }}</span>
+                        <span v-else class="black--text">{{ item.mes_2 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_2 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_3="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_3 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_3)"
-                >
+                    <template v-slot:item.mes_3="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_3 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_3)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_3) === 'red'"
                         class="white--text">{{
                       item.mes_3
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_3 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_3 }}</span>
+                        <span v-else class="black--text">{{ item.mes_3 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_3 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_4="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_4 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_4)"
-                >
+                    <template v-slot:item.mes_4="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_4 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_4)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_4) === 'red'"
                         class="white--text">{{
                       item.mes_4
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_4 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_4 }}</span>
+                        <span v-else class="black--text">{{ item.mes_4 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_4 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_5="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_5 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_5)"
-                >
+                    <template v-slot:item.mes_5="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_5 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_5)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_5) === 'red'"
                         class="white--text"> {{
                       item.mes_5
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_5 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_5 }}</span>
+                        <span v-else class="black--text">{{ item.mes_5 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_5 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_6="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_6 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_6)"
-                >
+                    <template v-slot:item.mes_6="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_6 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_6)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_6) === 'red'"
                         class="white--text">{{
                       item.mes_6
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_6 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_6 }}</span>
+                        <span v-else class="black--text">{{ item.mes_6 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_6 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_7="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_7 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_7)"
-                >
+                    <template v-slot:item.mes_7="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_7 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_7)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_7) === 'red'"
                         class="white--text">{{
                       item.mes_7
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_7 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_7 }}</span>
+                        <span v-else class="black--text">{{ item.mes_7 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_7 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_8="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_8 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_8)"
-                >
+                    <template v-slot:item.mes_8="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_8 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_8)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_8) === 'red'"
                         class="white--text">{{
                       item.mes_8
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_8 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_8 }}</span>
+                        <span v-else class="black--text">{{ item.mes_8 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_8 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_9="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_9 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_9)"
-                >
+                    <template v-slot:item.mes_9="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_9 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_9)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_9) === 'red'"
                         class="white--text"> {{
                       item.mes_9
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_9 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_9 }}</span>
+                        <span v-else class="black--text">{{ item.mes_9 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_9 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_10="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_10 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_10)"
-                >
+                    <template v-slot:item.mes_10="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_10 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_10)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_10) === 'red'"
                         class="white--text">{{
                       item.mes_10
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_10 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_10 }}</span>
+                        <span v-else class="black--text">{{ item.mes_10 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_10 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_11="{ item }">
+                    <template v-slot:item.mes_11="{ item }">
 
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_11 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_11)"
-                >
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_11 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_11)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_11) === 'red'"
                         class="white--text">{{
                       item.mes_11
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_11 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_11 }}</span>
+                        <span v-else class="black--text">{{ item.mes_11 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_11 }}</span>
 
-              </template>
+                    </template>
 
-              <template v-slot:item.mes_12="{ item }">
-                <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_12 !== ''"
-                        :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_12)"
-                >
+                    <template v-slot:item.mes_12="{ item }">
+                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_12 !== ''"
+                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_12)"
+                      >
                   <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_12) === 'red'"
                         class="white--text">{{
                       item.mes_12
                     }}</span>
-                  <span v-else class="black--text">{{ item.mes_12 }}</span>
-                </v-chip>
-                <span v-else> {{ item.mes_12 }}</span>
+                        <span v-else class="black--text">{{ item.mes_12 }}</span>
+                      </v-chip>
+                      <span v-else> {{ item.mes_12 }}</span>
 
-              </template>
+                    </template>
 
-            </v-data-table>
+                  </v-data-table>
+                </v-col>
+              </v-row>
+            </v-container>
 
+            <!-- visualização por categoria-->
             <CategoriaView v-else :anoCorrente="anoCorrente" :selectedSecao="selectedSecao"></CategoriaView>
 
           </v-alert>
@@ -515,6 +553,47 @@
         </v-col>
       </v-row>
     </v-container>
+
+    <!--Dialog para ver pendências-->
+    <v-dialog v-model="dialogMostraPendencia" max-width="800px">
+      <v-card>
+        <v-card-title class="justify-center" primary-title>
+          <v-icon
+            class="mr-4">
+            fa fa-exclamation-triangle
+          </v-icon>
+          Pendências
+          <v-icon
+            class="ml-4">
+            fa fa-exclamation-triangle
+          </v-icon>
+
+        </v-card-title>
+        <v-card-text>
+          <hr>
+          <br>
+          <h2>Foram encontradas as seguintes pendências:</h2>
+          <br>
+          <hr>
+          <br>
+
+          <ul>
+            <li class="mb-3" v-for="categoria in resultadoBusca[0].categorias_pendentes" :key="categoria.id">
+              {{categoria.categoria}}
+              <ul>
+                <li v-for="indicador in categoria.indicadores_pendentes" :key="indicador.id">
+                  {{indicador.indicador}} - Meses Pendentes: ( <span v-for="(mes, index) in indicador.meses_pendentes" :key="index">{{transformaMes(mes)}} </span> )
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </v-card-text>
+        <v-card-actions class="pb-5">
+          <v-spacer></v-spacer>
+          <v-btn color="grey lighten-1" @click="dialogMostraPendencia = false">Fechar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
   </v-main>
 </template>
@@ -572,7 +651,9 @@ export default {
     secaoCorrente: '',
     corGeral: 'warning',
     corCategoria: 'secondary',
-    loadingBtn: false
+    loadingBtn: false,
+    resultadoBusca: [],
+    dialogMostraPendencia: false
   }),
   computed: {
     ...mapGetters(['usuarioLogado']),
@@ -612,18 +693,20 @@ export default {
   },
   methods: {
     checaTipoUsuario () {
-      if (this.usuarioLogado.tipo === 'Administrador') {
+      if (this.usuarioLogado.tipo === 'Administrador' || this.usuarioLogado.tipo === 'Auditor') {
         this.showTable()
       }
     },
 
     async asyncMounted () {
       await this.getSecoes()
+
+      await this.fazPesquisaPendencia()
     },
 
     // tenho que melhorar isso e passar o mes e ano
     async getSecoes () {
-      if (this.usuarioLogado.tipo === 'Administrador') {
+      if (this.usuarioLogado.tipo === 'Administrador' || this.usuarioLogado.tipo === 'Auditor') {
         try {
           this.$http.get('secao/simples')
             .then(response => {
@@ -956,6 +1039,40 @@ export default {
       const currentDate = new Date()
       currentDate.setMonth(currentDate.getMonth())
       return currentDate.getMonth()// JavaScript months are 0-indexed, so add 1 for a human-readable format
+    },
+
+    async fazPesquisaPendencia () {
+      let objetoParaEnvio = {}
+      objetoParaEnvio['mes_limite'] = this.mesCorrente
+      objetoParaEnvio['ano'] = this.anoCorrente
+      try {
+        this.$http.post('ferramenta/relatoriopendencias', objetoParaEnvio)
+          .then(response => {
+            this.resultadoBusca = response.data
+          })
+          .catch(erro => console.log(erro))
+      } catch (e) {
+        console.log(e)
+      }
+    },
+
+    openDialogMostraPendencia () {
+      this.dialogMostraPendencia = true
+    },
+
+    transformaMes (mes) {
+      if (mes === 1) return 'Janeiro'
+      if (mes === 2) return 'Fevereiro'
+      if (mes === 3) return 'Março'
+      if (mes === 4) return 'Abril'
+      if (mes === 5) return 'Maio'
+      if (mes === 6) return 'Junho'
+      if (mes === 7) return 'Julho'
+      if (mes === 8) return 'Agosto'
+      if (mes === 9) return 'Setembro'
+      if (mes === 10) return 'Outubro'
+      if (mes === 11) return 'Novembro'
+      if (mes === 12) return 'Dezembro'
     }
   }
 }

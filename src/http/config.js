@@ -5,9 +5,45 @@ const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.3.4',
+    release: '201',
+    latest: true,
+    data: '05/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Ajustado o perfil de Auditor',
+      'Agora é possível verificar as pendências na tela do formulário',
+      'Melhorias na tela de ferramentas administrativas',
+      'Correção de bugs'
+    ]
+  },
+  {
+    id: '1.3.3',
+    release: '192',
+    latest: false,
+    data: '02/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Implementado o sistema de Relatório de Pendências',
+      'Correção de bugs'
+    ]
+  },
+  {
+    id: '1.3.2',
+    release: '189',
+    latest: false,
+    data: '02/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Implementado o total anual',
+      'Correção do bug que estourava o espaço das tabelas em dispositivos com telas pequenas',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.3.1',
     release: '177',
-    latest: true,
+    latest: false,
     data: '01/08/2024',
     detalhesVisiveis: false,
     detalhes: [

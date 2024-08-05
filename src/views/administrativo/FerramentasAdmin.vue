@@ -3,8 +3,9 @@
 
     <!--Barra de navegação da área administrativa-->
     <BarraNavegacao></BarraNavegacao>
+
     <v-container fluid>
-      <v-row>
+      <v-row class="pt-0" dense>
         <v-col>
 
           <!-- header -->
@@ -19,8 +20,22 @@
             </h2>
           </v-alert>
 
+          <!-- menu de ferramentas-->
+          <v-alert dense elevation="12">
+            <h2>Menu de ferramentas</h2>
+            <v-btn :class="ajustaCorBtn('integridade')" @click="changeVisibilityFerramenta('analiseIntegridade')">
+              Análise de
+              integridade do
+              banco
+            </v-btn>
+            <v-btn :class="ajustaCorBtn('relatorio')" @click="changeVisibilityFerramenta('relatorioPendencias')">
+              Relatório de
+              pendências
+            </v-btn>
+          </v-alert>
+
           <!-- análise de integridade do banco-->
-          <v-alert elevation="21">
+          <v-alert v-if="integridadeBancoVisibility" elevation="21">
             <h3>Análise de integridade do Banco de Dados</h3>
             <v-row>
               <v-col cols="12">
@@ -133,7 +148,11 @@
             </v-row>
           </v-alert>
 
-          <RelatorioPendencias class="mt-0"></RelatorioPendencias>
+          <RelatorioPendencias v-if="relatorioPendenciasVisibility" class="mt-0"/>
+
+          <v-alert v-if="alertEscolha" elevation="12" type="info">
+            <h3>Selecione uma opção do menu acima.</h3>
+          </v-alert>
         </v-col>
       </v-row>
     </v-container>
@@ -269,7 +288,10 @@ export default {
     dialogDeleteRegistro: false,
     dialogDeleteRegistroTodos: false,
     selectedRegistro: {},
-    dadodDuplicadosInexistentes: false
+    dadodDuplicadosInexistentes: false,
+    integridadeBancoVisibility: false,
+    relatorioPendenciasVisibility: false,
+    alertEscolha: true
   }),
   computed: {
     ...mapGetters(['usuarioLogado'])
@@ -403,6 +425,36 @@ export default {
         this.$toastr.e(
           'Houve um erro na tentativa de execução: <br>' + e, 'Erro!'
         )
+      }
+    },
+
+    changeVisibilityFerramenta (qual) {
+      if (qual === 'analiseIntegridade') {
+        this.integridadeBancoVisibility = true
+        this.relatorioPendenciasVisibility = false
+        this.alertEscolha = false
+      } else if (qual === 'relatorioPendencias') {
+        this.integridadeBancoVisibility = false
+        this.relatorioPendenciasVisibility = true
+        this.alertEscolha = false
+      }
+    },
+
+    ajustaCorBtn (selecionado) {
+      if (selecionado === 'integridade') {
+        if (this.integridadeBancoVisibility) {
+          return 'secondary'
+        } else {
+          return 'primary'
+        }
+      } else if (selecionado === 'relatorio') {
+        if (this.relatorioPendenciasVisibility) {
+          return 'secondary'
+        } else {
+          return 'primary'
+        }
+      } else {
+        return 'primary'
       }
     }
   }
