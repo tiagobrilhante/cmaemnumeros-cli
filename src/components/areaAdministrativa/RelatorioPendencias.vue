@@ -207,10 +207,13 @@ export default {
       let objetoParaEnvio = {}
       objetoParaEnvio['mes_limite'] = this.mesLimite
       objetoParaEnvio['ano'] = this.ano_verifica_fim
+      objetoParaEnvio['secao'] = 'todos'
+      objetoParaEnvio['tipo'] = 'pesquisa'
 
       try {
         this.$http.post('ferramenta/relatoriopendencias', objetoParaEnvio)
           .then(response => {
+            console.log(response.data)
             this.resultadoBusca = response.data
           })
           .catch(erro => console.log(erro))

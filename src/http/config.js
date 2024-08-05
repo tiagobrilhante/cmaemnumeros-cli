@@ -5,9 +5,22 @@ const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.3.5',
+    release: '213',
+    latest: true,
+    data: '05/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Melhorado o sistema de verificação de pendências',
+      'Corrigido o bug que exibia categorias inativas nas pesquisas',
+      'Ajustado o tamanho da tabela para "dense" e o tamanho do texto nas mesmas',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.3.4',
     release: '201',
-    latest: true,
+    latest: false,
     data: '05/08/2024',
     detalhesVisiveis: false,
     detalhes: [

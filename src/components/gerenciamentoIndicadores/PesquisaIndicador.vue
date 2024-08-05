@@ -91,6 +91,7 @@
             :items-per-page="-1"
             class="elevation-21 mt-4"
             disable-pagination
+            dense
             hide-default-footer
           >
 

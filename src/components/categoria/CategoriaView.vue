@@ -2,11 +2,46 @@
   <v-container fluid>
     <v-row>
       <v-col>
-        <v-alert v-if="meusDados.length > 0" color="blue lighten-2">
-          <v-btn :color="colorTextBtn" :loading="loaderBtnExpandir" small @click="expandeTodes">{{
-              textoBtnExpandirOcultar
-            }}
-          </v-btn>
+        <v-alert v-if="meusDados.length > 0" color="blue lighten-2" dense>
+
+          <v-row>
+            <v-col class="mb-auto mt-auto" cols="3">
+              <v-btn :color="colorTextBtn" :loading="loaderBtnExpandir" small @click="expandeTodes">{{
+                  textoBtnExpandirOcultar
+                }}
+              </v-btn>
+            </v-col>
+            <v-col>
+              <!-- alertas de pendências-->
+              <v-alert dismissible type="warning" dense class="mb-0" v-if="resultadoBusca.length > 0">
+                <v-row>
+                  <v-col cols="2"><h3>Alertas</h3></v-col>
+                  <v-col>
+                  <span v-if="resultadoBusca.length > 0">
+                    <span v-if="resultadoBusca[0].categorias_pendentes.length > 0">Pendências: {{
+                        resultadoBusca[0].categorias_pendentes.length
+                      }}</span>
+
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        class="ml-2 pb-1"
+                        v-bind="attrs"
+                        @click="openDialogMostraPendencia()"
+                        v-on="on"
+                      >
+                        mdi-information
+                      </v-icon>
+                    </template>
+                    <span>Exibir informações sobre as pendências</span>
+                  </v-tooltip>
+                  </span>
+                  </v-col>
+                </v-row>
+              </v-alert>
+            </v-col>
+          </v-row>
+
         </v-alert>
 
         <!-- carregamento de dados - loading-->
@@ -91,6 +126,7 @@
             :items-per-page="-1"
             class="elevation-21"
             disable-pagination
+            dense
             hide-default-footer
           >
 
@@ -135,7 +171,7 @@
                   <v-icon small @click="handleTotalAnoClick(categoria, 'mes')">mdi-information</v-icon>
                 </td>
                 <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
-                  {{ pegaSomaMes(categoria, index + 1) }}
+                  <span class="texto_chip">{{ pegaSomaMes(categoria, index + 1) }}</span>
                 </td>
                 <td class="text-center">
                   <v-tooltip v-if="pegaSomaMes(categoria, 99) === 'Média'" top>
@@ -174,7 +210,7 @@
             <!-- Janeiro-->
             <template v-slot:item.mes_1="{ item }">
         <span v-if="item.valor && retornaValorCorreto(item.valor, 1) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1"
+               <v-chip small v-if="item.indicador.meta === 1" class="texto_chip"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 1))"
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 1)) === 'red'"
@@ -183,7 +219,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 1) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 1) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 1) }}</span>
             </span>
               <span v-else class="text-center">-</span>
             </template>
@@ -191,7 +227,7 @@
             <!-- Fevereiro-->
             <template v-slot:item.mes_2="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 2) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1"
+               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 2))"
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 2)) === 'red'"
@@ -200,7 +236,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 2) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 2) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 2) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -208,7 +244,7 @@
             <!-- Março-->
             <template v-slot:item.mes_3="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 3) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1"
+               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 3))"
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 3)) === 'red'"
@@ -217,7 +253,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 3) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 3) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 3) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -225,7 +261,7 @@
             <!-- Abril-->
             <template v-slot:item.mes_4="{ item }">
             <span v-if="item.valor  && retornaValorCorreto(item.valor, 4) !== undefined">
-              <v-chip v-if="item.indicador.meta === 1"
+              <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 4))"
               >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 4)) === 'red'"
@@ -234,7 +270,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 4) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 4) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 4) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -242,7 +278,7 @@
             <!-- Maio-->
             <template v-slot:item.mes_5="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 5) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1"
+               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 5))"
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 5)) === 'red'"
@@ -251,7 +287,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 5) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 5) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 5) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -259,7 +295,7 @@
             <!-- Junho-->
             <template v-slot:item.mes_6="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 6) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1"
+               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 6))"
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 6)) === 'red'"
@@ -268,7 +304,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 6) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 6) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 6) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -276,7 +312,7 @@
             <!-- Julho-->
             <template v-slot:item.mes_7="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 7) !== undefined">
-              <v-chip v-if="item.indicador.meta === 1"
+              <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 7))"
               >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 7)) === 'red'"
@@ -285,7 +321,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 7) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 7) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 7) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -293,7 +329,7 @@
             <!-- Agosto-->
             <template v-slot:item.mes_8="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 8) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1"
+               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 8))"
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 8)) === 'red'"
@@ -302,7 +338,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 8) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 8) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 8) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -310,7 +346,7 @@
             <!-- Setembro-->
             <template v-slot:item.mes_9="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 9) !== undefined">
-              <v-chip v-if="item.indicador.meta === 1"
+              <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 9))"
               >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 9)) === 'red'"
@@ -319,7 +355,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 9) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 9) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 9) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -327,7 +363,7 @@
             <!-- Outubro-->
             <template v-slot:item.mes_10="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 10) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1"
+               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 10))"
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 10)) === 'red'"
@@ -336,7 +372,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 10) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 10) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 10) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -344,7 +380,7 @@
             <!-- Novembro-->
             <template v-slot:item.mes_11="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 11) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1"
+               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 11))"
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 11)) === 'red'"
@@ -353,7 +389,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 11) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 11) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 11) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -361,7 +397,7 @@
             <!-- Dezembro-->
             <template v-slot:item.mes_12="{ item }">
             <span v-if="item.valor && retornaValorCorreto(item.valor, 12) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1"
+               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 12))"
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 12)) === 'red'"
@@ -370,7 +406,7 @@
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 12) }}</span>
             </v-chip>
-              <span v-else>{{ retornaValorCorreto(item.valor, 12) }}</span>
+              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 12) }}</span>
             </span>
               <span v-else>-</span>
             </template>
@@ -379,7 +415,7 @@
             <template v-slot:item.total_ano="{ item }">
 
               <td :class="getStatusClass('Active')" class="text-center">
-                {{ getTotalAno(item, categoria) }}
+                <span class="texto_chip">{{ getTotalAno(item, categoria) }}</span>
               </td>
             </template>
 
@@ -503,6 +539,49 @@
           </v-card>
         </v-dialog>
 
+        <!--Dialog para ver pendências-->
+        <v-dialog v-model="dialogMostraPendencia" max-width="800px">
+          <v-card>
+            <v-card-title class="justify-center" primary-title>
+              <v-icon
+                class="mr-4">
+                fa fa-exclamation-triangle
+              </v-icon>
+              Pendências
+              <v-icon
+                class="ml-4">
+                fa fa-exclamation-triangle
+              </v-icon>
+
+            </v-card-title>
+            <v-card-text>
+              <hr>
+              <br>
+              <h2>Foram encontradas as seguintes pendências:</h2>
+              <br>
+              <hr>
+              <br>
+
+              <ul v-if="resultadoBusca.length > 0">
+                <li v-for="categoria in resultadoBusca[0].categorias_pendentes" :key="categoria.id" class="mb-3">
+                  {{ categoria.categoria }}
+                  <ul>
+                    <li v-for="indicador in categoria.indicadores_pendentes" :key="indicador.id">
+                      {{ indicador.indicador }} - Meses Pendentes: ( <span
+                      v-for="(mes, index) in indicador.meses_pendentes"
+                      :key="index">{{ transformaMes(mes) }} </span> )
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </v-card-text>
+            <v-card-actions class="pb-5">
+              <v-spacer></v-spacer>
+              <v-btn color="grey lighten-1" @click="dialogMostraPendencia = false">Fechar</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
       </v-col>
     </v-row>
   </v-container>
@@ -551,12 +630,14 @@ export default {
     tipoDeTotalVigente: '',
     textoBtnExpandirOcultar: 'Expandir Todos',
     colorTextBtn: 'primary',
-    loaderBtnExpandir: false
+    loaderBtnExpandir: false,
+    dialogMostraPendencia: false
   }),
 
   props: {
     selectedSecao: Object,
-    anoCorrente: Number
+    anoCorrente: Number,
+    resultadoBusca: Array
   },
 
   computed: {
@@ -945,6 +1026,24 @@ export default {
       } else {
         return `${totalExpected} / ${missingCount}`
       }
+    },
+
+    openDialogMostraPendencia () {
+      this.dialogMostraPendencia = true
+    },
+    transformaMes (mes) {
+      if (mes === 1) return 'Janeiro'
+      if (mes === 2) return 'Fevereiro'
+      if (mes === 3) return 'Março'
+      if (mes === 4) return 'Abril'
+      if (mes === 5) return 'Maio'
+      if (mes === 6) return 'Junho'
+      if (mes === 7) return 'Julho'
+      if (mes === 8) return 'Agosto'
+      if (mes === 9) return 'Setembro'
+      if (mes === 10) return 'Outubro'
+      if (mes === 11) return 'Novembro'
+      if (mes === 12) return 'Dezembro'
     }
   }
 }
@@ -957,5 +1056,9 @@ export default {
 
 .status-inactive {
   background-color: #f8d7da; /* Vermelho claro */
+}
+
+.texto_chip {
+  font-size: 1.1em !important;
 }
 </style>

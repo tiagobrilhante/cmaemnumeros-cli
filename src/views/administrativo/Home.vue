@@ -78,9 +78,11 @@
 
       </v-row>
 
+      <!-- pesquisa por indicador-->
       <v-alert class="pt-0 pb-0" dense elevation="21">
         <PesquisaIndicador/>
       </v-alert>
+
       <!-- seletor por seção-->
       <v-alert v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Auditor'"
                class="p-5"
@@ -128,10 +130,14 @@
             </v-alert>
 
             <!-- alertas de pendências-->
-            <v-alert elevation="5" type="warning" dismissible>
+            <v-alert dismissible elevation="5" type="warning" v-if="resultadoBusca.length > 0">
               <v-row>
                 <v-col cols="2"><h3>Alertas</h3></v-col>
-                <v-col>Pendências: {{ resultadoBusca[0].categorias_pendentes.length }}
+                <v-col>
+                  <span v-if="resultadoBusca.length > 0">
+                    <span v-if="resultadoBusca[0].categorias_pendentes.length > 0">Pendências: {{
+                        resultadoBusca[0].categorias_pendentes.length
+                      }}</span>
 
                   <v-tooltip top>
                     <template v-slot:activator="{ on, attrs }">
@@ -146,13 +152,12 @@
                     </template>
                     <span>Exibir informações sobre as pendências</span>
                   </v-tooltip>
+                  </span>
                 </v-col>
               </v-row>
             </v-alert>
 
-            <!-- nesse caso eu pego a categoria-->
-            <v-row v-if="selectedSecao.categoria.length > 0">
-
+            <v-row v-if="selectedSecao.categoria && selectedSecao.categoria.length > 0">
               <v-col v-for="categoria in selectedSecao.categoria" v-if="categoria.ativo" :key="categoria.id" cols="3">
                 <v-card class="pl-2 pr-2 pb-1" color="blue lighten-4" elevation="21">
                   <h4 class="mb-2">{{ categoria.nome }}</h4>
@@ -170,25 +175,23 @@
                       type="number"
                       @input="updateIndicadorValor(indicador, $event)"
                     ></v-text-field>
-                    <span v-if="indicador.indicador_valor.length === 0 || indicador.indicador_valor[0].valor === ''"
-                          class="ml-2">Dado não lançado</span>
+                    <span
+                      v-if="indicador.indicador_valor.length === 0 || indicador.indicador_valor[0].valor === '' || indicador.indicador_valor[0].valor === undefined"
+                      class="ml-2">Dado não lançado</span>
                     <span v-else class="ml-2">
-                      {{ indicador.indicador_valor[0].atualizado }}
-                    </span>
+          {{ indicador.indicador_valor[0].atualizado }}
+        </span>
                   </v-alert>
                   <v-btn :loading="loadingBtn" block class="primary" @click="gravaValores">
                     <v-icon class="mr-5">mdi-content-save-move</v-icon>
                     Gravar Valores
                   </v-btn>
-
                 </v-card>
-
               </v-col>
-
             </v-row>
 
             <!-- caso não tenha nenhum indicador cadastrado-->
-            <v-row v-else>
+            <v-row v-if="selectedSecao.categoria && !awaitData && selectedSecao.categoria.length === 0">
               <v-col>
                 <v-alert class="text-center mt-5" elevation="15" type="warning">
                   Esta Seção ainda não possui indicadores cadastrados
@@ -197,9 +200,8 @@
             </v-row>
 
             <!-- gravar valores-->
-            <v-row v-if="selectedSecao.categoria.length > 0">
+            <v-row v-if="selectedSecao.categoria && selectedSecao.categoria.length > 0">
               <v-col>
-
               </v-col>
               <v-col>
                 <v-btn :loading="loadingBtn" block class="primary" x-large @click="gravaValores">
@@ -212,7 +214,14 @@
           </v-col>
 
           <v-col v-else>
-            <v-alert type="info"> Aguardando Dados</v-alert>
+            <v-alert color="yellow lighten-2">
+              <v-progress-circular
+                class="mr-10"
+                color="primary"
+                indeterminate
+              ></v-progress-circular>
+              Aguarde o carregamento de dados...
+            </v-alert>
           </v-col>
 
         </v-row>
@@ -281,7 +290,9 @@
 
               <!-- separador-->
               <v-col class="text-right">
-                <v-btn v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Usuário'" color="success" @click="showTable">Formulário</v-btn>
+                <v-btn v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Usuário'" color="success"
+                       @click="showTable">Formulário
+                </v-btn>
               </v-col>
 
             </v-row>
@@ -546,7 +557,7 @@
             </v-container>
 
             <!-- visualização por categoria-->
-            <CategoriaView v-else :anoCorrente="anoCorrente" :selectedSecao="selectedSecao"></CategoriaView>
+            <CategoriaView v-else :anoCorrente="anoCorrente" :selectedSecao="selectedSecao" :resultadoBusca = "resultadoBusca"></CategoriaView>
 
           </v-alert>
 
@@ -577,12 +588,13 @@
           <hr>
           <br>
 
-          <ul>
-            <li class="mb-3" v-for="categoria in resultadoBusca[0].categorias_pendentes" :key="categoria.id">
-              {{categoria.categoria}}
+          <ul v-if="resultadoBusca.length > 0">
+            <li v-for="categoria in resultadoBusca[0].categorias_pendentes" :key="categoria.id" class="mb-3">
+              {{ categoria.categoria }}
               <ul>
                 <li v-for="indicador in categoria.indicadores_pendentes" :key="indicador.id">
-                  {{indicador.indicador}} - Meses Pendentes: ( <span v-for="(mes, index) in indicador.meses_pendentes" :key="index">{{transformaMes(mes)}} </span> )
+                  {{ indicador.indicador }} - Meses Pendentes: ( <span v-for="(mes, index) in indicador.meses_pendentes"
+                                                                       :key="index">{{ transformaMes(mes) }} </span> )
                 </li>
               </ul>
             </li>
@@ -700,8 +712,6 @@ export default {
 
     async asyncMounted () {
       await this.getSecoes()
-
-      await this.fazPesquisaPendencia()
     },
 
     // tenho que melhorar isso e passar o mes e ano
@@ -742,8 +752,10 @@ export default {
           this.$http.post('indicadores/secao/refinado', objetoParaEnvio)
             .then(response => {
               this.selectedSecao = response.data
-              this.awaitData = false
               this.getResumoVigente(secaoId, ano)
+              this.awaitData = false
+
+              this.fazPesquisaPendencia()
             })
             .catch(erro => console.log(erro))
         } catch (e) {
@@ -771,8 +783,6 @@ export default {
       this.selectedSecao = {}
       this.awaitData = true
       this.getIndicadoresVigentes(secao.id, this.mesCorrente, this.anoCorrente, 'consulta').then(() => {
-        // Após a atualização dos dados, `tabelaDados` será recalculado automaticamente
-        this.awaitData = false
       }).catch(error => {
         console.error('Erro ao buscar indicadores:', error)
         this.awaitData = false
@@ -869,6 +879,8 @@ export default {
     },
 
     escolheMesIndicador (mes) {
+      this.resultadoBusca = []
+      this.awaitData = true
       this.mesCorrente = mes
       this.pegaIndicadoresSecao(this.selectedSecao)
     },
@@ -1042,9 +1054,12 @@ export default {
     },
 
     async fazPesquisaPendencia () {
+      this.resultadoBusca = []
       let objetoParaEnvio = {}
       objetoParaEnvio['mes_limite'] = this.mesCorrente
       objetoParaEnvio['ano'] = this.anoCorrente
+      objetoParaEnvio['secao'] = this.selectedSecao.id
+      objetoParaEnvio['tipo'] = 'form'
       try {
         this.$http.post('ferramenta/relatoriopendencias', objetoParaEnvio)
           .then(response => {
