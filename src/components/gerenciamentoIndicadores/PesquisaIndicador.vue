@@ -33,7 +33,7 @@
             <v-col class="text-right" cols="2">
               <v-btn
                 class="link"
-                @click="dialogVerResultados = false"
+                @click="closeDialogVerResultado"
               >
                 X
               </v-btn>
@@ -42,8 +42,7 @@
 
         </v-card-title>
         <v-card-text>
-
-          <v-row v-if="resultadoBusca.length > 0">
+          <v-row v-if="resultadoBusca.length > 0" class="mb-3">
             <v-col></v-col>
             <!--btn Navega Ano-->
             <v-col class="text-center">
@@ -52,7 +51,7 @@
 
                 <!-- dminui ano-->
                 <v-col class="text-right">
-                  <v-btn class="primary" @click="changeYear('down')">
+                  <v-btn class="primary" elevation="10" @click="changeYear('down')">
                     <v-icon>mdi-chevron-left</v-icon>
                   </v-btn>
                 </v-col>
@@ -66,11 +65,11 @@
 
                 <!-- aimenta ano-->
                 <v-col class="text-left">
-                  <v-btn v-if="anoBase !== anoCorrente" class="primary" @click="changeYear('up')">
+                  <v-btn v-if="anoBase !== anoCorrente" class="primary" elevation="10" @click="changeYear('up')">
                     <v-icon>mdi-chevron-right</v-icon>
                   </v-btn>
 
-                  <v-btn v-if="anoBase !== anoCorrente" class="success" @click="changeYear('corrente')">
+                  <v-btn v-if="anoBase !== anoCorrente" class="success" elevation="10" @click="changeYear('corrente')">
                     <v-icon>mdi-calendar-today</v-icon>
                   </v-btn>
 
@@ -82,78 +81,133 @@
             <v-col></v-col>
           </v-row>
 
-          <v-data-table
-            v-for="categoria in resultadoBusca"
-            v-if="categoria.indicadores.length > 0"
-            :key="categoria.id"
-            :headers="headersDados"
-            :items="categoria.indicadores"
-            :items-per-page="-1"
-            class="elevation-21 mt-4"
-            disable-pagination
-            dense
-            hide-default-footer
-          >
+          <!-- expande todes-->
+          <v-alert v-if="resultadoBusca.length > 0" color="blue lighten-2" dense>
+            <v-row>
+              <v-col class="mb-auto mt-auto" cols="3">
+                <v-btn :color="colorTextBtn" :loading="loaderBtnExpandir" small @click="expandeTodes">{{
+                    textoBtnExpandirOcultar
+                  }}
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-alert>
 
-            <!-- template para titulo e abrir grafico anual-->
-            <template v-slot:top>
-              <v-toolbar class="green lighten-3"
-                         flat
-              >
-                <!-- Título da tabela-->
-                <v-toolbar-title>
+          <v-alert v-for="categoria in resultadoBusca"
+                   v-if="categoria.indicadores.length > 0"
+                   :key="categoria.id" color="green lighten-2"
+                   elevation="12">
+
+            <!-- expande -nome-detalhe e gera grafico anual-->
+            <v-row v-if="!categoria.expanded">
+              <!-- expande - nome e detalhes-->
+              <v-col>
+                <span class="text-h6">
+                  <v-icon class="mr-5" @click="toggleExpand(categoria)">mdi-plus</v-icon>
                   {{ categoria.nome }} - <b>Seção Responsável: {{ categoria.secao.sigla }}</b>
                   <v-icon class="ml-10" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
-                </v-toolbar-title>
+                </span>
+              </v-col>
 
-                <!-- abre grafico anual-->
-                <v-row>
-                  <v-col class="text-right">
-                    <v-btn class="primary" small @click="openGraphDialog(categoria)">Gerar Gráfico</v-btn>
-                  </v-col>
-                </v-row>
+              <!-- gera grafico anual-->
+              <v-col class="text-right" cols="4">
+                <v-btn class="primary" small @click="openGraphDialog(categoria)">
+                  <v-icon class="mr-4" small>mdi-chart-bar</v-icon>
+                  Gerar Gráfico Anual
+                </v-btn>
+              </v-col>
 
-              </v-toolbar>
+            </v-row>
 
-            </template>
+            <v-data-table
+              v-if="categoria.indicadores.length > 0 && categoria.expanded"
+              :key="categoria.id"
+              :headers="headersDados"
+              :items="categoria.indicadores"
+              :items-per-page="-1"
+              class="elevation-21"
+              dense
+              disable-pagination
+              hide-default-footer
+            >
 
-            <!-- template para o nome do indicador-->
-            <template v-slot:item.indicador="{ item }">
+              <!-- template para titulo e abrir grafico anual-->
+              <template v-slot:top>
+                <v-toolbar class="green lighten-3"
+                           flat
+                >
+                  <!-- Título da tabela-->
+                  <v-toolbar-title>
+                    <v-icon class="mr-5" @click="toggleExpand(categoria)">mdi-minus</v-icon>
+                    {{ categoria.nome }} - <b>Seção Responsável: {{ categoria.secao.sigla }}</b>
+                    <v-icon class="ml-10" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
+                  </v-toolbar-title>
 
-              {{ item.nome }}
+                  <!-- abre grafico anual-->
+                  <v-row>
+                    <v-col class="text-right">
+                      <v-btn class="primary" small @click="openGraphDialog(categoria)">
+                        <v-icon class="mr-4" small>mdi-chart-bar</v-icon>
+                        Gerar Gráfico Anual
+                      </v-btn>
+                    </v-col>
+                  </v-row>
 
-            </template>
+                </v-toolbar>
 
-            <!-- linhas para totais mensais e gerar gráficos -->
-            <template v-if="categoria.indicadores.length > 1" v-slot:body.append>
-              <tr class="cyan lighten-2">
-                <td class="text-center">
-                  Total (M)
-                  <v-icon small @click="handleTotalAnoClick(categoria, 'mes')">mdi-information</v-icon>
-                </td>
-                <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
-                  {{ pegaSomaMes(categoria, index + 1) }}
-                </td>
-                <td class="text-center">
-                  -
-                </td>
-              </tr>
-              <tr class="yellow lighten-4">
-                <td class="text-center">
-                  Gerar Gráfico<br>
-                  Mensal
-                </td>
-                <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
-                  <v-btn v-if="mostraBtnMes(categoria, index)" color="secondary" x-small
-                         @click="generateMonthGraph(categoria, index)">{{ month }}
-                  </v-btn>
-                </td>
-                <td></td>
-              </tr>
-            </template>
+              </template>
 
-            <!-- Janeiro-->
-            <template v-slot:item.mes_1="{ item }">
+              <!-- template para o nome do indicador-->
+              <template v-slot:item.indicador="{ item }">
+
+                {{ item.nome }}
+
+              </template>
+
+              <!-- linhas para totais mensais e gerar gráficos -->
+              <template v-if="categoria.indicadores.length > 1" v-slot:body.append>
+                <tr class="cyan lighten-2">
+                  <td class="text-center">
+                    Total (M)
+                    <v-icon small @click="handleTotalAnoClick(categoria, 'mes')">mdi-information</v-icon>
+                  </td>
+                  <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
+                    {{ pegaSomaMes(categoria, index + 1) }}
+                  </td>
+                  <td class="text-center">
+                    <v-tooltip v-if="pegaSomaMes(categoria, 99) === 'Média'" top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                          v-bind="attrs"
+                          v-on="on"
+                        >
+                          mdi-information
+                        </v-icon>
+                      </template>
+                      <span>Total Anual em Média - não é possível estipular um valor</span>
+                    </v-tooltip>
+                    <span v-else>{{ pegaSomaMes(categoria, 99) }}</span>
+                  </td>
+                </tr>
+                <tr class="yellow lighten-4">
+                  <td class="text-center">
+                    Gerar Gráfico<br>
+                    Mensal
+                  </td>
+                  <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
+                    <v-btn v-if="mostraBtnMes(categoria, index)" color="secondary" x-small
+                           @click="generateMonthGraph(categoria, index)">{{ month }}
+                    </v-btn>
+                  </td>
+                  <td class="text-center">
+                    <v-btn color="secondary" x-small @click="generateMonthGraph(categoria, 99)">Geral
+                    </v-btn>
+                  </td>
+                </tr>
+              </template>
+
+              <!-- Janeiro-->
+              <template v-slot:item.mes_1="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 1) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 1))"
@@ -166,11 +220,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 1) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- Fevereiro-->
-            <template v-slot:item.mes_2="{ item }">
+              <!-- Fevereiro-->
+              <template v-slot:item.mes_2="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 2) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 2))"
@@ -183,11 +237,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 2) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- Março-->
-            <template v-slot:item.mes_3="{ item }">
+              <!-- Março-->
+              <template v-slot:item.mes_3="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 3) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 3))"
@@ -200,11 +254,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 3) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- Abril-->
-            <template v-slot:item.mes_4="{ item }">
+              <!-- Abril-->
+              <template v-slot:item.mes_4="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 4) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 4))"
@@ -217,11 +271,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 4) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- Maio-->
-            <template v-slot:item.mes_5="{ item }">
+              <!-- Maio-->
+              <template v-slot:item.mes_5="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 5) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 5))"
@@ -234,11 +288,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 5) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- junho-->
-            <template v-slot:item.mes_6="{ item }">
+              <!-- junho-->
+              <template v-slot:item.mes_6="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 6) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 6))"
@@ -251,11 +305,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 6) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- julho-->
-            <template v-slot:item.mes_7="{ item }">
+              <!-- julho-->
+              <template v-slot:item.mes_7="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 7) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 7))"
@@ -268,11 +322,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 7) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- Agosto-->
-            <template v-slot:item.mes_8="{ item }">
+              <!-- Agosto-->
+              <template v-slot:item.mes_8="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 8) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 8))"
@@ -285,11 +339,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 8) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- Setembro-->
-            <template v-slot:item.mes_9="{ item }">
+              <!-- Setembro-->
+              <template v-slot:item.mes_9="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 9) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 9))"
@@ -302,11 +356,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 9) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- Outubro-->
-            <template v-slot:item.mes_10="{ item }">
+              <!-- Outubro-->
+              <template v-slot:item.mes_10="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 10) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 10))"
@@ -319,11 +373,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 10) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- Novembro-->
-            <template v-slot:item.mes_11="{ item }">
+              <!-- Novembro-->
+              <template v-slot:item.mes_11="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 11) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 11))"
@@ -336,11 +390,11 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 11) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- Dezembro-->
-            <template v-slot:item.mes_12="{ item }">
+              <!-- Dezembro-->
+              <template v-slot:item.mes_12="{ item }">
         <span v-if="item.indicador_valor && retornaValorCorreto(item.indicador_valor, 12) !== undefined">
                <v-chip v-if="item.meta === 1"
                        :color="getColorForIndicatorTable(item, retornaValorCorreto(item.indicador_valor, 12))"
@@ -353,22 +407,24 @@
             </v-chip>
               <span v-else>{{ retornaValorCorreto(item.indicador_valor, 12) }}</span>
             </span>
-              <span v-else class="text-center">-</span>
-            </template>
+                <span v-else class="text-center">-</span>
+              </template>
 
-            <!-- total-->
-            <template v-slot:item.total_ano="{ item }">
-              <td :class="getStatusClass('Active')" class="text-center">
-                {{ getTotalAno(item, categoria) }}
-              </td>
-            </template>
+              <!-- total-->
+              <template v-slot:item.total_ano="{ item }">
+                <td :class="getStatusClass('Active')" class="text-center">
+                  {{ getTotalAno(item, categoria) }}
+                </td>
+              </template>
 
-            <template v-slot:header.total_ano="{ header }">
-              <v-icon small @click="handleTotalAnoClick(categoria, 'ano')">mdi-information</v-icon>
-              {{ header.text }}
-            </template>
+              <template v-slot:header.total_ano="{ header }">
+                <v-icon small @click="handleTotalAnoClick(categoria, 'ano')">mdi-information</v-icon>
+                {{ header.text }}
+              </template>
 
-          </v-data-table>
+            </v-data-table>
+
+          </v-alert>
 
           <v-alert v-if="resultadoBusca.length === 0" class="mt-5" type="info">
             <v-row>
@@ -383,7 +439,7 @@
           <v-spacer></v-spacer>
           <v-btn
             color="secondary"
-            @click="dialogVerResultados = false"
+            @click="closeDialogVerResultado"
           >
             Fechar
           </v-btn>
@@ -549,7 +605,10 @@ export default {
     dialogDetailsIndicador: false,
     indicadorDetalhe: {},
     dialogDetailsTotal: false,
-    tipoDeTotalVigente: ''
+    tipoDeTotalVigente: '',
+    textoBtnExpandirOcultar: 'Expandir Todos',
+    colorTextBtn: 'primary',
+    loaderBtnExpandir: false
   }),
   props: {},
 
@@ -565,35 +624,34 @@ export default {
   },
 
   methods: {
+    // tenho que resolver isso aqui pois está pedindo para digitar algo
     fazBusca (anoBusca) {
-      if (this.search.length > 0) {
-        let anoNow = 0
-        if (anoBusca === 'agora') {
-          anoNow = new Date().getFullYear()
-        } else {
-          anoNow = anoBusca
-        }
-        let objetoParaEnvio = {
-          busca: this.search,
-          ano: anoNow
-        }
-        try {
-          this.$http.post('categorias/busca', objetoParaEnvio)
-            .then(response => {
-              this.resultadoBusca = response.data
-              this.dialogVerResultados = true
-              this.search = ''
-            })
-            .catch(erro => console.log(erro))
-        } catch (e) {
-          console.log(e)
-        }
+      let anoNow = 0
+      if (anoBusca === 'agora') {
+        anoNow = new Date().getFullYear()
       } else {
-        this.$toastr.e(
-          'Você deve digitar algo', 'Erro!'
-        )
+        anoNow = anoBusca
+      }
+      let objetoParaEnvio = {
+        busca: this.search,
+        ano: anoNow
+      }
+      try {
+        this.$http.post('categorias/busca', objetoParaEnvio)
+          .then(response => {
+            this.resultadoBusca = response.data.map(categoria => {
+              return {...categoria, expanded: false}
+            })
+            this.dialogVerResultados = true
+            this.textoBtnExpandirOcultar = 'Expandir Todos'
+            this.colorTextBtn = 'primary'
+          })
+          .catch(erro => console.log(erro))
+      } catch (e) {
+        console.log(e)
       }
     },
+
     getColorForIndicator (indicador) {
       if (indicador.meta) {
         if (indicador.indicador_valor.length > 0) {
@@ -689,23 +747,36 @@ export default {
 
       let labels = []
       let series = []
-      let mes = indexMonth + 1
+      if (indexMonth === 99) {
+        for (let i = 0; i < categoria.indicadores.length; i++) {
+          labels.push(categoria.indicadores[i].nome)
+          series.push(this.getTotalAno(categoria.indicadores[i], this.selectedCategoria))
+        }
+        this.dadosGraph = series
+        this.labelpie = labels
+        this.garphTipo = 'Geral - ' + this.anoCorrente
+        this.nomeCategoria = this.selectedCategoria.nome
 
-      for (let i = 0; i < categoria.indicadores.length; i++) {
-        labels.push(categoria.indicadores[i].nome)
+        this.dialogVerGrafico = true
+      } else {
+        let mes = indexMonth + 1
 
-        for (let j = 0; j < categoria.indicadores[i].indicador_valor.length; j++) {
-          if (categoria.indicadores[i].indicador_valor[j].mes === mes) {
-            series.push(categoria.indicadores[i].indicador_valor[j].valor)
+        for (let i = 0; i < categoria.indicadores.length; i++) {
+          labels.push(categoria.indicadores[i].nome)
+
+          for (let j = 0; j < categoria.indicadores[i].indicador_valor.length; j++) {
+            if (categoria.indicadores[i].indicador_valor[j].mes === mes) {
+              series.push(categoria.indicadores[i].indicador_valor[j].valor)
+            }
           }
         }
+
+        this.dadosGraph = series
+        this.labelpie = labels
+        this.nomeCategoria = this.selectedCategoria.nome
+
+        this.dialogVerGrafico = true
       }
-
-      this.dadosGraph = series
-      this.labelpie = labels
-      this.nomeCategoria = this.selectedCategoria.nome
-
-      this.dialogVerGrafico = true
     },
 
     mostraBtnMes (categoria, indexMes) {
@@ -739,6 +810,7 @@ export default {
         this.fazBusca(this.anoCorrente)
       })
     },
+
     getCurrentDate () {
       // Obtém a data atual
       const currentDate = new Date()
@@ -753,43 +825,62 @@ export default {
 
     pegaSomaMes (categoria, mes) {
       let arrayTrabalho = []
-
-      for (let i = 0; i < categoria.indicadores.length; i++) {
-        for (let j = 0; j < categoria.indicadores[i].indicador_valor.length; j++) {
-          if (categoria.indicadores[i].indicador_valor[j].mes === mes) {
+      if (mes === 99) {
+        for (let i = 0; i < categoria.indicadores.length; i++) {
+          for (let j = 0; j < categoria.indicadores[i].indicador_valor.length; j++) {
             arrayTrabalho.push(categoria.indicadores[i].indicador_valor[j].valor)
           }
         }
-      }
 
-      if (categoria.mapeamento_total_mensal === 'Somatório') {
-        if (arrayTrabalho.length === 0) {
-          return '-'
-        } else {
-          return arrayTrabalho.reduce((a, b) => a + b, 0)
+        if (categoria.mapeamento_total_anual === 'Somatório' || categoria.mapeamento_total_anual === 'Máximo' || categoria.mapeamento_total_anual === 'Mínimo') {
+          if (arrayTrabalho.length === 0) {
+            return '-'
+          } else {
+            return arrayTrabalho.reduce((a, b) => a + b, 0)
+          }
+        } else if (categoria.mapeamento_total_anual === 'Média') {
+          if (arrayTrabalho.length === 0) {
+            return '-'
+          } else {
+            return 'Média'
+          }
         }
-      } else if (categoria.mapeamento_total_mensal === 'Média') {
-        if (arrayTrabalho.length === 0) {
-          return '-'
-        } else {
-          const average = arrayTrabalho.reduce((a, b) => a + b, 0) / arrayTrabalho.length
-          return Number.isInteger(average) ? average : average.toFixed(2)
+      } else {
+        for (let i = 0; i < categoria.indicadores.length; i++) {
+          for (let j = 0; j < categoria.indicadores[i].indicador_valor.length; j++) {
+            if (categoria.indicadores[i].indicador_valor[j].mes === mes) {
+              arrayTrabalho.push(categoria.indicadores[i].indicador_valor[j].valor)
+            }
+          }
         }
-      } else if (categoria.mapeamento_total_mensal === 'Mínimo') {
-        if (arrayTrabalho.length === 0) {
-          return '-'
-        } else {
-          return Math.min(...arrayTrabalho)
-        }
-      } else if (categoria.mapeamento_total_mensal === 'Máximo') {
-        if (arrayTrabalho.length === 0) {
-          return '-'
-        } else {
-          return Math.max(...arrayTrabalho)
+
+        if (categoria.mapeamento_total_mensal === 'Somatório') {
+          if (arrayTrabalho.length === 0) {
+            return '-'
+          } else {
+            return arrayTrabalho.reduce((a, b) => a + b, 0)
+          }
+        } else if (categoria.mapeamento_total_mensal === 'Média') {
+          if (arrayTrabalho.length === 0) {
+            return '-'
+          } else {
+            const average = arrayTrabalho.reduce((a, b) => a + b, 0) / arrayTrabalho.length
+            return Number.isInteger(average) ? average : average.toFixed(2)
+          }
+        } else if (categoria.mapeamento_total_mensal === 'Mínimo') {
+          if (arrayTrabalho.length === 0) {
+            return '-'
+          } else {
+            return Math.min(...arrayTrabalho)
+          }
+        } else if (categoria.mapeamento_total_mensal === 'Máximo') {
+          if (arrayTrabalho.length === 0) {
+            return '-'
+          } else {
+            return Math.max(...arrayTrabalho)
+          }
         }
       }
-
-      return arrayTrabalho
     },
 
     getTotalAno (indicador, categoria) {
@@ -810,7 +901,7 @@ export default {
           return '-'
         } else {
           const average = arrayTrabalho.reduce((a, b) => a + b, 0) / arrayTrabalho.length
-          return Number.isInteger(average) ? average : average.toFixed(2)
+          return Number.isInteger(average) ? average : parseFloat(average.toFixed(2))
         }
       } else if (categoria.mapeamento_total_anual === 'Mínimo') {
         if (arrayTrabalho.length === 0) {
@@ -852,6 +943,42 @@ export default {
         return 'status-inactive'
       }
       return ''
+    },
+
+    toggleExpand (categoria) {
+      this.resultadoBusca.forEach(cat => {
+        if (cat.id === categoria.id) {
+          cat.expanded = !cat.expanded
+        } else {
+          cat.expanded = false
+        }
+      })
+    },
+
+    closeDialogVerResultado () {
+      this.dialogVerResultados = false
+      this.search = ''
+    },
+
+    expandeTodes () {
+      this.loaderBtnExpandir = true
+      if (this.textoBtnExpandirOcultar === 'Expandir Todos') {
+        for (let i = 0; i < this.resultadoBusca.length; i++) {
+          this.resultadoBusca[i].expanded = true
+        }
+
+        this.textoBtnExpandirOcultar = 'Colapsar Todos'
+        this.colorTextBtn = 'warning'
+        this.loaderBtnExpandir = false
+      } else {
+        for (let i = 0; i < this.resultadoBusca.length; i++) {
+          this.resultadoBusca[i].expanded = false
+        }
+
+        this.textoBtnExpandirOcultar = 'Expandir Todos'
+        this.colorTextBtn = 'primary'
+        this.loaderBtnExpandir = false
+      }
     }
   }
 }

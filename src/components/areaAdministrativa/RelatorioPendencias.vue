@@ -213,7 +213,6 @@ export default {
       try {
         this.$http.post('ferramenta/relatoriopendencias', objetoParaEnvio)
           .then(response => {
-            console.log(response.data)
             this.resultadoBusca = response.data
           })
           .catch(erro => console.log(erro))

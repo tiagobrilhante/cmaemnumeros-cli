@@ -463,7 +463,6 @@ export default {
         this.$http.get('users')
           .then(response => {
             this.usuarios = response.data
-            console.log(this.usuarios)
           })
           .catch(erro => console.log(erro))
       } catch (e) {

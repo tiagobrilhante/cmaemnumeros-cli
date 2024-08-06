@@ -260,7 +260,7 @@
 
                   <!-- dminui ano-->
                   <v-col class="text-right">
-                    <v-btn class="primary" @click="changeYear('down')">
+                    <v-btn class="primary" @click="changeYear('down')" elevation="10">
                       <v-icon>mdi-chevron-left</v-icon>
                     </v-btn>
                   </v-col>
@@ -274,11 +274,11 @@
 
                   <!-- aimenta ano-->
                   <v-col class="text-left">
-                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="primary" @click="changeYear('up')">
+                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="primary" @click="changeYear('up')" elevation="10">
                       <v-icon>mdi-chevron-right</v-icon>
                     </v-btn>
 
-                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="success" @click="changeYear('corrente')">
+                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="success" @click="changeYear('corrente')" elevation="10">
                       <v-icon>mdi-calendar-today</v-icon>
                     </v-btn>
 

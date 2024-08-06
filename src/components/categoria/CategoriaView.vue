@@ -2,8 +2,11 @@
   <v-container fluid>
     <v-row>
       <v-col>
+
+        <!-- expande todes e pendencias-->
         <v-alert v-if="meusDados.length > 0" color="blue lighten-2" dense>
 
+          <!-- expande todes e pendências-->
           <v-row>
             <v-col class="mb-auto mt-auto" cols="3">
               <v-btn :color="colorTextBtn" :loading="loaderBtnExpandir" small @click="expandeTodes">{{
@@ -139,10 +142,12 @@
                 <v-toolbar-title>
                   <v-icon class="mr-5" @click="categoria.expanded = false">mdi-minus</v-icon>
                   {{ categoria.categoria.nome }}
-                  <v-icon class="ml-10" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
                 </v-toolbar-title>
 
                 <v-row>
+                  <v-col>
+                    <v-icon class="ml-10" @click="openDialogDetailsCategoria(categoria)">mdi-magnify</v-icon>
+                  </v-col>
                   <v-col class="text-right">
                     <v-btn class="primary" small @click="openGraphDialog(categoria)">
                       <v-icon class="mr-4" small>mdi-chart-bar</v-icon>
