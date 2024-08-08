@@ -96,6 +96,7 @@
           </v-col>
         </v-row>
       </v-alert>
+
       <!--Seletor de mês e inserção de dados-->
       <v-alert
         class="p-5"
@@ -123,17 +124,33 @@
           <!--area de lançamento preciso  ARRUMAR ISSO AQUI-->
           <v-col v-if="!awaitData">
 
+            <!-- alert seçao e mes ano referencia-->
             <v-alert color="green lighten-2" elevation="5">
               <!-- informa o mês e o ano de referência-->
               <h3 class="text-center">{{ selectedSecao.sigla }} - Referência: {{ this.mesCorrente }} de
                 {{ this.anoCorrente }}</h3>
             </v-alert>
 
-            <!-- alertas de pendências-->
-            <v-alert dismissible elevation="5" type="warning" v-if="resultadoBusca.length > 0">
+            <!-- expande / colapsa + pendência-->
+            <v-alert color="blue lighten-2" dense>
               <v-row>
-                <v-col cols="2"><h3>Alertas</h3></v-col>
+                <v-col class="mb-auto mt-auto" cols="3">
+
+                  <v-btn :color="selectedSecao.categoria.some(categoria => !categoria.expanded) ? 'primary' : 'warning'"
+                         small
+                         @click="toggleAllCategories">
+                    {{
+                      selectedSecao.categoria.some(categoria => !categoria.expanded) ? 'Expandir Todas' : 'Ocultar Todas'
+                    }}
+                  </v-btn>
+
+                </v-col>
+                <!-- alertas de pendências-->
                 <v-col>
+                  <v-alert v-if="resultadoBusca.length > 0" class="mb-0" dense dismissible elevation="5" type="warning">
+                    <v-row>
+                      <v-col cols="2"><h3>Alertas</h3></v-col>
+                      <v-col>
                   <span v-if="resultadoBusca.length > 0">
                     <span v-if="resultadoBusca[0].categorias_pendentes.length > 0">Pendências: {{
                         resultadoBusca[0].categorias_pendentes.length
@@ -153,18 +170,97 @@
                     <span>Exibir informações sobre as pendências</span>
                   </v-tooltip>
                   </span>
+                      </v-col>
+                    </v-row>
+                  </v-alert>
                 </v-col>
               </v-row>
             </v-alert>
 
+            <!-- inputs para lançamento de dados-->
             <v-row v-if="selectedSecao.categoria && selectedSecao.categoria.length > 0">
-              <v-col v-for="categoria in selectedSecao.categoria" v-if="categoria.ativo" :key="categoria.id" cols="3">
-                <v-card class="pl-2 pr-2 pb-1" color="blue lighten-4" elevation="21">
-                  <h4 class="mb-2">{{ categoria.nome }}</h4>
+              <v-col v-for="categoria in selectedSecao.categoria" v-if="categoria.ativo && categoria.numindicador > 0"
+                     :key="categoria.id" cols="3">
+                <v-card class="pl-2 pr-2 pb-1 pt-1" color="blue lighten-4" elevation="21">
+                  <v-alert :color="contaFaltasValor(categoria.indicadores) > 0 ? 'yellow' : 'black'"
+                           class="pt-1 pb-1 mb-1"
+                           dense>
+                    <h4 :class="contaFaltasValor(categoria.indicadores) > 0 ? 'black--text' : 'white--text'">
+                      {{ categoria.nome }}</h4>
+                  </v-alert>
 
-                  <v-alert v-for="indicador in categoria.indicadores" :key="indicador.id"
+                  <!-- espaço para icones e colapsar expandir-->
+                  <v-row>
+                    <v-col>
+
+                      <!-- colapsar e expandir-->
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-icon
+                            class="ml-2 pb-1"
+                            v-bind="attrs"
+                            @click="expandeOcultaCategoria(categoria)"
+                            v-on="on"
+                          >
+                            {{ categoria.expanded ? 'mdi-minus-circle' : 'mdi-plus-circle' }}
+                          </v-icon>
+                        </template>
+                        <span>Expandir</span>
+                      </v-tooltip>
+
+                      <!-- mostrar detalhes da categoria-->
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-icon
+                            class="ml-2 pb-1"
+                            v-bind="attrs"
+                            @click="openDialogMostraDetalhesCategoriaIndicador(categoria, 'da Categoria')"
+                            v-on="on"
+                          >
+                            mdi-magnify
+                          </v-icon>
+                        </template>
+                        <span>Exibir informações sobre a categoria</span>
+                      </v-tooltip>
+
+                      <!-- conta intens faltosos-->
+                      <v-tooltip v-if="contaFaltasValor(categoria.indicadores) > 0" top>
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-icon
+                            class="ml-2 pb-1"
+                            v-bind="attrs"
+                            @click="openDialogMostraDetalhesCategoria()"
+                            v-on="on"
+                          >
+                            mdi-alert
+                          </v-icon>
+                        </template>
+                        <span>Lançamentos faltosos</span>
+                      </v-tooltip>
+                      <!-- conta intens faltosos-->
+                      <span v-if="contaFaltasValor(categoria.indicadores) > 0">{{
+                          contaFaltasValor(categoria.indicadores)
+                        }}</span>
+
+                    </v-col>
+                  </v-row>
+
+                  <v-alert v-for="indicador in categoria.indicadores" v-if="categoria.expanded" :key="indicador.id"
                            :color="getColorForIndicator(indicador)" class="mt-0 ml-0 mr-0 mb-2" dense elevation="10">
-                    <span class="ml-2">{{ indicador.nome }}</span>
+                    <span class="ml-2">{{ indicador.nome }}  <!-- mostrar detalhes da categoria-->
+                      <v-tooltip top>
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-icon
+                            class="ml-4 pb-1"
+                            v-bind="attrs"
+                            @click="openDialogMostraDetalhesCategoriaIndicador(indicador, 'do Indicador')"
+                            v-on="on"
+                          >
+                            mdi-magnify
+                          </v-icon>
+                        </template>
+                        <span>Exibir informações sobre o indicador</span>
+                      </v-tooltip></span>
                     <v-text-field
                       :value="getIndicadorValor(indicador)"
                       class="mb-2"
@@ -182,7 +278,9 @@
           {{ indicador.indicador_valor[0].atualizado }}
         </span>
                   </v-alert>
-                  <v-btn :loading="loadingBtn" block class="primary" @click="gravaValores">
+
+                  <!-- grava valores-->
+                  <v-btn v-if="categoria.expanded" :loading="loadingBtn" block class="primary" @click="gravaValores">
                     <v-icon class="mr-5">mdi-content-save-move</v-icon>
                     Gravar Valores
                   </v-btn>
@@ -199,20 +297,9 @@
               </v-col>
             </v-row>
 
-            <!-- gravar valores-->
-            <v-row v-if="selectedSecao.categoria && selectedSecao.categoria.length > 0">
-              <v-col>
-              </v-col>
-              <v-col>
-                <v-btn :loading="loadingBtn" block class="primary" x-large @click="gravaValores">
-                  <v-icon class="mr-5" large>mdi-content-save-move</v-icon>
-                  Gravar Valores
-                </v-btn>
-              </v-col>
-            </v-row>
-
           </v-col>
 
+          <!-- carregamento de dados-->
           <v-col v-else>
             <v-alert color="yellow lighten-2">
               <v-progress-circular
@@ -260,7 +347,7 @@
 
                   <!-- dminui ano-->
                   <v-col class="text-right">
-                    <v-btn class="primary" @click="changeYear('down')" elevation="10">
+                    <v-btn class="primary" elevation="10" @click="changeYear('down')">
                       <v-icon>mdi-chevron-left</v-icon>
                     </v-btn>
                   </v-col>
@@ -274,11 +361,13 @@
 
                   <!-- aimenta ano-->
                   <v-col class="text-left">
-                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="primary" @click="changeYear('up')" elevation="10">
+                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="primary" elevation="10"
+                           @click="changeYear('up')">
                       <v-icon>mdi-chevron-right</v-icon>
                     </v-btn>
 
-                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="success" @click="changeYear('corrente')" elevation="10">
+                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="success" elevation="10"
+                           @click="changeYear('corrente')">
                       <v-icon>mdi-calendar-today</v-icon>
                     </v-btn>
 
@@ -557,7 +646,8 @@
             </v-container>
 
             <!-- visualização por categoria-->
-            <CategoriaView v-else :anoCorrente="anoCorrente" :selectedSecao="selectedSecao" :resultadoBusca = "resultadoBusca"></CategoriaView>
+            <CategoriaView v-else :anoCorrente="anoCorrente" :resultadoBusca="resultadoBusca"
+                           :selectedSecao="selectedSecao"></CategoriaView>
 
           </v-alert>
 
@@ -603,6 +693,47 @@
         <v-card-actions class="pb-5">
           <v-spacer></v-spacer>
           <v-btn color="grey lighten-1" @click="dialogMostraPendencia = false">Fechar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!--Dialog para ver detalhes de uma categoria-->
+    <v-dialog v-model="dialogMostraDetalheCatInd" max-width="30%">
+      <v-card>
+        <v-card-title class="justify-center" primary-title>
+          Detalhes {{ selectedDetalheCatInd[1] }}
+        </v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col v-if="selectedDetalheCatInd[1] === 'da Categoria'">
+              <b>Nome: </b> {{ selectedDetalheCatInd[0].nome }}<br>
+              <b>Natureza: </b> {{ selectedDetalheCatInd[0].natureza }}<br>
+              <b>Mapeamento de total (Mensal): </b> {{ selectedDetalheCatInd[0].mapeamento_total_mensal }}<br>
+              <b>Mapeamento de total (Anual): </b> {{ selectedDetalheCatInd[0].mapeamento_total_anual }}<br>
+              <b>Periodicidade: </b> {{ selectedDetalheCatInd[0].periodicidade }}<br>
+              <b>Numero de Indicadores: </b> {{ selectedDetalheCatInd[0].numindicador }}<br>
+            </v-col>
+            <v-col v-else>
+
+              <span v-if="selectedDetalheCatInd[0]">
+                <b>Nome: </b> {{ selectedDetalheCatInd[0].nome }}<br>
+                <b>Meta: </b> <span v-if="selectedDetalheCatInd[0].meta">Possui meta</span> <span v-else>Não possui meta</span><br>
+                <span v-if="selectedDetalheCatInd[0].meta">
+                  <b>Tendência: </b> {{ selectedDetalheCatInd[0].tendencia }}<br>
+                  <b>Objetivo: </b> {{ selectedDetalheCatInd[0].objetivo }}<br>
+                  <b>Verde: </b> <span v-if="selectedDetalheCatInd[0].tendencia === 'Quanto maior melhor'">Acima ou igual a </span><span v-else>Abaixo ou igual a: </span> {{ selectedDetalheCatInd[0].green }}<br>
+                  <b>Amarelo: </b> entre {{ selectedDetalheCatInd[0].yellow_1 }} e {{ selectedDetalheCatInd[0].yellow_2 }}<br>
+                  <b>Vermelho: </b> <span v-if="selectedDetalheCatInd[0].tendencia === 'Quanto maior melhor'">Abaixo ou igual a </span><span v-else>Acima ou igual a </span>{{ selectedDetalheCatInd[0].red }}
+                </span>
+              </span>
+
+            </v-col>
+          </v-row>
+
+        </v-card-text>
+        <v-card-actions class="pb-5">
+          <v-spacer></v-spacer>
+          <v-btn color="grey lighten-1" @click="dialogMostraDetalheCatInd = false">Fechar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -665,7 +796,9 @@ export default {
     corCategoria: 'secondary',
     loadingBtn: false,
     resultadoBusca: [],
-    dialogMostraPendencia: false
+    dialogMostraPendencia: false,
+    dialogMostraDetalheCatInd: false,
+    selectedDetalheCatInd: []
   }),
   computed: {
     ...mapGetters(['usuarioLogado']),
@@ -1088,6 +1221,30 @@ export default {
       if (mes === 10) return 'Outubro'
       if (mes === 11) return 'Novembro'
       if (mes === 12) return 'Dezembro'
+    },
+
+    expandeOcultaCategoria (categoria) {
+      this.$set(categoria, 'expanded', !categoria.expanded)
+    },
+
+    toggleAllCategories () {
+      const expandAll = this.selectedSecao.categoria.some(categoria => !categoria.expanded)
+      this.selectedSecao.categoria.forEach(categoria => {
+        this.$set(categoria, 'expanded', expandAll)
+      })
+    },
+
+    contaFaltasValor (indicadores) {
+      let contador = 0
+      for (let i = 0; i < indicadores.length; i++) {
+        contador += indicadores[i].indicador_valor.length
+      }
+      return indicadores.length - contador
+    },
+
+    openDialogMostraDetalhesCategoriaIndicador (objeto, tipo) {
+      this.selectedDetalheCatInd = [objeto, tipo]
+      this.dialogMostraDetalheCatInd = true
     }
   }
 }

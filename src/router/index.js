@@ -106,11 +106,15 @@ const router = new VueRouter({
 })
 router.beforeEach((routeTo, routeFrom, next) => {
   if (!routeTo.meta.publica && !store.state.token) {
-    return next({path: '/'})
+    return next({name: 'index'})
   }
 
   if (routeTo.meta.logado && Object.values(store.state.usuarioLogado).length === 0) {
-    return next({path: '/'})
+    return next({name: 'index'})
+  }
+
+  if (routeTo.meta.publica && store.state.token) {
+    return next({name: 'home'})
   }
 
   next()

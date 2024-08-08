@@ -35,11 +35,11 @@
       :headers="headers"
       :item-class="getItemClass"
       :items="categorias"
+      :loading="categorias.length === 0"
       :search="search"
       class="elevation-21 mt-4"
       group-by="secao.sigla"
       sort-by="nome"
-      :loading="categorias.length === 0"
     >
       <!-- template para titulo e search-->
       <template v-slot:top>
@@ -70,11 +70,13 @@
         </v-toolbar>
 
         <v-container fluid>
-        <v-row dense>
-          <v-col>
-            Legenda: <v-chip small class="ml-5 row-inactive">Inativo</v-chip>  <v-chip small class="ml-5 bgcat">Categorias</v-chip>
-          </v-col>
-        </v-row>
+          <v-row dense>
+            <v-col>
+              Legenda:
+              <v-chip class="ml-5 row-inactive" small>Inativo</v-chip>
+              <v-chip class="ml-5 bgcat" small>Categorias</v-chip>
+            </v-col>
+          </v-row>
         </v-container>
 
       </template>
@@ -83,6 +85,11 @@
       <template v-slot:item.ativo="{ item }">
         <span v-if="item.ativo">Sim</span><span v-else>Não</span>
       </template>
+
+      <template v-slot:item.indicadorLength="{ item }">
+        {{item.numindicador}}
+      </template>
+
       <!--Template de botões para editar, excluir -->
       <template v-slot:item.actions="{ item }">
 
@@ -338,6 +345,179 @@
       </v-card>
     </v-dialog>
 
+    <!--Dialog sobre alteração de natureza-->
+    <v-dialog v-model="dialogAlertChangeNatureza" max-width="800px">
+      <v-card>
+        <v-card-title class="justify-center" primary-title>
+          <v-icon
+            class="mr-4">
+            fa fa-exclamation-triangle
+          </v-icon>
+          Você esta alterando a natureza dos dados armazenados!
+          <v-icon
+            class="ml-4">
+            fa fa-exclamation-triangle
+          </v-icon>
+
+        </v-card-title>
+        <v-card-text class="text-justify">
+          Você está prestes a substituir a natureza de dados dessa categoria de:
+          <v-chip>{{ naturezaAntiga }}</v-chip>
+          para:
+          <v-chip>{{ naturezaNova }}</v-chip>
+          .
+          <p>Entenda o impacto disso:</p>
+          <p>Atualmente o sistema conta com as seguintes opções de natureza de dados:</p>
+
+          <v-row>
+            <v-col>
+              <ul>
+                <li>Pessoas</li>
+                <li>Quantidade (Inteiro)</li>
+                <li>Quantidade (Decimal)</li>
+                <li>Peso (Kg)</li>
+                <li>Peso (Ton)</li>
+                <li>Distância (Km)</li>
+                <li>Distância (Metros)</li>
+                <li>Tempo (Minutos)</li>
+                <li>Tempo (Horas)</li>
+                <li>Tempo (Dias)</li>
+                <li>Tempo (Meses)</li>
+                <li>Tempo (Anos)</li>
+                <li>Monetário (R$)</li>
+                <li>Porcentagem (%)</li>
+              </ul>
+            </v-col>
+
+            <v-col>
+              <v-alert type="warning">
+                <p>Apenas as naturezas:</p>
+                <ul>
+                  <li>Pessoas</li>
+                  <li>Quantidade (Inteiro)</li>
+                </ul>
+                <br>
+
+                <p>Possuem valores registrados em números inteiros, ou seja, sem casas decimais</p>
+                <p>Todos as demais naturezas pertencem ao conjunto dos números REAIS positivos.</p>
+              </v-alert>
+            </v-col>
+
+          </v-row>
+
+          <v-row>
+            <v-col>
+              <v-alert type="info">
+                {{ retornaPreocupacao() }}
+              </v-alert>
+            </v-col>
+          </v-row>
+
+        </v-card-text>
+        <v-card-actions class="pb-5">
+          <v-spacer></v-spacer>
+          <v-btn color="grey lighten-1" @click="dialogAlertChangeNatureza = false">Cancelar</v-btn>
+          <span class="pl-5 pr-5"></span>
+          <v-btn :loading="loadBtn" color="red lighten-1" @click="enviaParaPersistencia">Prosseguir</v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!--Dialog sobre alteração de de valores de indicadores-->
+    <v-dialog v-model="dialogChangeIndicadorValor" max-width="70%" persistent>
+      <v-card>
+        <v-card-title class="justify-center" primary-title>
+          <v-icon
+            class="mr-4">
+            fa fa-exclamation-triangle
+          </v-icon>
+          Revisão de Valores de Indicadores (por motivo de alteração de natureza de dados da categoria)
+          <v-icon
+            class="ml-4">
+            fa fa-exclamation-triangle
+          </v-icon>
+
+        </v-card-title>
+        <v-card-text class="text-justify">
+
+          Categoria: {{ dadosParaAlteracao.nome }}
+
+          <!--DataTable-->
+          <v-data-table
+            v-for="indicador in dadosParaAlteracao.indicadores"
+            :key="indicador.id"
+            :headers="headersAlteracao"
+            :items="indicador.indicador_valor"
+            :items-per-page=-1
+            :loading="dadosParaAlteracao.length === 0"
+            class="elevation-21 mt-4"
+            group-by="ano"
+            hide-default-footer
+          >
+            <!-- template para indicador-->
+            <template v-slot:top>
+              <v-toolbar
+                flat
+              >
+                <!-- Título da tabela-->
+                <v-toolbar-title>{{ indicador.nome }}</v-toolbar-title>
+
+              </v-toolbar>
+
+            </template>
+
+            <template v-slot:item.mes="{ item }">
+              {{ transformaMes(item.mes) }}
+            </template>
+
+            <template v-slot:item.valor="{ item }">
+              <v-text-field
+                :value="item.tempValor !== undefined ? item.tempValor : formatValue(item.valor)"
+                dense
+                flat
+                hide-details
+                rounded
+                solo-inverted
+                type="number"
+                @input="item.tempValor = $event"
+              ></v-text-field>
+            </template>
+
+            <!--Template de botões para editar, excluir -->
+            <template v-slot:item.actions="{ item }">
+
+              <!--confirmar-->
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn class="error" small
+                         v-bind="attrs" @click="ajustaNumero(item)" v-on="on">
+                    <v-icon
+                      class="mr-2"
+                      small
+                    >
+                      mdi-check
+                    </v-icon>
+                    Confirmar
+                  </v-btn>
+                </template>
+                <span>Confirmar dado</span>
+              </v-tooltip>
+
+            </template>
+          </v-data-table>
+
+        </v-card-text>
+        <v-card-actions class="pb-5">
+          <v-spacer></v-spacer>
+          <v-btn color="grey lighten-1" @click="dialogChangeIndicadorValor = false">Cancelar</v-btn>
+          <span class="pl-5 pr-5"></span>
+          <v-btn color="red lighten-1">Prosseguir</v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </v-container>
 
 </template>
@@ -382,9 +562,47 @@ export default {
         value: 'mapeamento_total_anual'
       },
       {
+        text: 'Indicadores Vinculados',
+        align: 'center',
+        value: 'indicadorLength'
+      },
+      {
         text: 'Ativo?',
         align: 'start',
         value: 'ativo'
+      },
+      {
+        text: 'Actions',
+        value: 'actions',
+        align: 'center',
+        sortable: false
+      }
+    ],
+    headersAlteracao: [
+      {
+        text: 'id',
+        align: 'start',
+        value: 'id'
+      },
+      {
+        text: 'Mes',
+        align: 'start',
+        value: 'mes'
+      },
+      {
+        text: 'Ano',
+        align: 'start',
+        value: 'ano'
+      },
+      {
+        text: 'Valor Antigo',
+        align: 'start',
+        value: 'valor_antigo'
+      },
+      {
+        text: 'Valor Novo',
+        align: 'start',
+        value: 'valor'
       },
       {
         text: 'Actions',
@@ -438,7 +656,15 @@ export default {
      */
     naturezas: ['Pessoas', 'Quantidade (Inteiro)', 'Quantidade (Decimal)', 'Peso (Kg)', 'Peso (Ton)', 'Distância (Km)', 'Distância (Metros)', 'Tempo (Minutos)', 'Tempo (Horas)', 'Tempo (Dias)', 'Tempo (Meses)', 'Tempo (Anos)', 'Monetário (R$)', 'Porcentagem (%)'],
     periodicidadeOptions: ['Mensal', 'Anual', 'Eventual'],
-    tipos_mapeamento_total: ['Somatório', 'Média', 'Máximo', 'Mínimo']
+    tipos_mapeamento_total: ['Somatório', 'Média', 'Máximo', 'Mínimo'],
+    dialogAlertChangeNatureza: false,
+    naturezaAntiga: '',
+    naturezaNova: '',
+    alteracaoNecessaria: false,
+    dialogChangeIndicadorValor: false,
+    loadBtn: false,
+    dadosParaAlteracao: [],
+    sistemaVigente: ''
   }),
   computed: {
     ...mapGetters(['usuarioLogado'])
@@ -497,6 +723,7 @@ export default {
 
     openDialogAddEditCategoria (tipo, item) {
       this.tipoAcao = tipo
+      this.alteracaoNecessaria = false
       if (tipo === 'add') {
         this.editedCategoria = Object.assign({}, this.defaultCategoria)
         if (this.usuarioLogado.tipo === 'Usuário') {
@@ -560,19 +787,26 @@ export default {
           }
         } else {
           // aqui vou editar
+
+          // tenho que checar se estou alterando antes de mais nada a natureza do indicador
+          // caso mude de inteiro para float e vice versa isso vai impactar nos dados a serem transmitidos
+
+          let objetoTeste = {}
+          objetoTeste['nova_natureza'] = objetoParaEnvio['natureza']
+          objetoTeste['id'] = this.editedCategoria.id
+
           try {
-            this.$http.put('categorias/' + this.editedCategoria.id, objetoParaEnvio)
+            this.$http.post('categorias/checanatureza', objetoTeste)
               .then(response => {
-                Object.assign(this.categorias[this.editedIndex], response.data)
-                this.$toastr.s(
-                  'Categoria alterada com sucesso', 'Sucesso!'
-                )
-                this.$nextTick(() => {
-                  this.editedCategoria = Object.assign({}, this.defaultCategoria)
-                  this.editedIndex = -1
-                })
-                this.dialogAddEditCategoria = false
-                this.$emit('resetaSecao', this.usuarioLogado.tipo)
+                if (response.data[0]) {
+                  this.dialogAlertChangeNatureza = true
+                  this.naturezaAntiga = response.data[1]
+                  this.naturezaNova = response.data[2]
+                  this.alteracaoNecessaria = true
+                } else {
+                  this.enviaParaPersistencia()
+                  this.alteracaoNecessaria = false
+                }
               })
               .catch(erro => console.log(erro))
           } catch (e) {
@@ -580,6 +814,76 @@ export default {
               'Houve um erro na tentativa de execução: <br>' + e, 'Erro!'
             )
           }
+        }
+      }
+    },
+
+    enviaParaPersistencia () {
+      this.loadBtn = true
+      let arrayVal = this.validadoresCampos()
+      if (arrayVal[0] > 0) {
+        this.$toastr.e(
+          arrayVal[1], 'Erro!'
+        )
+      } else {
+        let objetoParaEnvio = {}
+        objetoParaEnvio['nome'] = this.editedCategoria.nome
+        objetoParaEnvio['secao_id'] = this.editedCategoria.secao_id
+        objetoParaEnvio['natureza'] = this.editedCategoria.natureza
+        objetoParaEnvio['periodicidade'] = this.editedCategoria.periodicidade
+        objetoParaEnvio['mapeamento_total_anual'] = this.editedCategoria.mapeamento_total_anual
+        objetoParaEnvio['mapeamento_total_mensal'] = this.editedCategoria.mapeamento_total_mensal
+        objetoParaEnvio['ativo'] = this.editedCategoria.ativo
+
+        try {
+          this.$http.put('categorias/' + this.editedCategoria.id, objetoParaEnvio)
+            .then(response => {
+              Object.assign(this.categorias[this.editedIndex], response.data)
+              this.$toastr.s(
+                'Categoria alterada com sucesso', 'Sucesso!'
+              )
+              this.$nextTick(() => {
+                this.editedCategoria = Object.assign({}, this.defaultCategoria)
+                this.editedIndex = -1
+              })
+
+              this.$emit('resetaSecao', this.usuarioLogado.tipo)
+
+              if (this.alteracaoNecessaria) {
+                let objetoParaEnvio = response.data
+
+                try {
+                  this.$http.post('valorindicador/valor/alteracao', objetoParaEnvio)
+                    .then(response => {
+                      let dadosBrutos = response.data
+
+                      for (let i = 0; i < dadosBrutos.indicadores.length; i++) {
+                        for (let j = 0; j < dadosBrutos.indicadores[i].indicador_valor.length; j++) {
+                          dadosBrutos.indicadores[i].indicador_valor[j].valor_antigo = dadosBrutos.indicadores[i].indicador_valor[j].valor
+                        }
+                      }
+                      this.dadosParaAlteracao = dadosBrutos
+
+                      this.dialogChangeIndicadorValor = true
+                      this.dialogAddEditCategoria = false
+                      this.dialogAlertChangeNatureza = false
+                      this.loadBtn = false
+                    })
+                    .catch(erro => console.log(erro))
+                } catch (e) {
+                  console.log(e)
+                }
+              } else {
+                this.dialogAddEditCategoria = false
+                this.dialogAlertChangeNatureza = false
+                this.loadBtn = false
+              }
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          this.$toastr.e(
+            'Houve um erro na tentativa de execução: <br>' + e, 'Erro!'
+          )
         }
       }
     },
@@ -648,6 +952,80 @@ export default {
 
     getItemClass (item) {
       return item.ativo ? '' : 'row-inactive'
+    },
+
+    retornaPreocupacao () {
+      const naturezasInt = ['Pessoas', 'Quantidade (Inteiro)']
+      const naturezasFloat = ['Quantidade (Decimal)', 'Peso (Kg)', 'Peso (Ton)', 'Distância (Km)', 'Distância (Metros)', 'Tempo (Minutos)', 'Tempo (Horas)', 'Tempo (Dias)', 'Tempo (Meses)', 'Tempo (Anos)', 'Monetário (R$)', 'Porcentagem (%)']
+
+      const isIntAntiga = naturezasInt.includes(this.naturezaAntiga)
+      const isFloatAntiga = naturezasFloat.includes(this.naturezaAntiga)
+      const isIntNova = naturezasInt.includes(this.naturezaNova)
+      const isFloatNova = naturezasFloat.includes(this.naturezaNova)
+
+      if ((isIntAntiga && !isIntNova) || (isFloatAntiga && !isFloatNova)) {
+        this.alteracaoNecessaria = true
+        return 'A natureza antiga e a nova não pertencem ao mesmo grupo. (Ao prosseguir, você será redirecionado para uma nova tela, com a finalidade de revisão dos novos valores impactados pela mudança)'
+      } else {
+        this.alteracaoNecessaria = false
+        return 'A natureza antiga e a nova pertencem ao mesmo grupo. (você não sofrerá nenhuma consequência)'
+      }
+    },
+
+    transformaMes (mes) {
+      if (mes === 1) return 'Janeiro'
+      if (mes === 2) return 'Fevereiro'
+      if (mes === 3) return 'Março'
+      if (mes === 4) return 'Abril'
+      if (mes === 5) return 'Maio'
+      if (mes === 6) return 'Junho'
+      if (mes === 7) return 'Julho'
+      if (mes === 8) return 'Agosto'
+      if (mes === 9) return 'Setembro'
+      if (mes === 10) return 'Outubro'
+      if (mes === 11) return 'Novembro'
+      if (mes === 12) return 'Dezembro'
+    },
+
+    formatValue (value) {
+      const natuInt = ['Pessoas', 'Quantidade (Inteiro)']
+      const intt = natuInt.includes(this.naturezaNova)
+      if (intt) {
+        return parseInt(value)
+      } else {
+        return Number.isInteger(value) ? value.toFixed(2) : parseFloat(value.toFixed(2))
+      }
+    },
+
+    ajustaNumero (item) {
+      // Faça o que for necessário com o valor ajustado
+      try {
+        this.$http.post('valorindicador/valor/doit', item)
+          .then(response => {
+            for (let i = 0; i < this.dadosParaAlteracao.indicadores.length; i++) {
+              for (let j = 0; j < this.dadosParaAlteracao.indicadores[i].indicador_valor.length; j++) {
+                if (this.dadosParaAlteracao.indicadores[i].indicador_valor[j].id === response.data.id) {
+                  this.dadosParaAlteracao.indicadores[i].indicador_valor.splice(j, 1)
+                  j-- // Adjust index after removal
+                }
+              }
+            }
+            this.$toastr.s(
+              'Dado ajustado com sucesso!', 'Sucesso!'
+            )
+
+            let contador = 0
+            for (let i = 0; i < this.dadosParaAlteracao.indicadores.length; i++) {
+              contador += this.dadosParaAlteracao.indicadores[i].indicador_valor.length
+            }
+            if (contador === 0) {
+              this.dialogChangeIndicadorValor = false
+            }
+          })
+          .catch(erro => console.log(erro))
+      } catch (e) {
+        console.log(e)
+      }
     }
   }
 }

@@ -21,13 +21,13 @@ http.interceptors.response.use(
     if (status === 401) {
       if (router.currentRoute.name !== 'login') {
         store.commit('DESLOGAR_USUARIO')
-        router.push({name: '/'})
+        router.push({name: 'index'})
       }
     }
     if (status === 403) {
       if (router.currentRoute.name !== 'login') {
         store.commit('DESLOGAR_USUARIO')
-        router.push({name: '/'})
+        router.push({name: 'index'})
       }
     }
     if (status === 500) {
@@ -35,7 +35,7 @@ http.interceptors.response.use(
         router.push({name: 'erroToken'})
         setTimeout(function () {
           store.commit('DESLOGAR_USUARIO')
-          router.push({name: '/'})
+          router.push({name: 'index'})
         }, 3000)
       } else {
         router.push({
