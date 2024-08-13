@@ -624,7 +624,6 @@ export default {
   },
 
   methods: {
-    // tenho que resolver isso aqui pois está pedindo para digitar algo
     fazBusca (anoBusca) {
       let anoNow = 0
       if (anoBusca === 'agora') {

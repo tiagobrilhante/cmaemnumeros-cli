@@ -112,6 +112,8 @@
         </div>
       </template>
 
+      <!--Implementar o gerenciamento de seções-->
+
       <v-spacer></v-spacer>
 
       <!-- BARRA DE NAVEGACAO LOGADO-->

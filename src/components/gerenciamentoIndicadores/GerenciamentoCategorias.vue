@@ -542,11 +542,6 @@
 
         </v-card-text>
         <v-card-actions class="pb-5">
-          <v-spacer></v-spacer>
-          <v-btn color="grey lighten-1" @click="dialogChangeIndicadorValor = false">Cancelar</v-btn>
-          <span class="pl-5 pr-5"></span>
-          <v-btn color="red lighten-1">Prosseguir</v-btn>
-          <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
     </v-dialog>

@@ -1106,14 +1106,14 @@
             <v-card-text>
               <span class="pl-3">Observações sobre o valor do Indicador</span>
               <v-textarea v-if="dialogInsertIndicadorValorObs"
-                ref="observacaoTextarea"
-                :value="observacaoTexto"
-                dense
-                hint="Escreva algo se desejar, sobre o valor do indicador"
-                label="Observações do valor do Indicador"
-                rounded
-                solo
-                @input="debouncedUpdateObservacao($event)"
+                          ref="observacaoTextarea"
+                          :value="observacaoTexto"
+                          dense
+                          hint="Escreva algo se desejar, sobre o valor do indicador"
+                          label="Observações do valor do Indicador"
+                          rounded
+                          solo
+                          @input="debouncedUpdateObservacao($event)"
               ></v-textarea>
             </v-card-text>
             <v-card-actions>
@@ -1167,12 +1167,13 @@
                           class="ml-2 pb-1"
                           small
                           v-bind="attrs"
+                          @click="openDialogExcluiObsVI(obsvi , 'vi')"
                           v-on="on"
                         >
                           mdi-delete
                         </v-icon>
                       </template>
-                      <span>Excluir Observação (EM CONSTRUÇÃO)</span>
+                      <span>Excluir Observação</span>
                     </v-tooltip>
                   </v-col>
                 </v-row>
@@ -1193,6 +1194,42 @@
           </v-card>
         </v-dialog>
 
+        <!-- dialog para excluir observações de indicador valor-->
+        <v-dialog v-model="dialogIndicadorValorObsExcluir" width="40%">
+          <v-card>
+            <v-card-title class="justify-center" primary-title>
+              <v-icon
+                class="mr-4">
+                fa fa-exclamation-triangle
+              </v-icon>
+              Exclusão de observação
+              <v-icon
+                class="ml-4">
+                fa fa-exclamation-triangle
+              </v-icon>
+            </v-card-title>
+            <v-card-text>
+              <p>Você tem certeza de que quer excluir essa observação?</p>
+              <p>Essa ação não poderá ser desfeita!</p>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="error"
+                @click="doExcluiObsVI"
+              >
+                Excluir
+              </v-btn>
+              <v-btn
+                color="secondary"
+                @click="dialogIndicadorValorObsExcluir = false"
+              >
+                Cancelar
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <!-- dialog para inserir Observações sobre total mensal-->
         <v-dialog v-model="dialogInsertTMObs" width="30%">
           <v-card>
@@ -1202,12 +1239,12 @@
             <v-card-text>
               <span class="pl-3">Observações sobre o Total Mensal</span>
               <v-textarea v-if="dialogInsertTMObs"
-                dense
-                hint="Escreva algo se desejar, sobre o total mensal"
-                label="Observações sobre o total mensal"
-                rounded
-                solo
-                @input="debouncedUpdateObservacaoTotal($event)"
+                          dense
+                          hint="Escreva algo se desejar, sobre o total mensal"
+                          label="Observações sobre o total mensal"
+                          rounded
+                          solo
+                          @input="debouncedUpdateObservacaoTotal($event)"
               ></v-textarea>
             </v-card-text>
             <v-card-actions>
@@ -1229,6 +1266,7 @@
         </v-dialog>
 
         <!-- dialog para ver observações totais de categoria-->
+        <!-- preciso implementar edição  de obs-->
         <v-dialog v-model="dialogTMObs" width="40%">
           <v-card>
             <v-card-title>
@@ -1261,12 +1299,13 @@
                           class="ml-2 pb-1"
                           small
                           v-bind="attrs"
+                          @click="openDialogExcluiObsVI(leobstm, 'tm')"
                           v-on="on"
                         >
                           mdi-delete
                         </v-icon>
                       </template>
-                      <span>Excluir Observação (EM CONSTRUÇÃO)</span>
+                      <span>Excluir Observação</span>
                     </v-tooltip>
                   </v-col>
                 </v-row>
@@ -1355,7 +1394,10 @@ export default {
     dialogTMObs: false,
     obsTMArray: [],
     observacaoTemp: '',
-    observacaoTexto: ''
+    observacaoTexto: '',
+    dialogIndicadorValorObsExcluir: false,
+    selectedObsToExclude: {},
+    tipoExclusaoObs: ''
   }),
 
   props: {
@@ -2025,6 +2067,72 @@ export default {
       this.observacaoTexto = ''
       this.observacaovi = ''
       this.debouncedUpdateObservacao('')
+    },
+
+    openDialogExcluiObsVI (obsvi, tipo) {
+      this.selectedObsToExclude = obsvi
+      this.tipoExclusaoObs = tipo
+      this.dialogIndicadorValorObsExcluir = true
+    },
+
+    doExcluiObsVI () {
+      if (this.tipoExclusaoObs === 'vi') {
+        try {
+          this.$http.delete('obsiv/' + this.selectedObsToExclude.id)
+            .then(() => {
+              this.dialogIndicadorValorObsExcluir = false
+              const obsId = this.selectedObsToExclude.id
+              this.selectedObsToExclude = {}
+              // Itera sobre os dados para encontrar o indicador correto e remover a observação
+              for (let i = 0; i < this.meusDados.length; i++) {
+                for (let j = 0; j < this.meusDados[i].indicadores.length; j++) {
+                  let indicador = this.meusDados[i].indicadores[j]
+                  for (let k = 0; k < indicador.valor.length; k++) {
+                    let valor = indicador.valor[k]
+                    valor.indicador_valor_observacoes = valor.indicador_valor_observacoes.filter(obs => obs.id !== obsId)
+                  }
+                }
+              }
+
+              // Remove a observação de selectedVI.indicador_valor_observacoes
+              this.selectedVI.indicador_valor_observacoes = this.selectedVI.indicador_valor_observacoes.filter(obs => obs.id !== obsId)
+
+              // Fecha o dialog se não houver mais observações
+              if (this.selectedVI.indicador_valor_observacoes.length === 0) {
+                this.dialogIndicadorValorObs = false
+              }
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          console.log(e)
+        }
+      } else if (this.tipoExclusaoObs === 'tm') {
+        try {
+          this.$http.delete('obstm/' + this.selectedObsToExclude.id)
+            .then(() => {
+              this.dialogIndicadorValorObsExcluir = false
+              const obsId = this.selectedObsToExclude.id
+              this.selectedObsToExclude = {}
+              // Itera sobre os dados para encontrar a observação total mensal correta e remover a observação
+              for (let i = 0; i < this.meusDados.length; i++) {
+                let categoria = this.meusDados[i]
+                for (let j = 0; j < categoria.totalObs.length; j++) {
+                  categoria.totalObs[j] = categoria.totalObs[j].filter(obs => obs.id !== obsId)
+                }
+              }
+
+              // Remove a observação de obsTMArray
+              this.obsTMArray = this.obsTMArray.filter(obs => obs.id !== obsId)
+
+              if (this.obsTMArray.length === 0) {
+                this.dialogTMObs = false
+              }
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          console.log(e)
+        }
+      }
     }
   }
 }
