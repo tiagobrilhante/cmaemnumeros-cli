@@ -1105,13 +1105,15 @@
             </v-card-title>
             <v-card-text>
               <span class="pl-3">Observações sobre o valor do Indicador</span>
-              <v-textarea
-                v-model="observacaovi"
+              <v-textarea v-if="dialogInsertIndicadorValorObs"
+                ref="observacaoTextarea"
+                :value="observacaoTexto"
                 dense
                 hint="Escreva algo se desejar, sobre o valor do indicador"
                 label="Observações do valor do Indicador"
                 rounded
                 solo
+                @input="debouncedUpdateObservacao($event)"
               ></v-textarea>
             </v-card-text>
             <v-card-actions>
@@ -1199,13 +1201,13 @@
             </v-card-title>
             <v-card-text>
               <span class="pl-3">Observações sobre o Total Mensal</span>
-              <v-textarea
-                v-model="objTotalMObs.observacao"
+              <v-textarea v-if="dialogInsertTMObs"
                 dense
                 hint="Escreva algo se desejar, sobre o total mensal"
                 label="Observações sobre o total mensal"
                 rounded
                 solo
+                @input="debouncedUpdateObservacaoTotal($event)"
               ></v-textarea>
             </v-card-text>
             <v-card-actions>
@@ -1351,7 +1353,9 @@ export default {
     },
     dialogInsertTMObs: false,
     dialogTMObs: false,
-    obsTMArray: []
+    obsTMArray: [],
+    observacaoTemp: '',
+    observacaoTexto: ''
   }),
 
   props: {
@@ -1390,11 +1394,18 @@ export default {
         }
       },
       deep: true
+    },
+    dialogInsertIndicadorValorObs (newVal) {
+      if (newVal) {
+        this.clearTextarea()
+      }
     }
   },
 
   mounted () {
     this.pegaPorCategoria()
+
+    this.debouncedUpdate = this.debounce(this.updateObservacao, 300)
   },
 
   methods: {
@@ -1808,6 +1819,7 @@ export default {
     openDialogMostraPendencia () {
       this.dialogMostraPendencia = true
     },
+
     transformaMes (mes) {
       if (mes === 1) return 'Janeiro'
       if (mes === 2) return 'Fevereiro'
@@ -1825,7 +1837,17 @@ export default {
 
     openDialogInsertIndicadorValorObs (item, mes) {
       this.selectedVI = this.retornaIndicadoValorCorreto(item, mes)
+      this.observacaovi = '' // Limpa a variável observacaovi
       this.dialogInsertIndicadorValorObs = true
+
+      // Aguarda o próximo ciclo de renderização para acessar o elemento textarea
+      this.$nextTick(() => {
+        if (this.$refs.observacaoTextarea) {
+          // Limpa manualmente o valor do textarea e remove o @input temporariamente
+          this.$refs.observacaoTextarea.$el.querySelector('textarea').value = ''
+          this.$refs.observacaoTextarea.$el.querySelector('textarea').removeEventListener('input', this.debouncedUpdateObservacao)
+        }
+      })
     },
 
     doSaveEditObs () {
@@ -1845,6 +1867,12 @@ export default {
               this.dialogInsertIndicadorValorObs = false
               this.selectedVI = {}
               this.observacaovi = ''
+
+              this.$nextTick(() => {
+                if (this.$refs.observacaoTextarea) {
+                  this.$refs.observacaoTextarea.$el.querySelector('textarea').addEventListener('input', this.debouncedUpdateObservacao)
+                }
+              })
 
               // Itera sobre os dados para encontrar o indicador correto e atualizar as observações
               for (let i = 0; i < this.meusDados.length; i++) {
@@ -1904,9 +1932,6 @@ export default {
         try {
           this.$http.post('obstm', this.objTotalMObs)
             .then(response => {
-              console.log(response.data)
-              console.log(this.meusDados)
-
               for (let i = 0; i < this.meusDados.length; i++) {
                 if (this.meusDados[i].categoria.id === this.objTotalMObs.categoria_id) {
                   // Calcula a posição correta no array totalObs com base no mês
@@ -1963,9 +1988,43 @@ export default {
     },
 
     openDialogVerTMObs (categoria, mes) {
-      console.log(categoria)
       this.obsTMArray = categoria.totalObs[mes - 1]
       this.dialogTMObs = true
+    },
+
+    debounce (fn, delay) {
+      let timeoutID
+      return function (...args) {
+        clearTimeout(timeoutID)
+        timeoutID = setTimeout(() => {
+          fn.apply(this, args)
+        }, delay)
+      }
+    },
+
+    updateObservacao (value) {
+      this.observacaovi = value
+    },
+
+    updateObservacaoTotal (value) {
+      this.objTotalMObs.observacao = value
+    },
+
+    // Adicionando debounce na função updateObservacao
+    debouncedUpdateObservacao (value) {
+      // Somente atualiza se o diálogo estiver aberto
+      this.observacaovi = value
+    },
+
+    debouncedUpdateObservacaoTotal (value) {
+      // Somente atualiza se o diálogo estiver aberto
+      this.objTotalMObs.observacao = value
+    },
+
+    clearTextarea () {
+      this.observacaoTexto = ''
+      this.observacaovi = ''
+      this.debouncedUpdateObservacao('')
     }
   }
 }

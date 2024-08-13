@@ -1,13 +1,24 @@
-// const urlDownload = 'http://localhost:8000/'
-const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
+const urlDownload = 'http://localhost:8000/'
+// const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
 
 const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.4.4',
+    release: '348',
+    latest: true,
+    data: '13/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Corrigido o bug que retardava a aparição dos caracteres digitados no input de Cadastro de observação',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.4.3',
     release: '341',
-    latest: true,
+    latest: false,
     data: '13/08/2024',
     detalhesVisiveis: false,
     detalhes: [
