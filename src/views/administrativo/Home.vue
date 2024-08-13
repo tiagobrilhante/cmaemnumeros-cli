@@ -229,7 +229,6 @@
                           <v-icon
                             class="ml-2 pb-1"
                             v-bind="attrs"
-                            @click="openDialogMostraDetalhesCategoria()"
                             v-on="on"
                           >
                             mdi-alert
@@ -237,6 +236,7 @@
                         </template>
                         <span>Lançamentos faltosos</span>
                       </v-tooltip>
+
                       <!-- conta intens faltosos-->
                       <span v-if="contaFaltasValor(categoria.indicadores) > 0">{{
                           contaFaltasValor(categoria.indicadores)
@@ -717,13 +717,18 @@
 
               <span v-if="selectedDetalheCatInd[0]">
                 <b>Nome: </b> {{ selectedDetalheCatInd[0].nome }}<br>
-                <b>Meta: </b> <span v-if="selectedDetalheCatInd[0].meta">Possui meta</span> <span v-else>Não possui meta</span><br>
+                <b>Meta: </b> <span v-if="selectedDetalheCatInd[0].meta">Possui meta</span> <span
+                v-else>Não possui meta</span><br>
                 <span v-if="selectedDetalheCatInd[0].meta">
                   <b>Tendência: </b> {{ selectedDetalheCatInd[0].tendencia }}<br>
                   <b>Objetivo: </b> {{ selectedDetalheCatInd[0].objetivo }}<br>
-                  <b>Verde: </b> <span v-if="selectedDetalheCatInd[0].tendencia === 'Quanto maior melhor'">Acima ou igual a </span><span v-else>Abaixo ou igual a: </span> {{ selectedDetalheCatInd[0].green }}<br>
-                  <b>Amarelo: </b> entre {{ selectedDetalheCatInd[0].yellow_1 }} e {{ selectedDetalheCatInd[0].yellow_2 }}<br>
-                  <b>Vermelho: </b> <span v-if="selectedDetalheCatInd[0].tendencia === 'Quanto maior melhor'">Abaixo ou igual a </span><span v-else>Acima ou igual a </span>{{ selectedDetalheCatInd[0].red }}
+                  <b>Verde: </b> <span v-if="selectedDetalheCatInd[0].tendencia === 'Quanto maior melhor'">Acima ou igual a </span><span
+                  v-else>Abaixo ou igual a: </span> {{ selectedDetalheCatInd[0].green }}<br>
+                  <b>Amarelo: </b> entre {{ selectedDetalheCatInd[0].yellow_1 }} e {{
+                    selectedDetalheCatInd[0].yellow_2
+                  }}<br>
+                  <b>Vermelho: </b> <span v-if="selectedDetalheCatInd[0].tendencia === 'Quanto maior melhor'">Abaixo ou igual a </span><span
+                  v-else>Acima ou igual a </span>{{ selectedDetalheCatInd[0].red }}
                 </span>
               </span>
 

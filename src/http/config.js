@@ -1,13 +1,50 @@
-const urlDownload = 'http://localhost:8000/'
-// const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
+// const urlDownload = 'http://localhost:8000/'
+const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
 
 const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.4.3',
+    release: '341',
+    latest: true,
+    data: '13/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Implementado o sistema de observações de indicadores',
+      'Implementado o sistema de observações de categorias',
+      'Implementado o sistema de observações de valores de indicadores',
+      'Implementado o sistema de observações de valores totais em uma categoria',
+      'Implementada a ferramenta administrativa de correção para indicadores sem categorias',
+      'Correção de bugs'
+    ]
+  },
+  {
+    id: '1.4.2',
+    release: '317',
+    latest: false,
+    data: '08/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Corrigido o bug que impedia a geração de gráficos em pizza do valor total',
+      'Correção de bugs'
+    ]
+  },
+  {
+    id: '1.4.1',
+    release: '315',
+    latest: false,
+    data: '08/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Agora, os dados podem ser verificados com separação de casas decimais por vírgulas e milhares por pontos',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.4.0',
     release: '312',
-    latest: true,
+    latest: false,
     data: '08/08/2024',
     detalhesVisiveis: false,
     detalhes: [

@@ -6,17 +6,22 @@
         <!-- expande todes e pendencias-->
         <v-alert v-if="meusDados.length > 0" color="blue lighten-2" dense>
 
-          <!-- expande todes e pendências-->
+          <!-- expande todes / oculta e mostra OBS / e pendências-->
           <v-row>
             <v-col class="mb-auto mt-auto" cols="3">
               <v-btn :color="colorTextBtn" :loading="loaderBtnExpandir" small @click="expandeTodes">{{
                   textoBtnExpandirOcultar
                 }}
               </v-btn>
+              <v-btn :color="colorTextMostrarOcultarObs" :loading="loaderBtnMostraOcultaObs" small
+                     @click="mostraOcultaObs">{{
+                  textoBtnEsconderMostrarObs
+                }}
+              </v-btn>
             </v-col>
             <v-col>
               <!-- alertas de pendências-->
-              <v-alert dismissible type="warning" dense class="mb-0" v-if="resultadoBusca.length > 0">
+              <v-alert v-if="resultadoBusca.length > 0" class="mb-0" dense dismissible type="warning">
                 <v-row>
                   <v-col cols="2"><h3>Alertas</h3></v-col>
                   <v-col>
@@ -128,8 +133,8 @@
             :items="categoria.indicadores"
             :items-per-page="-1"
             class="elevation-21"
-            disable-pagination
             dense
+            disable-pagination
             hide-default-footer
           >
 
@@ -176,7 +181,42 @@
                   <v-icon small @click="handleTotalAnoClick(categoria, 'mes')">mdi-information</v-icon>
                 </td>
                 <td v-for="(month, index) in arrayMonthSmall" :key="index" class="text-left">
+
+                  <!--tooltip inserir Observação-->
+                  <v-tooltip v-if="mostraObsTootips && pegaSomaMes(categoria, index + 1) !== '-'" top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        class="mr-2"
+                        small
+                        v-bind="attrs"
+                        @click="openDialogTMObs(index+1, anoCorrente, categoria)"
+                        v-on="on"
+                      >
+                        mdi-chat-plus-outline
+                      </v-icon>
+                    </template>
+                    <span>Inserir Observação</span>
+                  </v-tooltip>
+
                   <span class="texto_chip">{{ pegaSomaMes(categoria, index + 1) }}</span>
+
+                  <!--tooltip observações cadastradas-->
+                  <v-tooltip
+                    v-if="mostraObsTootips && pegaSomaMes(categoria, index + 1) !== '-' && categoria.totalObs[index].length > 0"
+                    top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        class="ml-1"
+                        small
+                        v-bind="attrs"
+                        @click="openDialogVerTMObs(categoria, index + 1)"
+                        v-on="on"
+                      >
+                        mdi-chat
+                      </v-icon>
+                    </template>
+                    <span>Observações Cadastradas</span>
+                  </v-tooltip>
                 </td>
                 <td class="text-center">
                   <v-tooltip v-if="pegaSomaMes(categoria, 99) === 'Média'" top>
@@ -214,44 +254,140 @@
 
             <!-- Janeiro-->
             <template v-slot:item.mes_1="{ item }">
-        <span v-if="item.valor && retornaValorCorreto(item.valor, 1) !== undefined">
-               <v-chip small v-if="item.indicador.meta === 1" class="texto_chip"
-                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 1))"
-               >
+
+              <span v-if="item.valor && retornaValorCorreto(item.valor, 1) !== undefined">
+                <!--tooltip inserir Observação-->
+                <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 1)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+                <v-chip v-if="item.indicador.meta === 1"
+                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 1))"
+                        class="texto_chip"
+                        small
+                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 1)) === 'red'"
                         class="white--text">{{
                       retornaValorCorreto(item.valor, 1)
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 1) }}</span>
             </v-chip>
-              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 1) }}</span>
+                <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 1) }}</span>
+
+                <!--tooltip observações cadastradas-->
+                <v-tooltip
+                  v-if="retornaIndicadoValorCorreto(item,1).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                  top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,1))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else class="text-center">-</span>
+
             </template>
 
             <!-- Fevereiro-->
             <template v-slot:item.mes_2="{ item }">
-            <span v-if="item.valor && retornaValorCorreto(item.valor, 2) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
-                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 2))"
-               >
+
+              <span v-if="item.valor && retornaValorCorreto(item.valor, 2) !== undefined">
+                <!--tooltip inserir Observação-->
+                <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 2)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+                <v-chip v-if="item.indicador.meta === 1"
+                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 2))"
+                        class="texto_chip"
+                        small
+                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 2)) === 'red'"
                         class="white--text">{{
                       retornaValorCorreto(item.valor, 2)
                     }}</span>
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 2) }}</span>
             </v-chip>
-              <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 2) }}</span>
+                <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 2) }}</span>
+
+                <!--tooltip observações cadastradas-->
+                <v-tooltip
+                  v-if="retornaIndicadoValorCorreto(item,2).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                  top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,2))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Março-->
             <template v-slot:item.mes_3="{ item }">
+
             <span v-if="item.valor && retornaValorCorreto(item.valor, 3) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
-                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 3))"
-               >
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 3)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+              <v-chip v-if="item.indicador.meta === 1"
+                      :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 3))"
+                      class="texto_chip"
+                      small
+              >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 3)) === 'red'"
                         class="white--text">{{
                       retornaValorCorreto(item.valor, 3)
@@ -259,15 +395,54 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 3) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 3) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,3).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,3))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Abril-->
             <template v-slot:item.mes_4="{ item }">
+
             <span v-if="item.valor  && retornaValorCorreto(item.valor, 4) !== undefined">
-              <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 4)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+              <v-chip v-if="item.indicador.meta === 1"
                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 4))"
+                      class="texto_chip"
+                      small
               >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 4)) === 'red'"
                         class="white--text">{{
@@ -276,15 +451,54 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 4) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 4) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,4).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,4))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Maio-->
             <template v-slot:item.mes_5="{ item }">
+
             <span v-if="item.valor && retornaValorCorreto(item.valor, 5) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 5)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+               <v-chip v-if="item.indicador.meta === 1"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 5))"
+                       class="texto_chip"
+                       small
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 5)) === 'red'"
                         class="white--text">{{
@@ -293,16 +507,55 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 5) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 5) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,5).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,5))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Junho-->
             <template v-slot:item.mes_6="{ item }">
+
             <span v-if="item.valor && retornaValorCorreto(item.valor, 6) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
-                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 6))"
-               >
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 6)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+              <v-chip v-if="item.indicador.meta === 1"
+                      :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 6))"
+                      class="texto_chip"
+                      small
+              >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 6)) === 'red'"
                         class="white--text">{{
                       retornaValorCorreto(item.valor, 6)
@@ -310,15 +563,54 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 6) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 6) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,6).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,6))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Julho-->
             <template v-slot:item.mes_7="{ item }">
+
             <span v-if="item.valor && retornaValorCorreto(item.valor, 7) !== undefined">
-              <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 7)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+              <v-chip v-if="item.indicador.meta === 1"
                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 7))"
+                      class="texto_chip"
+                      small
               >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 7)) === 'red'"
                         class="white--text">{{
@@ -327,16 +619,55 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 7) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 7) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,7).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,7))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Agosto-->
             <template v-slot:item.mes_8="{ item }">
+
             <span v-if="item.valor && retornaValorCorreto(item.valor, 8) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
-                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 8))"
-               >
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 8)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+              <v-chip v-if="item.indicador.meta === 1"
+                      :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 8))"
+                      class="texto_chip"
+                      small
+              >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 8)) === 'red'"
                         class="white--text">{{
                       retornaValorCorreto(item.valor, 8)
@@ -344,15 +675,54 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 8) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 8) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,8).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,8))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Setembro-->
             <template v-slot:item.mes_9="{ item }">
+
             <span v-if="item.valor && retornaValorCorreto(item.valor, 9) !== undefined">
-              <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 9)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+              <v-chip v-if="item.indicador.meta === 1"
                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 9))"
+                      class="texto_chip"
+                      small
               >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 9)) === 'red'"
                         class="white--text">{{
@@ -361,16 +731,55 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 9) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 9) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,9).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,9))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Outubro-->
             <template v-slot:item.mes_10="{ item }">
+
             <span v-if="item.valor && retornaValorCorreto(item.valor, 10) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
-                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 10))"
-               >
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 10)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+              <v-chip v-if="item.indicador.meta === 1"
+                      :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 10))"
+                      class="texto_chip"
+                      small
+              >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 10)) === 'red'"
                         class="white--text">{{
                       retornaValorCorreto(item.valor, 10)
@@ -378,16 +787,55 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 10) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 10) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,10).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,10))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Novembro-->
             <template v-slot:item.mes_11="{ item }">
+
             <span v-if="item.valor && retornaValorCorreto(item.valor, 11) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
-                       :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 11))"
-               >
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 11)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+              <v-chip v-if="item.indicador.meta === 1"
+                      :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 11))"
+                      class="texto_chip"
+                      small
+              >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 11)) === 'red'"
                         class="white--text">{{
                       retornaValorCorreto(item.valor, 11)
@@ -395,15 +843,54 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 11) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 11) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,11).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,11))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
 
             <!-- Dezembro-->
             <template v-slot:item.mes_12="{ item }">
+
             <span v-if="item.valor && retornaValorCorreto(item.valor, 12) !== undefined">
-               <v-chip v-if="item.indicador.meta === 1" small class="texto_chip"
+
+              <!--tooltip inserir Observação-->
+              <v-tooltip v-if="mostraObsTootips" top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mr-2"
+                    small
+                    v-bind="attrs"
+                    @click="openDialogInsertIndicadorValorObs(item, 12)"
+                    v-on="on"
+                  >
+                    mdi-chat-plus-outline
+                  </v-icon>
+                </template>
+                <span>Inserir Observação</span>
+              </v-tooltip>
+
+               <v-chip v-if="item.indicador.meta === 1"
                        :color="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 12))"
+                       class="texto_chip"
+                       small
                >
                   <span v-if="getColorForIndicatorTable(item.indicador, retornaValorCorreto(item.valor, 12)) === 'red'"
                         class="white--text">{{
@@ -412,6 +899,25 @@
               <span v-else class="black--text">{{ retornaValorCorreto(item.valor, 12) }}</span>
             </v-chip>
               <span v-else class="texto_chip">{{ retornaValorCorreto(item.valor, 12) }}</span>
+
+              <!--tooltip observações cadastradas-->
+              <v-tooltip
+                v-if="retornaIndicadoValorCorreto(item,12).indicador_valor_observacoes.length >0 && mostraObsTootips"
+                top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="ml-1"
+                    small
+                    v-bind="attrs"
+                    @click="showObsIV(retornaIndicadoValorCorreto(item,12))"
+                    v-on="on"
+                  >
+                    mdi-chat
+                  </v-icon>
+                </template>
+                <span>Observações Cadastradas</span>
+              </v-tooltip>
+
             </span>
               <span v-else>-</span>
             </template>
@@ -465,6 +971,9 @@
               <v-row v-if="categoriaDetalhe.categoria">
                 <v-col>
                   <b>Nome: </b> {{ categoriaDetalhe.categoria.nome }}<br>
+                  <span v-if="categoriaDetalhe.categoria.observacoes"><b>Observações: </b> {{
+                      categoriaDetalhe.categoria.observacoes
+                    }}<br></span>
                   <b>Natureza: </b> {{ categoriaDetalhe.categoria.natureza }}<br>
                   <b>Periodicidade: </b> {{ categoriaDetalhe.categoria.periodicidade }}<br>
                   <b>Mapeamento de Total (Mensal)</b> {{ categoriaDetalhe.categoria.mapeamento_total_mensal }}<br>
@@ -496,6 +1005,7 @@
                 <v-col>
                   <b>Nome: </b> {{ indicadorDetalhe.nome }}<br>
                   <b>Meta: </b> <span v-if="indicadorDetalhe.meta">Sim</span><span v-else>Não</span><br>
+                  <span v-if="indicadorDetalhe.observacoes"><b>Observações: </b> {{ indicadorDetalhe.observacoes }}<br></span>
                   <div v-if="indicadorDetalhe.meta">
                     <b>Tendência: </b> {{ indicadorDetalhe.tendencia }}<br>
                     <b>Objetivo: </b> {{ indicadorDetalhe.objetivo }}<br>
@@ -587,6 +1097,194 @@
           </v-card>
         </v-dialog>
 
+        <!-- dialog para inserir Observações sobre indicador valor-->
+        <v-dialog v-model="dialogInsertIndicadorValorObs" width="30%">
+          <v-card>
+            <v-card-title>
+              Inserir Observação
+            </v-card-title>
+            <v-card-text>
+              <span class="pl-3">Observações sobre o valor do Indicador</span>
+              <v-textarea
+                v-model="observacaovi"
+                dense
+                hint="Escreva algo se desejar, sobre o valor do indicador"
+                label="Observações do valor do Indicador"
+                rounded
+                solo
+              ></v-textarea>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="success"
+                @click="doSaveEditObs"
+              >
+                Salvar
+              </v-btn>
+              <v-btn
+                color="secondary"
+                @click="dialogInsertIndicadorValorObs = false"
+              >
+                Fechar
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <!-- dialog para ver observações de indicador valor-->
+        <v-dialog v-model="dialogIndicadorValorObs" width="40%">
+          <v-card>
+            <v-card-title>
+              Observações Cadastradas
+            </v-card-title>
+            <v-card-text>
+              <v-alert v-for="obsvi in selectedVI.indicador_valor_observacoes" :key="obsvi.id" elevation="12">
+                <v-row>
+                  <v-col>
+                    <h3>Observação</h3>
+                  </v-col>
+                  <v-col class="text-right">
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                          class="ml-2 pb-1"
+                          small
+                          v-bind="attrs"
+                          v-on="on"
+                        >
+                          mdi-pencil
+                        </v-icon>
+                      </template>
+                      <span>Editar Observação (EM CONSTRUÇÃO)</span>
+                    </v-tooltip>
+
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                          class="ml-2 pb-1"
+                          small
+                          v-bind="attrs"
+                          v-on="on"
+                        >
+                          mdi-delete
+                        </v-icon>
+                      </template>
+                      <span>Excluir Observação (EM CONSTRUÇÃO)</span>
+                    </v-tooltip>
+                  </v-col>
+                </v-row>
+
+                {{ obsvi.observacao }} <br>
+                <b>Por: </b> {{ obsvi.resp }}
+              </v-alert>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="secondary"
+                @click="dialogIndicadorValorObs = false"
+              >
+                Fechar
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <!-- dialog para inserir Observações sobre total mensal-->
+        <v-dialog v-model="dialogInsertTMObs" width="30%">
+          <v-card>
+            <v-card-title>
+              Inserir Observação
+            </v-card-title>
+            <v-card-text>
+              <span class="pl-3">Observações sobre o Total Mensal</span>
+              <v-textarea
+                v-model="objTotalMObs.observacao"
+                dense
+                hint="Escreva algo se desejar, sobre o total mensal"
+                label="Observações sobre o total mensal"
+                rounded
+                solo
+              ></v-textarea>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="success"
+                @click="doSaveEditTM"
+              >
+                Salvar
+              </v-btn>
+              <v-btn
+                color="secondary"
+                @click="dialogInsertTMObs = false"
+              >
+                Fechar
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <!-- dialog para ver observações totais de categoria-->
+        <v-dialog v-model="dialogTMObs" width="40%">
+          <v-card>
+            <v-card-title>
+              Observações Cadastradas
+            </v-card-title>
+            <v-card-text>
+              <v-alert v-for="leobstm in obsTMArray" :key="leobstm.id" elevation="12">
+                <v-row>
+                  <v-col>
+                    <h3>Observação</h3>
+                  </v-col>
+                  <v-col class="text-right">
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                          class="ml-2 pb-1"
+                          small
+                          v-bind="attrs"
+                          v-on="on"
+                        >
+                          mdi-pencil
+                        </v-icon>
+                      </template>
+                      <span>Editar Observação (EM CONSTRUÇÃO)</span>
+                    </v-tooltip>
+
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                          class="ml-2 pb-1"
+                          small
+                          v-bind="attrs"
+                          v-on="on"
+                        >
+                          mdi-delete
+                        </v-icon>
+                      </template>
+                      <span>Excluir Observação (EM CONSTRUÇÃO)</span>
+                    </v-tooltip>
+                  </v-col>
+                </v-row>
+
+                {{ leobstm.observacao }} <br>
+                <b>Por: </b> {{ leobstm.resp }}
+              </v-alert>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="secondary"
+                @click="dialogTMObs = false"
+              >
+                Fechar
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
       </v-col>
     </v-row>
   </v-container>
@@ -634,9 +1332,26 @@ export default {
     dialogDetailsTotal: false,
     tipoDeTotalVigente: '',
     textoBtnExpandirOcultar: 'Expandir Todos',
+    textoBtnEsconderMostrarObs: 'Ocultar Obs',
     colorTextBtn: 'primary',
+    colorTextMostrarOcultarObs: 'primary',
     loaderBtnExpandir: false,
-    dialogMostraPendencia: false
+    loaderBtnMostraOcultaObs: false,
+    dialogMostraPendencia: false,
+    dialogInsertIndicadorValorObs: false,
+    observacaovi: '',
+    selectedVI: {},
+    dialogIndicadorValorObs: false,
+    mostraObsTootips: true,
+    objTotalMObs: {
+      'mes': '',
+      'ano': '',
+      'categoria_id': '',
+      'observacao': ''
+    },
+    dialogInsertTMObs: false,
+    dialogTMObs: false,
+    obsTMArray: []
   }),
 
   props: {
@@ -803,7 +1518,7 @@ export default {
       if (indexMonth === 99) {
         for (let i = 0; i < categoria.indicadores.length; i++) {
           labels.push(categoria.indicadores[i].indicador.nome)
-          series.push(this.getTotalAno(categoria.indicadores[i], this.selectedCategoria))
+          series.push(this.convertStringToNumber(this.getTotalAno(categoria.indicadores[i], this.selectedCategoria)))
         }
 
         this.dadosGraph = series
@@ -827,6 +1542,7 @@ export default {
 
         this.dadosGraph = series
         this.labelpie = labels
+
         this.nomeCategoria = this.selectedCategoria.categoria.nome
 
         this.dialogVerGrafico = true
@@ -863,9 +1579,33 @@ export default {
     retornaValorCorreto (item, mes) {
       for (let i = 0; i < item.length; i++) {
         if (item[i].mes === mes) {
-          return item[i].valor
+          let valor = item[i].valor
+
+          // Format to two decimal places if it's a decimal number
+          if (valor % 1 !== 0) {
+            valor = valor.toFixed(2)
+          }
+
+          // Replace decimal point with comma
+          valor = valor.toString().replace('.', ',')
+
+          // Format with thousand separators
+          valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+
+          return valor
         }
       }
+    },
+
+    convertStringToNumber (value) {
+      // Remove spaces
+      value = value.trim()
+
+      // Remove thousand separators and replace decimal comma with a period
+      value = value.replace(/\./g, '').replace(',', '.')
+
+      // Convert to number
+      return parseFloat(value)
     },
 
     pegaSomaMes (categoria, mes) {
@@ -882,7 +1622,7 @@ export default {
           if (arrayTrabalho.length === 0) {
             return '-'
           } else {
-            return arrayTrabalho.reduce((a, b) => a + b, 0)
+            return this.formatNumber(arrayTrabalho.reduce((a, b) => a + b, 0))
           }
         } else if (categoria.categoria.mapeamento_total_anual === 'Média') {
           if (arrayTrabalho.length === 0) {
@@ -904,29 +1644,45 @@ export default {
           if (arrayTrabalho.length === 0) {
             return '-'
           } else {
-            return arrayTrabalho.reduce((a, b) => a + b, 0)
+            return this.formatNumber(arrayTrabalho.reduce((a, b) => a + b, 0))
           }
         } else if (categoria.categoria.mapeamento_total_mensal === 'Média') {
           if (arrayTrabalho.length === 0) {
             return '-'
           } else {
             const average = arrayTrabalho.reduce((a, b) => a + b, 0) / arrayTrabalho.length
-            return Number.isInteger(average) ? average : average.toFixed(2)
+            return this.formatNumber(average)
           }
         } else if (categoria.categoria.mapeamento_total_mensal === 'Mínimo') {
           if (arrayTrabalho.length === 0) {
             return '-'
           } else {
-            return Math.min(...arrayTrabalho)
+            return this.formatNumber(Math.min(...arrayTrabalho))
           }
         } else if (categoria.categoria.mapeamento_total_mensal === 'Máximo') {
           if (arrayTrabalho.length === 0) {
             return '-'
           } else {
-            return Math.max(...arrayTrabalho)
+            return this.formatNumber(Math.max(...arrayTrabalho))
           }
         }
       }
+    },
+
+    formatNumber (value) {
+      if (typeof value === 'number') {
+        // Format to two decimal places if it's a decimal number
+        if (value % 1 !== 0) {
+          value = value.toFixed(2)
+        }
+
+        // Replace decimal point with comma
+        value = value.toString().replace('.', ',')
+
+        // Format with thousand separators
+        return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+      }
+      return value
     },
 
     getTotalAno (indicador, categoria) {
@@ -940,26 +1696,26 @@ export default {
         if (arrayTrabalho.length === 0) {
           return '-'
         } else {
-          return arrayTrabalho.reduce((a, b) => a + b, 0)
+          return this.formatNumber(arrayTrabalho.reduce((a, b) => a + b, 0))
         }
       } else if (categoria.categoria.mapeamento_total_anual === 'Média') {
         if (arrayTrabalho.length === 0) {
           return '-'
         } else {
           const average = arrayTrabalho.reduce((a, b) => a + b, 0) / arrayTrabalho.length
-          return Number.isInteger(average) ? average : parseFloat(average.toFixed(2))
+          return this.formatNumber(Number.isInteger(average) ? average : parseFloat(average.toFixed(2)))
         }
       } else if (categoria.categoria.mapeamento_total_anual === 'Mínimo') {
         if (arrayTrabalho.length === 0) {
           return '-'
         } else {
-          return Math.min(...arrayTrabalho)
+          return this.formatNumber(Math.min(...arrayTrabalho))
         }
       } else if (categoria.categoria.mapeamento_total_anual === 'Máximo') {
         if (arrayTrabalho.length === 0) {
           return '-'
         } else {
-          return Math.max(...arrayTrabalho)
+          return this.formatNumber(Math.max(...arrayTrabalho))
         }
       }
 
@@ -1003,6 +1759,22 @@ export default {
         this.colorTextBtn = 'primary'
         this.loaderBtnExpandir = false
       }
+    },
+
+    mostraOcultaObs () {
+      this.loaderBtnMostraOcultaObs = true
+      setTimeout(() => {
+        if (this.mostraObsTootips) {
+          this.mostraObsTootips = false
+          this.textoBtnEsconderMostrarObs = 'Mostrar Obs'
+          this.colorTextMostrarOcultarObs = 'secondary'
+        } else {
+          this.mostraObsTootips = true
+          this.textoBtnEsconderMostrarObs = 'Ocultar Obs'
+          this.colorTextMostrarOcultarObs = 'primary'
+        }
+        this.loaderBtnMostraOcultaObs = false
+      }, 2000)
     },
 
     getCurrentMonth () {
@@ -1049,6 +1821,151 @@ export default {
       if (mes === 10) return 'Outubro'
       if (mes === 11) return 'Novembro'
       if (mes === 12) return 'Dezembro'
+    },
+
+    openDialogInsertIndicadorValorObs (item, mes) {
+      this.selectedVI = this.retornaIndicadoValorCorreto(item, mes)
+      this.dialogInsertIndicadorValorObs = true
+    },
+
+    doSaveEditObs () {
+      if (this.observacaovi === '') {
+        this.$toastr.e(
+          'Você deve preencher o campo de observação', 'Erro!'
+        )
+      } else {
+        let objetoParaEnvio = {
+          valor_indicador: this.selectedVI,
+          observacao: this.observacaovi
+        }
+
+        try {
+          this.$http.post('obsiv', objetoParaEnvio)
+            .then(response => {
+              this.dialogInsertIndicadorValorObs = false
+              this.selectedVI = {}
+              this.observacaovi = ''
+
+              // Itera sobre os dados para encontrar o indicador correto e atualizar as observações
+              for (let i = 0; i < this.meusDados.length; i++) {
+                for (let j = 0; j < this.meusDados[i].indicadores.length; j++) {
+                  let indicador = this.meusDados[i].indicadores[j]
+                  if (indicador.indicador.id === response.data.indicador_id) {
+                    // Atualiza o valor do indicador com a nova resposta do servidor
+                    indicador.indicador_valor = response.data
+
+                    // Adiciona a nova observação ao indicador específico
+                    for (let k = 0; k < indicador.valor.length; k++) {
+                      if (indicador.valor[k].id === response.data.id) {
+                        indicador.valor[k].indicador_valor_observacoes = response.data.indicador_valor_observacoes
+                        break
+                      }
+                    }
+                  }
+                }
+              }
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          console.log(e)
+        }
+      }
+    },
+
+    retornaIndicadoValorCorreto (item, mes) {
+      for (let i = 0; i < item.valor.length; i++) {
+        if (item.valor[i].mes === mes) {
+          return item.valor[i]
+        }
+      }
+    },
+
+    showObsIV (item) {
+      this.selectedVI = item
+      this.dialogIndicadorValorObs = true
+    },
+
+    openDialogTMObs (mes, ano, categoria) {
+      this.objTotalMObs = {
+        'mes': mes,
+        'ano': ano,
+        'categoria_id': categoria.categoria.id,
+        'observacao': ''
+      }
+      this.dialogInsertTMObs = true
+    },
+
+    doSaveEditTM () {
+      if (this.objTotalMObs.observacao === '') {
+        this.$toastr.e(
+          'Você deve preencher o campo de observação', 'Erro!'
+        )
+      } else {
+        try {
+          this.$http.post('obstm', this.objTotalMObs)
+            .then(response => {
+              console.log(response.data)
+              console.log(this.meusDados)
+
+              for (let i = 0; i < this.meusDados.length; i++) {
+                if (this.meusDados[i].categoria.id === this.objTotalMObs.categoria_id) {
+                  // Calcula a posição correta no array totalObs com base no mês
+                  const mesIndex = this.objTotalMObs.mes - 1 // Meses vão de 1 a 12, posições de 0 a 11
+
+                  // Faz o push da nova observação na posição correta
+                  this.meusDados[i].totalObs[mesIndex].push({
+                    id: response.data.id,
+                    observacao: this.objTotalMObs.observacao,
+                    resp: response.data.resp, // Supondo que a resposta do servidor inclua o responsável
+                    mes: this.objTotalMObs.mes,
+                    ano: this.objTotalMObs.ano,
+                    categoria_id: this.objTotalMObs.categoria_id,
+                    user_id: response.data.user_id, // Supondo que a resposta inclua o ID do usuário
+                    created_at: response.data.created_at,
+                    updated_at: response.data.updated_at,
+                    deleted_at: null
+                  })
+
+                  break // Sai do loop após encontrar e atualizar a categoria correta
+                }
+              }
+
+              this.dialogInsertTMObs = false
+              this.objTotalMObs = {
+                'mes': '',
+                'ano': '',
+                'categoria_id': '',
+                'observacao': ''
+              }
+            })
+            .catch(erro => console.log(erro))
+        } catch (e) {
+          console.log(e)
+        }
+      }
+    },
+
+    temObsCadastrada (categoria, ano, mes) {
+      let objetoParaEnvio = {
+        ano: ano,
+        categoria_id: categoria.categoria.id
+      }
+
+      try {
+        this.$http.post('obstm/pegaporcategoria', objetoParaEnvio)
+          .then(response => {
+            return response.data[mes].length > 0
+          })
+          .catch(erro => console.log(erro))
+      } catch (e) {
+        console.log(e)
+      }
+    },
+
+    openDialogVerTMObs (categoria, mes) {
+      console.log(categoria)
+      this.obsTMArray = categoria.totalObs[mes - 1]
+      this.dialogTMObs = true
     }
   }
 }

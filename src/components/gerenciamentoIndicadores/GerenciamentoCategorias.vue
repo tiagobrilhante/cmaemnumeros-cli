@@ -69,6 +69,7 @@
 
         </v-toolbar>
 
+        <!-- LEGENDA-->
         <v-container fluid>
           <v-row dense>
             <v-col>
@@ -87,11 +88,27 @@
       </template>
 
       <template v-slot:item.indicadorLength="{ item }">
-        {{item.numindicador}}
+        {{ item.numindicador }}
       </template>
 
       <!--Template de botões para editar, excluir -->
       <template v-slot:item.actions="{ item }">
+
+        <!--observacoes-->
+        <v-tooltip v-if="item.observacoes" top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+              class="mr-2"
+              small
+              v-bind="attrs"
+              @click="openModalObservacoes(item.observacoes)"
+              v-on="on"
+            >
+              mdi-magnify
+            </v-icon>
+          </template>
+          <span>Observações</span>
+        </v-tooltip>
 
         <!--editar-->
         <v-tooltip top>
@@ -206,6 +223,22 @@
                   rounded
                   solo
                 ></v-select>
+              </v-col>
+            </v-row>
+
+            <!--observacoes-->
+            <v-row dense>
+              <v-col>
+                <span class="pl-3">Observações da Categoria</span>
+                <v-textarea
+                  v-model="editedCategoria.observacoes"
+                  class="ml-3"
+                  dense
+                  hint="Escreva algo se desejar, sobre a categoria"
+                  label="Observações da Categoria"
+                  rounded
+                  solo
+                ></v-textarea>
               </v-col>
             </v-row>
 
@@ -518,6 +551,22 @@
       </v-card>
     </v-dialog>
 
+    <!--Dialog para mostrar observacoes-->
+    <v-dialog v-model="dialogShowObservacoes" max-width="50%">
+      <v-card>
+        <v-card-title class="justify-center" primary-title>
+          Observações
+        </v-card-title>
+        <v-card-text>
+          {{leObservacoes}}
+        </v-card-text>
+        <v-card-actions class="pb-5">
+          <v-spacer></v-spacer>
+          <v-btn color="grey lighten-1" @click="dialogShowObservacoes = false">Fechar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </v-container>
 
 </template>
@@ -621,6 +670,7 @@ export default {
       'natureza': '',
       'secao': {},
       'periodicidade': '',
+      'observacoes': '',
       'mapeamento_total_anual': '',
       'mapeamento_total_mensal': '',
       'ativo': true
@@ -629,6 +679,7 @@ export default {
       'nome': '',
       'secao_id': '',
       'natureza': '',
+      'observacoes': '',
       'secao': {},
       'periodicidade': '',
       'mapeamento_total_anual': '',
@@ -664,7 +715,9 @@ export default {
     dialogChangeIndicadorValor: false,
     loadBtn: false,
     dadosParaAlteracao: [],
-    sistemaVigente: ''
+    sistemaVigente: '',
+    leObservacoes: '',
+    dialogShowObservacoes: false
   }),
   computed: {
     ...mapGetters(['usuarioLogado'])
@@ -758,6 +811,7 @@ export default {
         objetoParaEnvio['nome'] = this.editedCategoria.nome
         objetoParaEnvio['secao_id'] = this.editedCategoria.secao_id
         objetoParaEnvio['natureza'] = this.editedCategoria.natureza
+        objetoParaEnvio['observacoes'] = this.editedCategoria.observacoes
         objetoParaEnvio['periodicidade'] = this.editedCategoria.periodicidade
         objetoParaEnvio['mapeamento_total_anual'] = this.editedCategoria.mapeamento_total_anual
         objetoParaEnvio['mapeamento_total_mensal'] = this.editedCategoria.mapeamento_total_mensal
@@ -830,6 +884,7 @@ export default {
         objetoParaEnvio['nome'] = this.editedCategoria.nome
         objetoParaEnvio['secao_id'] = this.editedCategoria.secao_id
         objetoParaEnvio['natureza'] = this.editedCategoria.natureza
+        objetoParaEnvio['observacoes'] = this.editedCategoria.observacoes
         objetoParaEnvio['periodicidade'] = this.editedCategoria.periodicidade
         objetoParaEnvio['mapeamento_total_anual'] = this.editedCategoria.mapeamento_total_anual
         objetoParaEnvio['mapeamento_total_mensal'] = this.editedCategoria.mapeamento_total_mensal
@@ -1026,6 +1081,11 @@ export default {
       } catch (e) {
         console.log(e)
       }
+    },
+
+    openModalObservacoes (observacoes) {
+      this.leObservacoes = observacoes
+      this.dialogShowObservacoes = true
     }
   }
 }

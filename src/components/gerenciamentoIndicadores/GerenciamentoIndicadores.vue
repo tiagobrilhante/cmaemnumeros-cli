@@ -62,11 +62,11 @@
         }"
         :headers="headers"
         :items="indicadores"
+        :items-per-page="porPag"
         :loading="indicadores.length === 0"
         :search="search"
         class="elevation-21 mt-4"
         group-by="categoria.nome"
-        :items-per-page="porPag"
       >
         <!-- template para titulo e search-->
         <template v-slot:top>
@@ -165,6 +165,22 @@
 
         <!--Template de botões para editar, excluir -->
         <template v-slot:item.actions="{ item }">
+
+          <!--observacoes-->
+          <v-tooltip v-if="item.observacoes" top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                class="mr-2"
+                small
+                v-bind="attrs"
+                @click="openModalObservacoes(item.observacoes)"
+                v-on="on"
+              >
+                mdi-magnify
+              </v-icon>
+            </template>
+            <span>Observações</span>
+          </v-tooltip>
 
           <!--editar-->
           <v-tooltip top>
@@ -330,6 +346,21 @@
                   ></v-checkbox>
                 </v-col>
 
+              </v-row>
+
+              <!--observacoes-->
+              <v-row v-if="categoriasPorSecao.length > 0" dense>
+                <v-col>
+                  <span class="pl-3">Observações do Indicador</span>
+                  <v-textarea
+                    v-model="editedIndicador.observacoes"
+                    dense
+                    hint="Escreva algo se desejar, sobre o indicador"
+                    label="Observações do Indicador"
+                    rounded
+                    solo
+                  ></v-textarea>
+                </v-col>
               </v-row>
 
               <!-- tendência e objetivo-->
@@ -518,6 +549,22 @@
       </v-card>
     </v-dialog>
 
+    <!--Dialog para mostrar observacoes-->
+    <v-dialog v-model="dialogShowObservacoes" max-width="50%">
+      <v-card>
+        <v-card-title class="justify-center" primary-title>
+          Observações
+        </v-card-title>
+        <v-card-text>
+          {{ leObservacoes }}
+        </v-card-text>
+        <v-card-actions class="pb-5">
+          <v-spacer></v-spacer>
+          <v-btn color="grey lighten-1" @click="dialogShowObservacoes = false">Fechar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </v-main>
 </template>
 
@@ -540,6 +587,7 @@ export default {
       'nome': '',
       'meta': true,
       'tendencia': '',
+      'observacoes': '',
       'objetivo': '',
       'green': '',
       'yellow_1': '',
@@ -552,6 +600,7 @@ export default {
       'nome': '',
       'meta': '',
       'tendencia': '',
+      'observacoes': '',
       'objetivo': '',
       'green': '',
       'yellow_1': '',
@@ -611,7 +660,9 @@ export default {
     ],
     selectedSecao: 'Todos',
     dialogGerenciaCategoria: false,
-    porPag: 50
+    porPag: 50,
+    dialogShowObservacoes: false,
+    leObservacoes: ''
   }),
   computed: {
     ...mapGetters(['usuarioLogado'])
@@ -728,6 +779,7 @@ export default {
         objetoParaEnvio['nome'] = this.editedIndicador.nome
         objetoParaEnvio['categoria_id'] = this.editedIndicador.categoria_id
         objetoParaEnvio['meta'] = this.editedIndicador.meta
+        objetoParaEnvio['observacoes'] = this.editedIndicador.observacoes
         if (this.editedIndicador.meta) {
           objetoParaEnvio['tendencia'] = this.editedIndicador.tendencia
           objetoParaEnvio['objetivo'] = this.editedIndicador.objetivo
@@ -890,6 +942,11 @@ export default {
       } else {
         return 'primary'
       }
+    },
+
+    openModalObservacoes (observacoes) {
+      this.leObservacoes = observacoes
+      this.dialogShowObservacoes = true
     }
   }
 }

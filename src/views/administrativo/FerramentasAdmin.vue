@@ -32,6 +32,9 @@
               Relatório de
               pendências
             </v-btn>
+            <v-btn :class="ajustaCorBtn('verificaIndSemCat')" @click="changeVisibilityFerramenta('verificaIndSemCat')">
+              Verificação de Indicadores sem categoria
+            </v-btn>
           </v-alert>
 
           <!-- análise de integridade do banco-->
@@ -150,6 +153,9 @@
 
           <RelatorioPendencias v-if="relatorioPendenciasVisibility" class="mt-0"/>
 
+          <IndSemCat v-if="relatorioIndSemCatVisibility" class="mt-0"/>
+
+          <!-- selecione uma oipção-->
           <v-alert v-if="alertEscolha" elevation="12" type="info">
             <h3>Selecione uma opção do menu acima.</h3>
           </v-alert>
@@ -222,11 +228,12 @@ import config from '../../http/config'
 // import moment from 'moment-timezone'
 import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
 import RelatorioPendencias from '../../components/areaAdministrativa/RelatorioPendencias.vue'
+import IndSemCat from '../../components/areaAdministrativa/IndSemCat.vue'
 
 export default {
   name: 'ferramentasAdm',
   mixins: [logoutMixin],
-  components: {BarraNavegacao, RelatorioPendencias},
+  components: {BarraNavegacao, RelatorioPendencias, IndSemCat},
   data: () => ({
     configSis: config,
     ano_verifica_inicio: '',
@@ -291,6 +298,7 @@ export default {
     dadodDuplicadosInexistentes: false,
     integridadeBancoVisibility: false,
     relatorioPendenciasVisibility: false,
+    relatorioIndSemCatVisibility: false,
     alertEscolha: true
   }),
   computed: {
@@ -432,10 +440,17 @@ export default {
       if (qual === 'analiseIntegridade') {
         this.integridadeBancoVisibility = true
         this.relatorioPendenciasVisibility = false
+        this.relatorioIndSemCatVisibility = false
         this.alertEscolha = false
       } else if (qual === 'relatorioPendencias') {
         this.integridadeBancoVisibility = false
         this.relatorioPendenciasVisibility = true
+        this.relatorioIndSemCatVisibility = false
+        this.alertEscolha = false
+      } else if (qual === 'verificaIndSemCat') {
+        this.integridadeBancoVisibility = false
+        this.relatorioPendenciasVisibility = false
+        this.relatorioIndSemCatVisibility = true
         this.alertEscolha = false
       }
     },
@@ -449,6 +464,12 @@ export default {
         }
       } else if (selecionado === 'relatorio') {
         if (this.relatorioPendenciasVisibility) {
+          return 'secondary'
+        } else {
+          return 'primary'
+        }
+      } else if (selecionado === 'verificaIndSemCat') {
+        if (this.relatorioIndSemCatVisibility) {
           return 'secondary'
         } else {
           return 'primary'
