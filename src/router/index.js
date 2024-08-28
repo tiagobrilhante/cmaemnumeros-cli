@@ -8,6 +8,7 @@ import erroToken from '../views/errors/erroToken.vue'
 import store from '@/store'
 import Historico from '../views/administrativo/Historico.vue'
 import GerIndicadores from '../components/gerenciamentoIndicadores/GerenciamentoIndicadores.vue'
+import GerenciamentoDeTelas from '../components/telas/GerenciamentoDeTelas.vue'
 import BkupBanco from '../views/administrativo/BkupBanco.vue'
 import FerramentasAdmin from '../views/administrativo/FerramentasAdmin.vue'
 import AdmUser from '../components/areaAdministrativa/AdmUser.vue'
@@ -50,6 +51,14 @@ const routes = [
     path: '/historico',
     name: 'historico',
     component: Historico,
+    meta: {
+      logado: true
+    }
+  },
+  {
+    path: '/telas',
+    name: 'telas',
+    component: GerenciamentoDeTelas,
     meta: {
       logado: true
     }

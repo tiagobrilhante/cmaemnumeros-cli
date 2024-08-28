@@ -5,9 +5,21 @@ const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.5.0',
+    release: '402',
+    latest: true,
+    data: '20/08/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Agora é possível cadastrar e compartilhar telas de gráficos',
+      'Foi reajustada a View, removendo a antiga visão geral',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.4.5',
     release: '354',
-    latest: true,
+    latest: false,
     data: '13/08/2024',
     detalhesVisiveis: false,
     detalhes: [

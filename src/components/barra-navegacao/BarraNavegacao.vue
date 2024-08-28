@@ -33,7 +33,7 @@
       </template>
 
       <!--configurações-->
-      <template v-if="usuarioEstaLogado && usuarioResetado">
+      <template v-if="usuarioEstaLogado && usuarioResetado && usuarioLogado.tipo !== 'Auditor'">
         <div class="text-center">
           <v-menu
             bottom

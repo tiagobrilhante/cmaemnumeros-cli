@@ -4,10 +4,9 @@
     <!--Barra de navegação da área administrativa-->
     <BarraNavegacao></BarraNavegacao>
 
-    <!--Gerenciamento de Valores-->
-    <v-container v-if="mostraForm" fluid>
-
-      <!-- Banner e seletor de seletor de ano-->
+    <!-- container básico-->
+    <v-container class="mb-0" fluid>
+      <!-- Banner / seletor de seletor de ano / Tipo de Visualização-->
       <v-row>
 
         <v-col>
@@ -49,7 +48,7 @@
                     </v-alert>
                   </v-col>
 
-                  <!-- aimenta ano-->
+                  <!-- aumenta ano-->
                   <v-col class="text-left">
                     <v-btn v-if="anoBase !== anoCorrente" class="primary" @click="changeYear('up')">
                       <v-icon>mdi-chevron-right</v-icon>
@@ -65,9 +64,26 @@
 
               </v-col>
 
-              <!-- separador-->
+              <!-- btn de tipo de visualização-->
               <v-col class="text-right">
-                <v-btn color="success" @click="showTable">Visão Geral</v-btn>
+
+                <!-- visão geral-->
+                <v-btn :color="selectorTelaVG" @click="showTable('Visão Geral')">
+                  <v-icon class="mr-4" small>mdi-table-large</v-icon>
+                  Visão Geral
+                </v-btn>
+
+                <!-- formulário de cadastramento-->
+                <v-btn :color="selectorTelaForm" @click="showTable('Formulário')" v-if="usuarioLogado.tipo !== 'Auditor'">
+                  <v-icon class="mr-4" small>mdi-form-textbox</v-icon>
+                  Formulário
+                </v-btn>
+
+                <!-- montagem de telas-->
+                <v-btn :color="selectorTelaScreen" to="/telas">
+                  <v-icon class="mr-4" small>mdi-chart-pie</v-icon>
+                  Criação de telas
+                </v-btn>
               </v-col>
 
             </v-row>
@@ -79,13 +95,13 @@
       </v-row>
 
       <!-- pesquisa por indicador-->
-      <v-alert class="pt-0 pb-0" dense elevation="21">
+      <v-alert class="pt-0 pb-0 mb-0" dense elevation="21">
         <PesquisaIndicador/>
       </v-alert>
 
       <!-- seletor por seção-->
       <v-alert v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Auditor'"
-               class="p-5"
+               class="p-5 mb-0 mt-4"
                elevation="21"
       >
         <v-row>
@@ -97,9 +113,12 @@
         </v-row>
       </v-alert>
 
+    </v-container>
+
+    <!--Gerenciamento de Valores (Lançamento de dados - FORM)-->
+    <v-container v-if="mostraForm" class="mt-0 pt-1" fluid>
       <!--Seletor de mês e inserção de dados-->
       <v-alert
-        class="p-5"
         elevation="21"
       >
         <v-row>
@@ -317,96 +336,10 @@
     </v-container>
 
     <!-- exibição de tabela de dados-->
-    <v-container v-if="mostraTabela" fluid>
+    <v-container v-if="mostraTabela" class="mt-0 pt-1" fluid>
       <v-row>
         <v-col>
-
-          <!--Banner (cabecalho e btn de navegação ano-->
-          <v-alert
-            class="p-5"
-            elevation="21"
-          >
-
-            <v-row>
-              <!--cabecalho-->
-              <v-col>
-                <h2>
-                  <v-icon
-                    class="mr-4"
-                    size="36">
-                    mdi-finance
-                  </v-icon>
-                  Controle de Indicadores
-                </h2>
-              </v-col>
-
-              <!--btn Navega Ano-->
-              <v-col class="text-center">
-                <!--diminui ano, exibe ano corrente e aumenta ano-->
-                <v-row>
-
-                  <!-- dminui ano-->
-                  <v-col class="text-right">
-                    <v-btn class="primary" elevation="10" @click="changeYear('down')">
-                      <v-icon>mdi-chevron-left</v-icon>
-                    </v-btn>
-                  </v-col>
-
-                  <!-- exibe ano selecionado-->
-                  <v-col>
-                    <v-alert class="mt-0 mb-0 pt-0 pb-0" dense elevation="10">
-                      <h2>{{ this.anoCorrente }}</h2>
-                    </v-alert>
-                  </v-col>
-
-                  <!-- aimenta ano-->
-                  <v-col class="text-left">
-                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="primary" elevation="10"
-                           @click="changeYear('up')">
-                      <v-icon>mdi-chevron-right</v-icon>
-                    </v-btn>
-
-                    <v-btn v-if="this.anoBase !== this.anoCorrente" class="success" elevation="10"
-                           @click="changeYear('corrente')">
-                      <v-icon>mdi-calendar-today</v-icon>
-                    </v-btn>
-
-                  </v-col>
-
-                </v-row>
-
-              </v-col>
-
-              <!-- separador-->
-              <v-col class="text-right">
-                <v-btn v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Usuário'" color="success"
-                       @click="showTable">Formulário
-                </v-btn>
-              </v-col>
-
-            </v-row>
-
-          </v-alert>
-
-          <!-- pesquisa de indicador-->
-          <v-alert class="pt-0 pb-0" dense elevation="21">
-            <PesquisaIndicador/>
-          </v-alert>
-
-          <!-- seletor por seção-->
-          <v-alert v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Auditor'"
-                   class="p-5"
-                   elevation="21"
-          >
-            <v-row>
-              <v-col>
-                <v-btn v-for="secao in secoes" :key="secao.id" :color="ajustaCorBtn(secao.id)" class="mr-3"
-                       @click="pegaIndicadoresSecao(secao)"> {{ secao.sigla }}
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-alert>
-          <!-- dados Tabelares-->
+          <!-- Cabeçalho-->
           <v-alert v-if="tabelaDados.length !== 0" color="white">
             <v-container fluid>
               <v-row>
@@ -415,238 +348,9 @@
                 </v-col>
               </v-row>
             </v-container>
-            <!-- seletor de visualização-->
-            <v-row class="mt-2 mb-2">
-              <v-col>
-                <v-btn :color="corCategoria" class="ml-3" @click="seletorVisualizacao('categoria')">Visualização Por
-                  Categoria
-                </v-btn>
-                <v-btn :color="corGeral" @click="seletorVisualizacao('geral')">Visualização Geral</v-btn>
-              </v-col>
-            </v-row>
-
-            <!--dados tabelares de visualizaçãp geral-->
-            <v-container v-if="visualizaGeral" fluid>
-              <v-row>
-                <v-col>
-                  <v-data-table
-                    :headers="headersDados"
-                    :items="tabelaDados"
-                    :items-per-page="-1"
-                    :search="search"
-                    class="elevation-21 mt-4"
-                    disable-pagination
-                    group-by="categoria"
-                  >
-
-                    <!-- template para titulo e search-->
-                    <template v-slot:top>
-                      <v-toolbar
-                        flat
-                      >
-                        <!-- Título da tabela-->
-                        <v-toolbar-title>Tabela de Indicadores Cadastrados</v-toolbar-title>
-
-                        <v-divider
-                          class="mx-4"
-                          inset
-                          vertical
-                        ></v-divider>
-
-                        <v-spacer></v-spacer>
-
-                        <!--Pesquisar-->
-                        <v-text-field
-                          v-model="search"
-                          append-icon="mdi-magnify"
-                          hide-details
-                          label="Pesquisar"
-                          placeholder="Pesquisar"
-                          single-line
-                        ></v-text-field>
-
-                      </v-toolbar>
-
-                    </template>
-
-                    <template v-slot:item.mes_1="{ item }">
-
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_1 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_1)"
-                      >
-
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_1) === 'red'"
-                        class="white--text">{{
-                      item.mes_1
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_1 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_1 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_2="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_2 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_2)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_2) === 'red'"
-                        class="white--text">{{
-                      item.mes_2
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_2 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_2 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_3="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_3 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_3)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_3) === 'red'"
-                        class="white--text">{{
-                      item.mes_3
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_3 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_3 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_4="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_4 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_4)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_4) === 'red'"
-                        class="white--text">{{
-                      item.mes_4
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_4 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_4 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_5="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_5 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_5)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_5) === 'red'"
-                        class="white--text"> {{
-                      item.mes_5
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_5 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_5 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_6="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_6 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_6)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_6) === 'red'"
-                        class="white--text">{{
-                      item.mes_6
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_6 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_6 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_7="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_7 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_7)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_7) === 'red'"
-                        class="white--text">{{
-                      item.mes_7
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_7 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_7 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_8="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_8 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_8)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_8) === 'red'"
-                        class="white--text">{{
-                      item.mes_8
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_8 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_8 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_9="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_9 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_9)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_9) === 'red'"
-                        class="white--text"> {{
-                      item.mes_9
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_9 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_9 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_10="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_10 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_10)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_10) === 'red'"
-                        class="white--text">{{
-                      item.mes_10
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_10 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_10 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_11="{ item }">
-
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_11 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_11)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_11) === 'red'"
-                        class="white--text">{{
-                      item.mes_11
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_11 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_11 }}</span>
-
-                    </template>
-
-                    <template v-slot:item.mes_12="{ item }">
-                      <v-chip v-if="item.objeto_indicador.meta === 1 && item.mes_12 !== ''"
-                              :color="getColorForIndicatorTable(item.objeto_indicador, item.mes_12)"
-                      >
-                  <span v-if="getColorForIndicatorTable(item.objeto_indicador, item.mes_12) === 'red'"
-                        class="white--text">{{
-                      item.mes_12
-                    }}</span>
-                        <span v-else class="black--text">{{ item.mes_12 }}</span>
-                      </v-chip>
-                      <span v-else> {{ item.mes_12 }}</span>
-
-                    </template>
-
-                  </v-data-table>
-                </v-col>
-              </v-row>
-            </v-container>
 
             <!-- visualização por categoria-->
-            <CategoriaView v-else :anoCorrente="anoCorrente" :resultadoBusca="resultadoBusca"
+            <CategoriaView :anoCorrente="anoCorrente" :resultadoBusca="resultadoBusca"
                            :selectedSecao="selectedSecao"></CategoriaView>
 
           </v-alert>
@@ -794,8 +498,6 @@ export default {
     search: '',
     mostraForm: true,
     mostraTabela: false,
-    visualizaGeral: false,
-    visualizaCategoria: true,
     secaoCorrente: '',
     corGeral: 'warning',
     corCategoria: 'secondary',
@@ -803,7 +505,10 @@ export default {
     resultadoBusca: [],
     dialogMostraPendencia: false,
     dialogMostraDetalheCatInd: false,
-    selectedDetalheCatInd: []
+    selectedDetalheCatInd: [],
+    selectorTelaVG: 'success',
+    selectorTelaForm: 'success',
+    selectorTelaScreen: 'success'
   }),
   computed: {
     ...mapGetters(['usuarioLogado']),
@@ -844,7 +549,9 @@ export default {
   methods: {
     checaTipoUsuario () {
       if (this.usuarioLogado.tipo === 'Administrador' || this.usuarioLogado.tipo === 'Auditor') {
-        this.showTable()
+        this.showTable('Visão Geral')
+      } else {
+        this.showTable('Formulário')
       }
     },
 
@@ -1154,34 +861,19 @@ export default {
       }
     },
 
-    showTable () {
-      if (this.mostraForm) {
+    showTable (qual) {
+      if (qual === 'Visão Geral') {
         this.mostraForm = false
         this.mostraTabela = true
+        this.selectorTelaVG = 'secondary'
+        this.selectorTelaForm = 'success'
+        this.selectorTelaScreen = 'success'
       } else {
         this.mostraForm = true
         this.mostraTabela = false
-      }
-    },
-
-    seletorVisualizacao (tipo) {
-      if (tipo === 'geral') {
-        this.visualizaGeral = true
-        this.visualizaCategoria = false
-      } else if (tipo === 'categoria') {
-        this.visualizaGeral = false
-        this.visualizaCategoria = true
-      }
-      this.verificaCorVisualizacao()
-    },
-
-    verificaCorVisualizacao () {
-      if (this.visualizaGeral) {
-        this.corGeral = 'secondary'
-        this.corCategoria = 'warning'
-      } else {
-        this.corGeral = 'warning'
-        this.corCategoria = 'secondary'
+        this.selectorTelaVG = 'success'
+        this.selectorTelaForm = 'secondary'
+        this.selectorTelaScreen = 'success'
       }
     },
 
