@@ -9,7 +9,7 @@
       <!-- Banner / seletor de seletor de ano / Tipo de Visualização-->
       <v-row>
 
-        <v-col>
+        <v-col v-if="!mostraDash">
           <!--Banner (cabecalho e btn de navegação ano-->
           <v-alert
             class="p-5"
@@ -64,26 +64,32 @@
 
               </v-col>
 
-              <!-- btn de tipo de visualização-->
-              <v-col class="text-right">
+              <v-col></v-col>
 
-                <!-- visão geral-->
-                <v-btn :color="selectorTelaVG" @click="showTable('Visão Geral')">
-                  <v-icon class="mr-4" small>mdi-table-large</v-icon>
-                  Visão Geral
-                </v-btn>
+            </v-row>
 
-                <!-- formulário de cadastramento-->
-                <v-btn :color="selectorTelaForm" @click="showTable('Formulário')" v-if="usuarioLogado.tipo !== 'Auditor'">
-                  <v-icon class="mr-4" small>mdi-form-textbox</v-icon>
-                  Formulário
-                </v-btn>
+          </v-alert>
 
-                <!-- montagem de telas-->
-                <v-btn :color="selectorTelaScreen" to="/telas">
-                  <v-icon class="mr-4" small>mdi-chart-pie</v-icon>
-                  Criação de telas
-                </v-btn>
+        </v-col>
+
+        <v-col v-else>
+          <!--Banner (cabecalho e btn de navegação ano-->
+          <v-alert
+            class="p-5"
+            elevation="21"
+          >
+
+            <v-row>
+              <!--cabecalho-->
+              <v-col>
+                <h2>
+                  <v-icon
+                    class="mr-4"
+                    size="36">
+                    mdi-monitor-dashboard
+                  </v-icon>
+                  CMA em Números - Central de Dashboards
+                </h2>
               </v-col>
 
             </v-row>
@@ -94,13 +100,42 @@
 
       </v-row>
 
+      <!-- tipo de visualização-->
+      <v-alert dense elevation="11">
+        <v-row dense>
+          <!-- btn de tipo de visualização-->
+          <v-col>
+
+            <!-- visão geral-->
+            <v-btn v-if="dashboards.length > 0" :color="selectorTelaDash" small @click="showTable('Dashboards')">
+              <v-icon class="mr-4" small>mdi-monitor-dashboard</v-icon>
+              Dashboards
+            </v-btn>
+
+            <!-- visão geral-->
+            <v-btn :color="selectorTelaVG" small @click="showTable('Visão Geral')">
+              <v-icon class="mr-4" small>mdi-table-large</v-icon>
+              Visão Geral
+            </v-btn>
+
+            <!-- formulário de cadastramento-->
+            <v-btn v-if="usuarioLogado.tipo !== 'Auditor'" :color="selectorTelaForm" small
+                   @click="showTable('Formulário')">
+              <v-icon class="mr-4" small>mdi-form-textbox</v-icon>
+              Formulário
+            </v-btn>
+
+          </v-col>
+        </v-row>
+      </v-alert>
+
       <!-- pesquisa por indicador-->
-      <v-alert class="pt-0 pb-0 mb-0" dense elevation="21">
+      <v-alert v-if="!mostraDash" class="pt-0 pb-0 mb-0" dense elevation="21">
         <PesquisaIndicador/>
       </v-alert>
 
       <!-- seletor por seção-->
-      <v-alert v-if="usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Auditor'"
+      <v-alert v-if="(usuarioLogado.tipo === 'Administrador' || usuarioLogado.tipo === 'Auditor') && !mostraDash"
                class="p-5 mb-0 mt-4"
                elevation="21"
       >
@@ -113,6 +148,12 @@
         </v-row>
       </v-alert>
 
+    </v-container>
+
+    <v-container v-if="mostraDash" class="mt-0 pt-0" fluid>
+      <v-alert elevation="12">
+      <Dashboards :dados="dashboards"/>
+      </v-alert>
     </v-container>
 
     <!--Gerenciamento de Valores (Lançamento de dados - FORM)-->
@@ -458,11 +499,12 @@ import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
 import CategoriaView from '../../components/categoria/CategoriaView.vue'
 import PesquisaIndicador from '../../components/gerenciamentoIndicadores/PesquisaIndicador.vue'
 import Grafico from './Grafico.vue'
+import Dashboards from '../../components/dashboard/Dashboards.vue'
 
 export default {
   name: 'home',
   mixins: [logoutMixin],
-  components: {BarraNavegacao, Grafico, CategoriaView, PesquisaIndicador},
+  components: {BarraNavegacao, Grafico, CategoriaView, PesquisaIndicador, Dashboards},
   data: () => ({
     configSis: config,
     anoCorrente: 0,
@@ -498,6 +540,7 @@ export default {
     search: '',
     mostraForm: true,
     mostraTabela: false,
+    mostraDash: false,
     secaoCorrente: '',
     corGeral: 'warning',
     corCategoria: 'secondary',
@@ -508,7 +551,9 @@ export default {
     selectedDetalheCatInd: [],
     selectorTelaVG: 'success',
     selectorTelaForm: 'success',
-    selectorTelaScreen: 'success'
+    selectorTelaScreen: 'success',
+    selectorTelaDash: 'success',
+    dashboards: []
   }),
   computed: {
     ...mapGetters(['usuarioLogado']),
@@ -548,10 +593,23 @@ export default {
   },
   methods: {
     checaTipoUsuario () {
-      if (this.usuarioLogado.tipo === 'Administrador' || this.usuarioLogado.tipo === 'Auditor') {
-        this.showTable('Visão Geral')
-      } else {
-        this.showTable('Formulário')
+      try {
+        this.$http.get('dashboard/completo')
+          .then(response => {
+            this.dashboards = response.data
+            if (this.dashboards.length > 0) {
+              this.showTable('Dashboards')
+            } else {
+              if (this.usuarioLogado.tipo === 'Administrador' || this.usuarioLogado.tipo === 'Auditor') {
+                this.showTable('Visão Geral')
+              } else {
+                this.showTable('Formulário')
+              }
+            }
+          })
+          .catch(erro => console.log(erro))
+      } catch (e) {
+        console.log(e)
       }
     },
 
@@ -865,15 +923,27 @@ export default {
       if (qual === 'Visão Geral') {
         this.mostraForm = false
         this.mostraTabela = true
+        this.mostraDash = false
         this.selectorTelaVG = 'secondary'
         this.selectorTelaForm = 'success'
         this.selectorTelaScreen = 'success'
-      } else {
+        this.selectorTelaDash = 'success'
+      } else if (qual === 'Formulário') {
         this.mostraForm = true
+        this.mostraDash = false
         this.mostraTabela = false
         this.selectorTelaVG = 'success'
         this.selectorTelaForm = 'secondary'
         this.selectorTelaScreen = 'success'
+        this.selectorTelaDash = 'success'
+      } else {
+        this.mostraForm = false
+        this.mostraDash = true
+        this.mostraTabela = false
+        this.selectorTelaVG = 'success'
+        this.selectorTelaForm = 'success'
+        this.selectorTelaScreen = 'success'
+        this.selectorTelaDash = 'secondary'
       }
     },
 

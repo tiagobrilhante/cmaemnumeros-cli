@@ -1,13 +1,27 @@
-const urlDownload = 'http://localhost:8000/'
-// const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
+// const urlDownload = 'http://localhost:8000/'
+const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
 
 const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.6.0',
+    release: '614',
+    latest: true,
+    data: '11/09/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Agora é possível gerenciar seções',
+      'Agora é possível criar dashboards',
+      'Agora é possível implementar dashboards na visualização inicial',
+      'Foi reajustado o menu top para que seja mais intuitivo',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.5.0',
     release: '402',
-    latest: true,
+    latest: false,
     data: '20/08/2024',
     detalhesVisiveis: false,
     detalhes: [

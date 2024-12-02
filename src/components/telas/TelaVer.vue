@@ -3,9 +3,8 @@
   <v-row v-if="Object.keys(objetoPesquisa).length > 0" class="mt-0" dense>
     <v-col>
 
-      <v-row>
+      <v-row dense>
         <v-col>
-          <h3>Resultado da Tela - {{ objetoPesquisa.nome }}</h3>
         </v-col>
         <v-col v-if="usuarioLogado.id !== objetoPesquisa.user_id" class="text-right">
           <v-btn color="primary" small @click="openDialogSaveTela">
@@ -16,8 +15,9 @@
       </v-row>
 
       <br>
-      <v-alert elevation="12">
-        <v-row dense>
+      <v-alert elevation="12" color="cyan lighten-3">
+        <h3>{{ objetoPesquisa.nome }}</h3>
+        <v-row dense class="mt-4">
           <v-col><b>Tipo de Gráfico: </b> <span v-if="objetoPesquisa.tipoGraph === 'pie'">Pizza</span> <span v-else>Barra</span>
           </v-col>
           <v-col><b>Forma de montagem: </b> {{ objetoPesquisa.objetoPesquisa.forma }}</v-col>
@@ -98,7 +98,7 @@ export default {
         offsetY: 0,
         floating: false,
         style: {
-          fontSize: '20px',
+          fontSize: '15px',
           color: '#263238'
         }
       },
@@ -110,7 +110,7 @@ export default {
           return `${label}: ${val.toFixed(2)}% (${absoluteValue})`
         },
         style: {
-          fontSize: '20px',
+          fontSize: '13px',
           colors: ['#ffffff']
         },
         dropShadow: {
@@ -163,10 +163,10 @@ export default {
       },
       legend: {
         show: true,
-        position: 'top', // Coloca as legendas à direita
+        position: 'bottom', // Coloca as legendas à direita
         floating: false, // Mantém as legendas não flutuantes
-        horizontalAlign: 'center', // Alinha as legendas à esquerda da posição
-        fontSize: '18px', // Aumenta o tamanho da fonte das legendas
+        horizontalAlign: 'left', // Alinha as legendas à esquerda da posição
+        fontSize: '13px', // Aumenta o tamanho da fonte das legendas
         labels: {
           colors: ['#263238'], // Cor das legendas
           useSeriesColors: false
@@ -181,6 +181,12 @@ export default {
           onClick: undefined,
           offsetX: 0,
           offsetY: 0
+        },
+        onItemClick: {
+          toggleDataSeries: true
+        },
+        onItemHover: {
+          highlightDataSeries: true
         },
         itemMargin: {
           horizontal: 20, // Ajusta para que as legendas fiquem uma abaixo da outra
@@ -229,11 +235,11 @@ export default {
                     // Para gráficos do tipo "pie"
                     this.series = this.resultado.map(r => r.valor)
                     this.chartOptions.labels = this.resultado.map(r => ` ${r.indicador.categoria.nome} - ${r.indicador.nome}  `)
-                    this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' -X- ')
+                    this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' \n-X-\n ').split('\n')
                   } else if (this.objetoPesquisa.tipoGraph === 'bar') {
                     if (this.objetoPesquisa.objetoPesquisa.forma === 'Ano específico') {
                       // Para gráficos do tipo "bar"
-                      this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' -X- ')
+                      this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' \n-X-\n ').split('\n')
 
                       // Preparando a lista única de meses e ordenando
                       const meses = [...new Set(this.resultado.map(r => r.mes))].sort((a, b) => a - b)
@@ -299,7 +305,7 @@ export default {
                       }
                     } else if (this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de anos' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de meses de um ano específico' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de meses de um intervalo de anos') {
                       // Para gráficos do tipo "bar"
-                      this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' -X- ')
+                      this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' \n-X-\n ').split('\n')
 
                       // Preparando uma lista única de anos e meses com dados, sem valores vazios
                       const mesesAnos = [...new Set(this.resultado.map(r => `${r.mes}-${r.ano}`))].sort((a, b) => {

@@ -32,8 +32,8 @@
         </div>
       </template>
 
-      <!--configurações-->
-      <template v-if="usuarioEstaLogado && usuarioResetado && usuarioLogado.tipo !== 'Auditor'">
+      <!--configurações básicas-->
+      <template v-if="usuarioEstaLogado && usuarioResetado">
         <div class="text-center">
           <v-menu
             bottom
@@ -45,14 +45,39 @@
               <v-btn color="black"
                      dark
                      rounded
-                     to="/gerindicadores"
                      v-bind="attrs"
                      v-on="on"
               >
                 <v-icon class="mr-3" small>mdi-cogs</v-icon>
-                Configurações de Indicadores
+                Configurações Básicas
               </v-btn>
             </template>
+            <v-list>
+
+              <!-- gerenciamento de indicadores-->
+              <v-list-item to="/gerindicadores" v-if="usuarioLogado.tipo !== 'Auditor'">
+                <v-list-item-title>
+                  <v-icon class="mr-3" small>mdi-finance</v-icon>
+                  Configurações de Indicadores
+                </v-list-item-title>
+              </v-list-item>
+
+              <!-- montagem de telas-->
+              <v-list-item to="/telas">
+                <v-list-item-title>
+                  <v-icon class="mr-4" small>mdi-chart-pie</v-icon>
+                  Criação de telas
+                </v-list-item-title>
+              </v-list-item>
+
+              <!-- montagem de Dashboards-->
+              <v-list-item to="/gerenciadasboard">
+                <v-list-item-title>
+                  <v-icon class="mr-4" small>mdi-view-dashboard-variant-outline</v-icon>
+                  Gerenciamento de Dashboards
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
           </v-menu>
         </div>
       </template>
@@ -81,6 +106,14 @@
 
             <v-list>
 
+              <!-- gerenciamento de seções-->
+              <v-list-item to="/admsecoes">
+                <v-list-item-title>
+                  <v-icon class="pr-3" small>mdi-sitemap</v-icon>
+                  Gerenciamento de Seções
+                </v-list-item-title>
+              </v-list-item>
+
               <!-- gerenciamento de usuários-->
               <v-list-item to="/admuser">
                 <v-list-item-title>
@@ -94,6 +127,14 @@
                 <v-list-item-title>
                   <v-icon class="pr-3" small>mdi-cog</v-icon>
                   Ferramentas de Administrador
+                </v-list-item-title>
+              </v-list-item>
+
+              <!-- Configurações Gerais-->
+              <v-list-item to="/ferramentas">
+                <v-list-item-title>
+                  <v-icon class="pr-3" small>mdi-cogs</v-icon>
+                  Configurações Gerais
                 </v-list-item-title>
               </v-list-item>
 

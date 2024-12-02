@@ -31,7 +31,7 @@
               <v-col class="text-right">
 
                 <!-- voltar-->
-                <v-btn color="success" to="/home">
+                <v-btn color="primary" to="/home">
                   <v-icon class="mr-4" small>mdi-home</v-icon>
                   Voltar
                 </v-btn>
@@ -534,6 +534,12 @@
       <!--Dialog para ver tela-->
       <v-dialog v-model="dialogVerTela" max-width="90%">
         <v-card>
+          <v-card-title>
+            <v-row>
+              <v-col>Detalhes da Tela</v-col>
+              <v-col class="text-right"> <v-btn color="grey lighten-1" class="link" @click="dialogVerTela = false" rounded>X</v-btn></v-col>
+            </v-row>
+          </v-card-title>
           <v-card-text>
             <TelaVer v-if="dialogVerTela" :selectedTela="selectedTela" class="pt-5"
                      @ajustaTelasSalvas="handleResetaTelaSalva" @resetaTela="handleResetaTela"/>

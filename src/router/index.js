@@ -9,9 +9,11 @@ import store from '@/store'
 import Historico from '../views/administrativo/Historico.vue'
 import GerIndicadores from '../components/gerenciamentoIndicadores/GerenciamentoIndicadores.vue'
 import GerenciamentoDeTelas from '../components/telas/GerenciamentoDeTelas.vue'
+import GerenciamentoDeDashboard from '../components/dashboard/GerenciamentoDashboard.vue'
 import BkupBanco from '../views/administrativo/BkupBanco.vue'
 import FerramentasAdmin from '../views/administrativo/FerramentasAdmin.vue'
 import AdmUser from '../components/areaAdministrativa/AdmUser.vue'
+import AdmSecoes from '../components/areaAdministrativa/AdmSecoes.vue'
 
 Vue.use(VueRouter)
 const routes = [
@@ -40,6 +42,14 @@ const routes = [
     }
   },
   {
+    path: '/admsecoes',
+    name: 'admsecoes',
+    component: AdmSecoes,
+    meta: {
+      logado: true
+    }
+  },
+  {
     path: '/ferramentas',
     name: 'ferramentasAdm',
     component: FerramentasAdmin,
@@ -59,6 +69,14 @@ const routes = [
     path: '/telas',
     name: 'telas',
     component: GerenciamentoDeTelas,
+    meta: {
+      logado: true
+    }
+  },
+  {
+    path: '/gerenciadasboard',
+    name: 'gerenciaDash',
+    component: GerenciamentoDeDashboard,
     meta: {
       logado: true
     }

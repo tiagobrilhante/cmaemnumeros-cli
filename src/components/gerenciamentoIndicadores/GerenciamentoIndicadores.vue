@@ -801,6 +801,7 @@ export default {
           try {
             this.$http.post('indicadores', objetoParaEnvio)
               .then(response => {
+                console.log(response.data)
                 this.indicadores.push(response.data)
                 this.$nextTick(() => {
                   this.editedIndicador = Object.assign({}, this.defaultIndicador)
