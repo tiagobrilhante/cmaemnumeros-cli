@@ -142,6 +142,22 @@
                         entre 2023 e 2024.
                       </v-alert>
 
+                      <v-alert dense elevation="12">
+                        <b>Total de um ano específico</b><br>
+                        Nesta opção você vai selecionar os indicadores e receber os valores somados correspondentes aos
+                        meses de um ano específico.
+                        <hr>
+                        Ex: Número total de acidentes no serviço da Brigada X e Brigada Y no ano de 2024.
+                      </v-alert>
+
+                      <v-alert dense elevation="12">
+                        <b>Total de um intervalo de anos</b><br>
+                        Nesta opção você vai selecionar os indicadores e receber os valores somados correspondentes aos
+                        meses de um intervalo de anos específico.
+                        <hr>
+                        Ex: Número total de acidentes no serviço da Brigada X e Brigada Y entre o ano de 2023 e 2024.
+                      </v-alert>
+
                     </v-col>
                   </v-row>
                 </v-alert>
@@ -233,7 +249,7 @@
             </v-row>
 
             <!-- ano específico-->
-            <v-row v-if="formaMontagem === 'Ano específico'">
+            <v-row v-if="formaMontagem === 'Ano específico' || formaMontagem === 'Total de um ano específico'">
               <!-- ano-->
               <v-col>
                 <span class="pl-3">Ano</span>
@@ -257,7 +273,7 @@
             </v-row>
 
             <!-- intervalo de ano-->
-            <v-row v-if="formaMontagem === 'Intervalo de anos'">
+            <v-row v-if="formaMontagem === 'Intervalo de anos' || formaMontagem === 'Total de um intervalo de anos'">
               <!-- ano inicio-->
               <v-col>
                 <span class="pl-3">Ano Início</span>
@@ -537,7 +553,9 @@
           <v-card-title>
             <v-row>
               <v-col>Detalhes da Tela</v-col>
-              <v-col class="text-right"> <v-btn color="grey lighten-1" class="link" @click="dialogVerTela = false" rounded>X</v-btn></v-col>
+              <v-col class="text-right">
+                <v-btn class="link" color="grey lighten-1" rounded @click="dialogVerTela = false">X</v-btn>
+              </v-col>
             </v-row>
           </v-card-title>
           <v-card-text>
@@ -590,7 +608,7 @@ export default {
   components: {Tela, PesquisaIndicador, BarraNavegacao, TelaVer},
   data: () => ({
     formaMontagem: '',
-    formaMontagemTipo: ['Mês de um ano específico', 'Intervalo de meses de um ano específico', 'Ano específico', 'Intervalo de anos', 'Intervalo de meses de um intervalo de anos'],
+    formaMontagemTipo: ['Mês de um ano específico', 'Intervalo de meses de um ano específico', 'Ano específico', 'Intervalo de anos', 'Intervalo de meses de um intervalo de anos', 'Total de um ano específico', 'Total de um intervalo de anos'],
     ano_verifica_inicio: '',
     ano_verifica_fim: '',
     mostraExplicacao: false,
@@ -764,7 +782,21 @@ export default {
         if (this.ano_verifica_fim === '') {
           msgErro.push('Informe o ano de fim')
         }
+      } else if (this.formaMontagem !== '' && this.formaMontagem === 'Total de um ano específico') {
+        this.tipoGraph = 'pie'
+        if (this.ano_verifica_inicio === '') {
+          msgErro.push('Informe o ano')
+        }
+      } else if (this.formaMontagem !== '' && this.formaMontagem === 'Total de um intervalo de anos') {
+        this.tipoGraph = 'bar'
+        if (this.ano_verifica_inicio === '') {
+          msgErro.push('Informe o ano de início')
+        }
+        if (this.ano_verifica_fim === '') {
+          msgErro.push('Informe o ano de fim')
+        }
       }
+
       if (this.arrayIndGeral.length <= 1) {
         msgErro.push('Selecione ao menos 2 indicadores')
       }

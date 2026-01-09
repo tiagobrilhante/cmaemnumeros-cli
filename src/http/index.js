@@ -7,7 +7,6 @@ const leBase = config.baseURL
 const http = axios.create({
   baseURL: leBase,
   headers: {
-    'Access-Control-Allow-Origin': '*',
     'Accept': 'application/json',
     'Content-type': 'application/json'
   }

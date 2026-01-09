@@ -1,576 +1,580 @@
 <template>
+  <v-main class="bgConfig">
+    <BarraNavegacao v-if="isGerCategoriasRoute"></BarraNavegacao>
+    <v-container fluid>
+      <!--Banner-->
+      <v-alert
+        elevation="21"
+      >
+        <!-- nome e btn add nova categoria-->
+        <v-row>
 
-  <v-container fluid>
-    <!--Banner-->
-    <v-alert
-      elevation="21"
-    >
-      <!-- nome e btn add nova categoria-->
-      <v-row>
+          <!--nome-->
+          <v-col cols="9">
+            <h2>
+              <v-icon
+                class="mr-4"
+                size="36">
+                mdi-chart-line
+              </v-icon>
+              Gerenciamento de Categorias
+            </h2>
 
-        <!--nome-->
-        <v-col cols="9">
-          <h2>
-            <v-icon
-              class="mr-4"
-              size="36">
-              mdi-chart-line
-            </v-icon>
-            Gerenciamento de Categorias
-          </h2>
+          </v-col>
 
-        </v-col>
+          <!-- btn add categoria-->
+          <v-col class="text-right" cols="3">
+            <v-btn class="primary" @click="openDialogAddEditCategoria('add')">Adicionar Nova Categoria</v-btn>
+          </v-col>
 
-        <!-- btn add categoria-->
-        <v-col class="text-right" cols="3">
-          <v-btn class="primary" @click="openDialogAddEditCategoria('add')">Adicionar Nova Categoria</v-btn>
-        </v-col>
+        </v-row>
 
-      </v-row>
+      </v-alert>
 
-    </v-alert>
+      <!--DataTable-->
+      <v-data-table
+        :headers="headers"
+        :item-class="getItemClass"
+        :items="categorias"
+        :loading="categorias.length === 0"
+        :search="search"
+        class="elevation-21 mt-4"
+        group-by="secao.sigla"
+        sort-by="nome"
+      >
+        <!-- template para titulo e search-->
+        <template v-slot:top>
+          <v-toolbar
+            flat
+          >
+            <!-- Título da tabela-->
+            <v-toolbar-title>Tabela de Categorias Cadastradas</v-toolbar-title>
 
-    <!--DataTable-->
-    <v-data-table
-      :headers="headers"
-      :item-class="getItemClass"
-      :items="categorias"
-      :loading="categorias.length === 0"
-      :search="search"
-      class="elevation-21 mt-4"
-      group-by="secao.sigla"
-      sort-by="nome"
-    >
-      <!-- template para titulo e search-->
-      <template v-slot:top>
-        <v-toolbar
-          flat
-        >
-          <!-- Título da tabela-->
-          <v-toolbar-title>Tabela de Categorias Cadastradas</v-toolbar-title>
+            <v-divider
+              class="mx-4"
+              inset
+              vertical
+            ></v-divider>
 
-          <v-divider
-            class="mx-4"
-            inset
-            vertical
-          ></v-divider>
+            <v-spacer></v-spacer>
 
-          <v-spacer></v-spacer>
+            <!--Pesquisar-->
+            <v-text-field
+              v-model="search"
+              append-icon="mdi-magnify"
+              hide-details
+              label="Pesquisar"
+              placeholder="Pesquisar"
+              single-line
+            ></v-text-field>
 
-          <!--Pesquisar-->
-          <v-text-field
-            v-model="search"
-            append-icon="mdi-magnify"
-            hide-details
-            label="Pesquisar"
-            placeholder="Pesquisar"
-            single-line
-          ></v-text-field>
+          </v-toolbar>
 
-        </v-toolbar>
-
-        <!-- LEGENDA-->
-        <v-container fluid>
-          <v-row dense>
-            <v-col>
-              Legenda:
-              <v-chip class="ml-5 row-inactive" small>Inativo</v-chip>
-              <v-chip class="ml-5 bgcat" small>Categorias</v-chip>
-            </v-col>
-          </v-row>
-        </v-container>
-
-      </template>
-
-      <!--Template para ativo -->
-      <template v-slot:item.ativo="{ item }">
-        <span v-if="item.ativo">Sim</span><span v-else>Não</span>
-      </template>
-
-      <template v-slot:item.indicadorLength="{ item }">
-        {{ item.numindicador }}
-      </template>
-
-      <!--Template de botões para editar, excluir -->
-      <template v-slot:item.actions="{ item }">
-
-        <!--observacoes-->
-        <v-tooltip v-if="item.observacoes" top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-icon
-              class="mr-2"
-              small
-              v-bind="attrs"
-              @click="openModalObservacoes(item.observacoes)"
-              v-on="on"
-            >
-              mdi-magnify
-            </v-icon>
-          </template>
-          <span>Observações</span>
-        </v-tooltip>
-
-        <!--editar-->
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-icon
-              class="mr-2"
-              small
-              v-bind="attrs"
-              @click="openDialogAddEditCategoria('edit', item)"
-              v-on="on"
-            >
-              mdi-pen
-            </v-icon>
-          </template>
-          <span>Editar Categoria</span>
-        </v-tooltip>
-
-        <!--Excluir-->
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-icon
-              class="mr-2"
-              small
-              v-bind="attrs"
-              @click="deleteCategoria(item)"
-              v-on="on"
-            >
-              mdi-delete
-            </v-icon>
-          </template>
-          <span>Excluir Usuário</span>
-        </v-tooltip>
-
-      </template>
-
-    </v-data-table>
-
-    <!--Dialog para add/edit Categoria-->
-    <v-dialog v-model="dialogAddEditCategoria" max-width="70%" persistent>
-      <v-card>
-        <v-form @submit.prevent="efetuarCadastroEditCategoria">
-
-          <v-card-title class="justify-center" primary-title>
-            <span v-if="tipoAcao === 'add'">Adicionar nova Categoria</span><span v-else>Edição de Categoria</span>
-          </v-card-title>
-
-          <v-card-text>
-            <!--Nome e seção-->
-            <v-row dense>
-
-              <!-- nome-->
-              <v-col>
-                <span class="pl-3">Nome da Categoria (Obrigatório)</span>
-                <v-text-field
-                  v-model="editedCategoria.nome"
-                  class="ml-3"
-                  dense
-                  label="Nome da Categoria"
-                  rounded
-                  solo
-                ></v-text-field>
-              </v-col>
-
-              <!-- seção-->
-              <v-col>
-                <span class="pl-3">Seção (Obrigatório)</span>
-                <v-autocomplete
-                  v-model="editedCategoria.secao_id"
-                  :items="secoes"
-                  :readonly="somenteLeitura"
-                  class="ml-3"
-                  dense
-                  item-text="sigla"
-                  item-value="id"
-                  label="Selecione a seção vinculada a essa categoria"
-                  name="secao"
-                  rounded
-                  solo
-                ></v-autocomplete>
-              </v-col>
-
-            </v-row>
-
-            <!--Natureza do dado e periodicidade-->
-            <v-row dense>
-
-              <!-- natureza-->
-              <v-col>
-                <span class="pl-3">Natureza do dado a ser armazenado (Obrigatório)</span>
-                <v-autocomplete
-                  v-model="editedCategoria.natureza"
-                  :items="naturezas"
-                  class="ml-3"
-                  dense
-                  label="Selecione a natureza do dado"
-                  name="netureza"
-                  rounded
-                  solo
-                ></v-autocomplete>
-              </v-col>
-
-              <!-- periodicidade-->
-              <v-col>
-                <span class="pl-3">Periodicidade do lançamento (Obrigatório)</span>
-                <v-select
-                  v-model="editedCategoria.periodicidade"
-                  :items="periodicidadeOptions"
-                  class="ml-3"
-                  dense
-                  label="Selecione a periodicidade do lançamento"
-                  name="secao"
-                  rounded
-                  solo
-                ></v-select>
-              </v-col>
-            </v-row>
-
-            <!--observacoes-->
+          <!-- LEGENDA-->
+          <v-container fluid>
             <v-row dense>
               <v-col>
-                <span class="pl-3">Observações da Categoria</span>
-                <v-textarea
-                  v-model="editedCategoria.observacoes"
-                  class="ml-3"
-                  dense
-                  hint="Escreva algo se desejar, sobre a categoria"
-                  label="Observações da Categoria"
-                  rounded
-                  solo
-                ></v-textarea>
+                Legenda:
+                <v-chip class="ml-5 row-inactive" small>Inativo</v-chip>
+                <v-chip class="ml-5 bgcat" small>Categorias</v-chip>
               </v-col>
             </v-row>
+          </v-container>
 
-            <!-- status-->
-            <v-row>
-              <v-col>
-                <v-alert color="blue lighten-3" dense rounded="xxl">
+        </template>
 
-                  <v-row>
-                    <v-col><h4>Selecione se a categoria está ativa:</h4>
-                      <v-checkbox
-                        v-model="editedCategoria.ativo"
-                        hide-details
-                        label="Ativo"
-                      ></v-checkbox>
-                    </v-col>
-                    <v-col class="mt-4 mb-auto">
-                      <v-alert dense elevation="12">
-                        Caso desmarque essa opção, a categoria não será exibida no formulário de cadastramento de
-                        indicadores.
-                      </v-alert>
-                    </v-col>
-                  </v-row>
+        <!--Template para ativo -->
+        <template v-slot:item.ativo="{ item }">
+          <span v-if="item.ativo">Sim</span><span v-else>Não</span>
+        </template>
 
-                </v-alert>
-              </v-col>
-            </v-row>
+        <template v-slot:item.indicadorLength="{ item }">
+          {{ item.numindicador }}
+        </template>
 
-            <!--Gerenciamento de total-->
-            <v-row dense>
-              <v-col>
-                <v-alert color="green lighten-3">
-                  <h3>Mapeamento de Total</h3>
+        <!--Template de botões para editar, excluir -->
+        <template v-slot:item.actions="{ item }">
 
-                  <!-- mapeamento total anual e mensal-->
-                  <v-row dense>
+          <!--observacoes-->
+          <v-tooltip v-if="item.observacoes" top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                class="mr-2"
+                small
+                v-bind="attrs"
+                @click="openModalObservacoes(item.observacoes)"
+                v-on="on"
+              >
+                mdi-magnify
+              </v-icon>
+            </template>
+            <span>Observações</span>
+          </v-tooltip>
 
-                    <!-- mapeamento total anual-->
-                    <v-col>
-                      <span class="pl-3">Anual</span>
-                      <v-autocomplete
-                        v-model="editedCategoria.mapeamento_total_anual"
-                        :items="tipos_mapeamento_total"
-                        class="ml-3"
-                        dense
-                        label="Selecione a forma de mapeamento do total (Anual)"
-                        name="mapeamento_total_anual"
-                        rounded
-                        solo
-                      ></v-autocomplete>
-                    </v-col>
+          <!--editar-->
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                class="mr-2"
+                small
+                v-bind="attrs"
+                @click="openDialogAddEditCategoria('edit', item)"
+                v-on="on"
+              >
+                mdi-pen
+              </v-icon>
+            </template>
+            <span>Editar Categoria</span>
+          </v-tooltip>
 
-                    <!-- mapeamento total mensal-->
-                    <v-col>
-                      <span class="pl-3">Mensal</span>
-                      <v-autocomplete
-                        v-model="editedCategoria.mapeamento_total_mensal"
-                        :items="tipos_mapeamento_total"
-                        class="ml-3"
-                        dense
-                        label="Selecione a forma de mapeamento do total (Mensal)"
-                        name="mapeamento_total_mensal"
-                        rounded
-                        solo
-                      ></v-autocomplete>
-                    </v-col>
+          <!--Excluir-->
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                class="mr-2"
+                small
+                v-bind="attrs"
+                @click="deleteCategoria(item)"
+                v-on="on"
+              >
+                mdi-delete
+              </v-icon>
+            </template>
+            <span>Excluir Usuário</span>
+          </v-tooltip>
 
-                  </v-row>
+        </template>
 
-                  <!-- explicação-->
-                  <v-alert>
-                    <p>O mapeamento de Totais refletem como os dados serão acumulados ao tongo do tempo:</p>
-                    <img :src="require('@/assets/img/explicatotal.png')" alt="Logo CMA" width="100%">
-                    <p>O mapeamento de totais são divididos da seguinte forma:</p>
-                    <ul>
-                      <li>Somatório: O resultado total será a soma de todos os lançamentos (na linha ou na coluna)</li>
-                      <li>Média: O resultado total será a soma de todos os lançamentos dividido pelo número de
-                        lançamentos (na linha ou na coluna)
-                      </li>
-                      <li>Máximo: O resultado total será o maior valor existente (na linha ou na coluna)</li>
-                      <li>Mínimo: O resultado total será o menor valor existente (na linha ou na coluna)</li>
-                    </ul>
+      </v-data-table>
+
+      <!--Dialog para add/edit Categoria-->
+      <v-dialog v-model="dialogAddEditCategoria" max-width="70%" persistent>
+        <v-card>
+          <v-form @submit.prevent="efetuarCadastroEditCategoria">
+
+            <v-card-title class="justify-center" primary-title>
+              <span v-if="tipoAcao === 'add'">Adicionar nova Categoria</span><span v-else>Edição de Categoria</span>
+            </v-card-title>
+
+            <v-card-text>
+              <!--Nome e seção-->
+              <v-row dense>
+
+                <!-- nome-->
+                <v-col>
+                  <span class="pl-3">Nome da Categoria (Obrigatório)</span>
+                  <v-text-field
+                    v-model="editedCategoria.nome"
+                    class="ml-3"
+                    dense
+                    label="Nome da Categoria"
+                    rounded
+                    solo
+                  ></v-text-field>
+                </v-col>
+
+                <!-- seção-->
+                <v-col>
+                  <span class="pl-3">Seção (Obrigatório)</span>
+                  <v-autocomplete
+                    v-model="editedCategoria.secao_id"
+                    :items="secoes"
+                    :readonly="somenteLeitura"
+                    class="ml-3"
+                    dense
+                    item-text="sigla"
+                    item-value="id"
+                    label="Selecione a seção vinculada a essa categoria"
+                    name="secao"
+                    rounded
+                    solo
+                  ></v-autocomplete>
+                </v-col>
+
+              </v-row>
+
+              <!--Natureza do dado e periodicidade-->
+              <v-row dense>
+
+                <!-- natureza-->
+                <v-col>
+                  <span class="pl-3">Natureza do dado a ser armazenado (Obrigatório)</span>
+                  <v-autocomplete
+                    v-model="editedCategoria.natureza"
+                    :items="naturezas"
+                    class="ml-3"
+                    dense
+                    label="Selecione a natureza do dado"
+                    name="netureza"
+                    rounded
+                    solo
+                  ></v-autocomplete>
+                </v-col>
+
+                <!-- periodicidade-->
+                <v-col>
+                  <span class="pl-3">Periodicidade do lançamento (Obrigatório)</span>
+                  <v-select
+                    v-model="editedCategoria.periodicidade"
+                    :items="periodicidadeOptions"
+                    class="ml-3"
+                    dense
+                    label="Selecione a periodicidade do lançamento"
+                    name="secao"
+                    rounded
+                    solo
+                  ></v-select>
+                </v-col>
+              </v-row>
+
+              <!--observacoes-->
+              <v-row dense>
+                <v-col>
+                  <span class="pl-3">Observações da Categoria</span>
+                  <v-textarea
+                    v-model="editedCategoria.observacoes"
+                    class="ml-3"
+                    dense
+                    hint="Escreva algo se desejar, sobre a categoria"
+                    label="Observações da Categoria"
+                    rounded
+                    solo
+                  ></v-textarea>
+                </v-col>
+              </v-row>
+
+              <!-- status-->
+              <v-row>
+                <v-col>
+                  <v-alert color="blue lighten-3" dense rounded="xxl">
+
+                    <v-row>
+                      <v-col><h4>Selecione se a categoria está ativa:</h4>
+                        <v-checkbox
+                          v-model="editedCategoria.ativo"
+                          hide-details
+                          label="Ativo"
+                        ></v-checkbox>
+                      </v-col>
+                      <v-col class="mt-4 mb-auto">
+                        <v-alert dense elevation="12">
+                          Caso desmarque essa opção, a categoria não será exibida no formulário de cadastramento de
+                          indicadores.
+                        </v-alert>
+                      </v-col>
+                    </v-row>
+
+                  </v-alert>
+                </v-col>
+              </v-row>
+
+              <!--Gerenciamento de total-->
+              <v-row dense>
+                <v-col>
+                  <v-alert color="green lighten-3">
+                    <h3>Mapeamento de Total</h3>
+
+                    <!-- mapeamento total anual e mensal-->
+                    <v-row dense>
+
+                      <!-- mapeamento total anual-->
+                      <v-col>
+                        <span class="pl-3">Anual</span>
+                        <v-autocomplete
+                          v-model="editedCategoria.mapeamento_total_anual"
+                          :items="tipos_mapeamento_total"
+                          class="ml-3"
+                          dense
+                          label="Selecione a forma de mapeamento do total (Anual)"
+                          name="mapeamento_total_anual"
+                          rounded
+                          solo
+                        ></v-autocomplete>
+                      </v-col>
+
+                      <!-- mapeamento total mensal-->
+                      <v-col>
+                        <span class="pl-3">Mensal</span>
+                        <v-autocomplete
+                          v-model="editedCategoria.mapeamento_total_mensal"
+                          :items="tipos_mapeamento_total"
+                          class="ml-3"
+                          dense
+                          label="Selecione a forma de mapeamento do total (Mensal)"
+                          name="mapeamento_total_mensal"
+                          rounded
+                          solo
+                        ></v-autocomplete>
+                      </v-col>
+
+                    </v-row>
+
+                    <!-- explicação-->
+                    <v-alert>
+                      <p>O mapeamento de Totais refletem como os dados serão acumulados ao tongo do tempo:</p>
+                      <img :src="require('@/assets/img/explicatotal.png')" alt="Logo CMA" width="100%">
+                      <p>O mapeamento de totais são divididos da seguinte forma:</p>
+                      <ul>
+                        <li>Somatório: O resultado total será a soma de todos os lançamentos (na linha ou na coluna)
+                        </li>
+                        <li>Média: O resultado total será a soma de todos os lançamentos dividido pelo número de
+                          lançamentos (na linha ou na coluna)
+                        </li>
+                        <li>Máximo: O resultado total será o maior valor existente (na linha ou na coluna)</li>
+                        <li>Mínimo: O resultado total será o menor valor existente (na linha ou na coluna)</li>
+                      </ul>
+                    </v-alert>
+
                   </v-alert>
 
-                </v-alert>
+                </v-col>
+              </v-row>
 
+            </v-card-text>
+            <v-card-actions class="pb-5">
+
+              <v-row>
+                <v-col class="text-right mr-4">
+                  <v-btn color="warning lighten-1" @click="dialogAddEditCategoria = false">Cancelar</v-btn>
+                  <span class="pl-5 pr-5"></span>
+                  <v-btn color="success" type="submit">
+                    <span v-if="tipoAcao === 'add'">Cadastrar</span><span v-else>Alterar</span>
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-card-actions>
+
+          </v-form>
+        </v-card>
+
+      </v-dialog>
+
+      <!--Dialog para deletar categoria-->
+      <v-dialog v-model="dialogDelete" max-width="800px">
+        <v-card>
+          <v-card-title class="justify-center" primary-title>
+            <v-icon
+              class="mr-4">
+              fa fa-exclamation-triangle
+            </v-icon>
+            Você tem certeza que quer deletar a categoria {{ editedCategoria.nome }}?
+            <v-icon
+              class="ml-4">
+              fa fa-exclamation-triangle
+            </v-icon>
+
+          </v-card-title>
+          <v-card-text>
+            <div class="text-center">
+              <p>Essa ação é irreversível. Tenha certeza do que está fazendo.</p>
+              <p>Todos os indicadores vinculados a essa categoria serão excluídos!</p>
+            </div>
+          </v-card-text>
+          <v-card-actions class="pb-5">
+            <v-spacer></v-spacer>
+            <v-btn color="grey lighten-1" @click="closeDelete">Cancelar</v-btn>
+            <span class="pl-5 pr-5"></span>
+            <v-btn color="red lighten-1" @click="deleteCategoriaConfirm">Excluir</v-btn>
+            <v-spacer></v-spacer>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!--Dialog sobre alteração de natureza-->
+      <v-dialog v-model="dialogAlertChangeNatureza" max-width="800px">
+        <v-card>
+          <v-card-title class="justify-center" primary-title>
+            <v-icon
+              class="mr-4">
+              fa fa-exclamation-triangle
+            </v-icon>
+            Você esta alterando a natureza dos dados armazenados!
+            <v-icon
+              class="ml-4">
+              fa fa-exclamation-triangle
+            </v-icon>
+
+          </v-card-title>
+          <v-card-text class="text-justify">
+            Você está prestes a substituir a natureza de dados dessa categoria de:
+            <v-chip>{{ naturezaAntiga }}</v-chip>
+            para:
+            <v-chip>{{ naturezaNova }}</v-chip>
+            .
+            <p>Entenda o impacto disso:</p>
+            <p>Atualmente o sistema conta com as seguintes opções de natureza de dados:</p>
+
+            <v-row>
+              <v-col>
+                <ul>
+                  <li>Pessoas</li>
+                  <li>Quantidade (Inteiro)</li>
+                  <li>Quantidade (Decimal)</li>
+                  <li>Peso (Kg)</li>
+                  <li>Peso (Ton)</li>
+                  <li>Distância (Km)</li>
+                  <li>Distância (Metros)</li>
+                  <li>Tempo (Minutos)</li>
+                  <li>Tempo (Horas)</li>
+                  <li>Tempo (Dias)</li>
+                  <li>Tempo (Meses)</li>
+                  <li>Tempo (Anos)</li>
+                  <li>Monetário (R$)</li>
+                  <li>Porcentagem (%)</li>
+                </ul>
+              </v-col>
+
+              <v-col>
+                <v-alert type="warning">
+                  <p>Apenas as naturezas:</p>
+                  <ul>
+                    <li>Pessoas</li>
+                    <li>Quantidade (Inteiro)</li>
+                  </ul>
+                  <br>
+
+                  <p>Possuem valores registrados em números inteiros, ou seja, sem casas decimais</p>
+                  <p>Todos as demais naturezas pertencem ao conjunto dos números REAIS positivos.</p>
+                </v-alert>
+              </v-col>
+
+            </v-row>
+
+            <v-row>
+              <v-col>
+                <v-alert type="info">
+                  {{ retornaPreocupacao() }}
+                </v-alert>
               </v-col>
             </v-row>
 
           </v-card-text>
           <v-card-actions class="pb-5">
-
-            <v-row>
-              <v-col class="text-right mr-4">
-                <v-btn color="warning lighten-1" @click="dialogAddEditCategoria = false">Cancelar</v-btn>
-                <span class="pl-5 pr-5"></span>
-                <v-btn color="success" type="submit">
-                  <span v-if="tipoAcao === 'add'">Cadastrar</span><span v-else>Alterar</span>
-                </v-btn>
-              </v-col>
-            </v-row>
+            <v-spacer></v-spacer>
+            <v-btn color="grey lighten-1" @click="dialogAlertChangeNatureza = false">Cancelar</v-btn>
+            <span class="pl-5 pr-5"></span>
+            <v-btn :loading="loadBtn" color="red lighten-1" @click="enviaParaPersistencia">Prosseguir</v-btn>
+            <v-spacer></v-spacer>
           </v-card-actions>
+        </v-card>
+      </v-dialog>
 
-        </v-form>
-      </v-card>
+      <!--Dialog sobre alteração de de valores de indicadores-->
+      <v-dialog v-model="dialogChangeIndicadorValor" max-width="70%" persistent>
+        <v-card>
+          <v-card-title class="justify-center" primary-title>
+            <v-icon
+              class="mr-4">
+              fa fa-exclamation-triangle
+            </v-icon>
+            Revisão de Valores de Indicadores (por motivo de alteração de natureza de dados da categoria)
+            <v-icon
+              class="ml-4">
+              fa fa-exclamation-triangle
+            </v-icon>
 
-    </v-dialog>
+          </v-card-title>
+          <v-card-text class="text-justify">
 
-    <!--Dialog para deletar categoria-->
-    <v-dialog v-model="dialogDelete" max-width="800px">
-      <v-card>
-        <v-card-title class="justify-center" primary-title>
-          <v-icon
-            class="mr-4">
-            fa fa-exclamation-triangle
-          </v-icon>
-          Você tem certeza que quer deletar a categoria {{ editedCategoria.nome }}?
-          <v-icon
-            class="ml-4">
-            fa fa-exclamation-triangle
-          </v-icon>
+            Categoria: {{ dadosParaAlteracao.nome }}
 
-        </v-card-title>
-        <v-card-text>
-          <div class="text-center">
-            <p>Essa ação é irreversível. Tenha certeza do que está fazendo.</p>
-            <p>Todos os indicadores vinculados a essa categoria serão excluídos!</p>
-          </div>
-        </v-card-text>
-        <v-card-actions class="pb-5">
-          <v-spacer></v-spacer>
-          <v-btn color="grey lighten-1" @click="closeDelete">Cancelar</v-btn>
-          <span class="pl-5 pr-5"></span>
-          <v-btn color="red lighten-1" @click="deleteCategoriaConfirm">Excluir</v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+            <!--DataTable-->
+            <v-data-table
+              v-for="indicador in dadosParaAlteracao.indicadores"
+              :key="indicador.id"
+              :headers="headersAlteracao"
+              :items="indicador.indicador_valor"
+              :items-per-page=-1
+              :loading="dadosParaAlteracao.length === 0"
+              class="elevation-21 mt-4"
+              group-by="ano"
+              hide-default-footer
+            >
+              <!-- template para indicador-->
+              <template v-slot:top>
+                <v-toolbar
+                  flat
+                >
+                  <!-- Título da tabela-->
+                  <v-toolbar-title>{{ indicador.nome }}</v-toolbar-title>
 
-    <!--Dialog sobre alteração de natureza-->
-    <v-dialog v-model="dialogAlertChangeNatureza" max-width="800px">
-      <v-card>
-        <v-card-title class="justify-center" primary-title>
-          <v-icon
-            class="mr-4">
-            fa fa-exclamation-triangle
-          </v-icon>
-          Você esta alterando a natureza dos dados armazenados!
-          <v-icon
-            class="ml-4">
-            fa fa-exclamation-triangle
-          </v-icon>
+                </v-toolbar>
 
-        </v-card-title>
-        <v-card-text class="text-justify">
-          Você está prestes a substituir a natureza de dados dessa categoria de:
-          <v-chip>{{ naturezaAntiga }}</v-chip>
-          para:
-          <v-chip>{{ naturezaNova }}</v-chip>
-          .
-          <p>Entenda o impacto disso:</p>
-          <p>Atualmente o sistema conta com as seguintes opções de natureza de dados:</p>
+              </template>
 
-          <v-row>
-            <v-col>
-              <ul>
-                <li>Pessoas</li>
-                <li>Quantidade (Inteiro)</li>
-                <li>Quantidade (Decimal)</li>
-                <li>Peso (Kg)</li>
-                <li>Peso (Ton)</li>
-                <li>Distância (Km)</li>
-                <li>Distância (Metros)</li>
-                <li>Tempo (Minutos)</li>
-                <li>Tempo (Horas)</li>
-                <li>Tempo (Dias)</li>
-                <li>Tempo (Meses)</li>
-                <li>Tempo (Anos)</li>
-                <li>Monetário (R$)</li>
-                <li>Porcentagem (%)</li>
-              </ul>
-            </v-col>
+              <template v-slot:item.mes="{ item }">
+                {{ transformaMes(item.mes) }}
+              </template>
 
-            <v-col>
-              <v-alert type="warning">
-                <p>Apenas as naturezas:</p>
-                <ul>
-                  <li>Pessoas</li>
-                  <li>Quantidade (Inteiro)</li>
-                </ul>
-                <br>
+              <template v-slot:item.valor="{ item }">
+                <v-text-field
+                  :value="item.tempValor !== undefined ? item.tempValor : formatValue(item.valor)"
+                  dense
+                  flat
+                  hide-details
+                  rounded
+                  solo-inverted
+                  type="number"
+                  @input="item.tempValor = $event"
+                ></v-text-field>
+              </template>
 
-                <p>Possuem valores registrados em números inteiros, ou seja, sem casas decimais</p>
-                <p>Todos as demais naturezas pertencem ao conjunto dos números REAIS positivos.</p>
-              </v-alert>
-            </v-col>
+              <!--Template de botões para editar, excluir -->
+              <template v-slot:item.actions="{ item }">
 
-          </v-row>
+                <!--confirmar-->
+                <v-tooltip top>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn class="error" small
+                           v-bind="attrs" @click="ajustaNumero(item)" v-on="on">
+                      <v-icon
+                        class="mr-2"
+                        small
+                      >
+                        mdi-check
+                      </v-icon>
+                      Confirmar
+                    </v-btn>
+                  </template>
+                  <span>Confirmar dado</span>
+                </v-tooltip>
 
-          <v-row>
-            <v-col>
-              <v-alert type="info">
-                {{ retornaPreocupacao() }}
-              </v-alert>
-            </v-col>
-          </v-row>
+              </template>
+            </v-data-table>
 
-        </v-card-text>
-        <v-card-actions class="pb-5">
-          <v-spacer></v-spacer>
-          <v-btn color="grey lighten-1" @click="dialogAlertChangeNatureza = false">Cancelar</v-btn>
-          <span class="pl-5 pr-5"></span>
-          <v-btn :loading="loadBtn" color="red lighten-1" @click="enviaParaPersistencia">Prosseguir</v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+          </v-card-text>
+          <v-card-actions class="pb-5">
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
-    <!--Dialog sobre alteração de de valores de indicadores-->
-    <v-dialog v-model="dialogChangeIndicadorValor" max-width="70%" persistent>
-      <v-card>
-        <v-card-title class="justify-center" primary-title>
-          <v-icon
-            class="mr-4">
-            fa fa-exclamation-triangle
-          </v-icon>
-          Revisão de Valores de Indicadores (por motivo de alteração de natureza de dados da categoria)
-          <v-icon
-            class="ml-4">
-            fa fa-exclamation-triangle
-          </v-icon>
+      <!--Dialog para mostrar observacoes-->
+      <v-dialog v-model="dialogShowObservacoes" max-width="50%">
+        <v-card>
+          <v-card-title class="justify-center" primary-title>
+            Observações
+          </v-card-title>
+          <v-card-text>
+            {{ leObservacoes }}
+          </v-card-text>
+          <v-card-actions class="pb-5">
+            <v-spacer></v-spacer>
+            <v-btn color="grey lighten-1" @click="dialogShowObservacoes = false">Fechar</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
-        </v-card-title>
-        <v-card-text class="text-justify">
-
-          Categoria: {{ dadosParaAlteracao.nome }}
-
-          <!--DataTable-->
-          <v-data-table
-            v-for="indicador in dadosParaAlteracao.indicadores"
-            :key="indicador.id"
-            :headers="headersAlteracao"
-            :items="indicador.indicador_valor"
-            :items-per-page=-1
-            :loading="dadosParaAlteracao.length === 0"
-            class="elevation-21 mt-4"
-            group-by="ano"
-            hide-default-footer
-          >
-            <!-- template para indicador-->
-            <template v-slot:top>
-              <v-toolbar
-                flat
-              >
-                <!-- Título da tabela-->
-                <v-toolbar-title>{{ indicador.nome }}</v-toolbar-title>
-
-              </v-toolbar>
-
-            </template>
-
-            <template v-slot:item.mes="{ item }">
-              {{ transformaMes(item.mes) }}
-            </template>
-
-            <template v-slot:item.valor="{ item }">
-              <v-text-field
-                :value="item.tempValor !== undefined ? item.tempValor : formatValue(item.valor)"
-                dense
-                flat
-                hide-details
-                rounded
-                solo-inverted
-                type="number"
-                @input="item.tempValor = $event"
-              ></v-text-field>
-            </template>
-
-            <!--Template de botões para editar, excluir -->
-            <template v-slot:item.actions="{ item }">
-
-              <!--confirmar-->
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn class="error" small
-                         v-bind="attrs" @click="ajustaNumero(item)" v-on="on">
-                    <v-icon
-                      class="mr-2"
-                      small
-                    >
-                      mdi-check
-                    </v-icon>
-                    Confirmar
-                  </v-btn>
-                </template>
-                <span>Confirmar dado</span>
-              </v-tooltip>
-
-            </template>
-          </v-data-table>
-
-        </v-card-text>
-        <v-card-actions class="pb-5">
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!--Dialog para mostrar observacoes-->
-    <v-dialog v-model="dialogShowObservacoes" max-width="50%">
-      <v-card>
-        <v-card-title class="justify-center" primary-title>
-          Observações
-        </v-card-title>
-        <v-card-text>
-          {{leObservacoes}}
-        </v-card-text>
-        <v-card-actions class="pb-5">
-          <v-spacer></v-spacer>
-          <v-btn color="grey lighten-1" @click="dialogShowObservacoes = false">Fechar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-  </v-container>
-
+    </v-container>
+  </v-main>
 </template>
 
 <script>import config from '../../http/config'
 import {mapGetters} from 'vuex'
+import BarraNavegacao from '../barra-navegacao/BarraNavegacao.vue'
 
 export default {
   name: 'gerindicadores',
+  components: {BarraNavegacao},
   data: () => ({
     configSis: config,
     search: '',
@@ -715,7 +719,10 @@ export default {
     dialogShowObservacoes: false
   }),
   computed: {
-    ...mapGetters(['usuarioLogado'])
+    ...mapGetters(['usuarioLogado']),
+    isGerCategoriasRoute () {
+      return this.$route.path === '/gercategorias'
+    }
   },
   watch: {},
   async mounted () {
@@ -826,7 +833,10 @@ export default {
                 this.$toastr.s(
                   'Categoria Cadastrada com sucesso', 'Sucesso!'
                 )
-                this.$emit('resetaSecao', this.usuarioLogado.tipo)
+
+                if (this.$route.path !== '/gercategorias') {
+                  this.$emit('resetaSecao', this.usuarioLogado.tipo)
+                }
               })
               .catch(erro => console.log(erro))
           } catch (e) {
@@ -897,7 +907,9 @@ export default {
                 this.editedIndex = -1
               })
 
-              this.$emit('resetaSecao', this.usuarioLogado.tipo)
+              if (this.$route.path !== '/gercategorias') {
+                this.$emit('resetaSecao', this.usuarioLogado.tipo)
+              }
 
               if (this.alteracaoNecessaria) {
                 let objetoParaEnvio = response.data
@@ -983,7 +995,10 @@ export default {
           this.$toastr.s(
             'Categoria removida com sucesso', 'Sucesso!'
           )
-          this.$emit('resetaSecao', this.usuarioLogado.tipo)
+
+          if (this.$route.path !== '/gercategorias') {
+            this.$emit('resetaSecao', this.usuarioLogado.tipo)
+          }
         }, err => {
           console.log(err)
           this.$toastr.e(
@@ -1088,6 +1103,10 @@ export default {
 <style>
 .row-inactive {
   background-color: #E89380 !important;
+}
+
+.bgConfig {
+  background-color: #CFE0BC !important;
 }
 
 .v-row-group__header {

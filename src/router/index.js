@@ -14,6 +14,7 @@ import BkupBanco from '../views/administrativo/BkupBanco.vue'
 import FerramentasAdmin from '../views/administrativo/FerramentasAdmin.vue'
 import AdmUser from '../components/areaAdministrativa/AdmUser.vue'
 import AdmSecoes from '../components/areaAdministrativa/AdmSecoes.vue'
+import GerenciamentoCategorias from '../components/gerenciamentoIndicadores/GerenciamentoCategorias.vue'
 
 Vue.use(VueRouter)
 const routes = [
@@ -77,6 +78,14 @@ const routes = [
     path: '/gerenciadasboard',
     name: 'gerenciaDash',
     component: GerenciamentoDeDashboard,
+    meta: {
+      logado: true
+    }
+  },
+  {
+    path: '/gercategorias',
+    name: 'gercategorias',
+    component: GerenciamentoCategorias,
     meta: {
       logado: true
     }

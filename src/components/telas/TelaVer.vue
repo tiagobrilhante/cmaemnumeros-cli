@@ -2,7 +2,6 @@
   <!-- container básico-->
   <v-row v-if="Object.keys(objetoPesquisa).length > 0" class="mt-0" dense>
     <v-col>
-
       <v-row dense>
         <v-col>
         </v-col>
@@ -15,9 +14,9 @@
       </v-row>
 
       <br>
-      <v-alert elevation="12" color="cyan lighten-3">
+      <v-alert color="cyan lighten-3" elevation="12">
         <h3>{{ objetoPesquisa.nome }}</h3>
-        <v-row dense class="mt-4">
+        <v-row class="mt-4" dense>
           <v-col><b>Tipo de Gráfico: </b> <span v-if="objetoPesquisa.tipoGraph === 'pie'">Pizza</span> <span v-else>Barra</span>
           </v-col>
           <v-col><b>Forma de montagem: </b> {{ objetoPesquisa.objetoPesquisa.forma }}</v-col>
@@ -41,6 +40,68 @@
         <apexchart v-if="series.length > 0" ref="apexChart" :options="chartOptions" :series="series"
                    :type="objetoPesquisa.tipoGraph"
                    height="1000"/>
+
+        <v-btn rounded :color="mostraTable ? 'primary' : 'secondary'" block small @click="mostraTable = !mostraTable">
+          <span v-if="mostraTable">Ocultar dados</span>
+          <span v-else>Mostrar dados</span>
+        </v-btn>
+        <!-- Nova tabela de dados -->
+        <v-alert class="mt-4" elevation="12" v-if="mostraTable">
+          <h3 class="mb-4">Dados do Gráfico</h3>
+
+          <!-- Tabela para gráfico tipo pizza -->
+          <v-simple-table v-if="objetoPesquisa.tipoGraph === 'pie'" dense>
+            <template v-slot:default>
+              <thead>
+              <tr>
+                <th class="text-left">Indicador</th>
+                <th class="text-right">Valor</th>
+                <th class="text-right">Percentual (%)</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="(valor, index) in series" :key="index">
+                <td>{{ getLabel(index) }}</td>
+                <td class="text-right">{{ formatValue(valor) }}</td>
+                <td class="text-right">{{ calculatePercentage(valor) }}%</td>
+              </tr>
+<!--              <tr class="grey lighten-3">
+                <td><strong>Total</strong></td>
+                <td class="text-right"><strong>{{ formatValue(calculateTotal()) }}</strong></td>
+                <td class="text-right"><strong>100%</strong></td>
+              </tr>-->
+              </tbody>
+            </template>
+          </v-simple-table>
+
+          <!-- Tabela para gráfico tipo barra -->
+          <v-simple-table v-else-if="objetoPesquisa.tipoGraph === 'bar'" dense>
+            <template v-slot:default>
+              <thead>
+              <tr>
+                <th class="text-left">Período</th>
+                <th v-for="(serie, index) in series" :key="index" class="text-right">
+                  {{ serie.name || `Série ${index + 1}` }}
+                </th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="(_, rowIndex) in getRowCount()" :key="rowIndex">
+                <td>{{ getCategory(rowIndex) }}</td>
+                <td v-for="(serie, serieIndex) in series" :key="serieIndex" class="text-right">
+                  {{ formatValue(getSerieValue(serie, rowIndex)) }}
+                </td>
+              </tr>
+<!--              <tr class="grey lighten-3">
+                <td><strong>Total</strong></td>
+                <td v-for="(serie, index) in series" :key="'total-'+index" class="text-right">
+                  <strong>{{ formatValue(calculateSeriesTotal(serie.data || [])) }}</strong>
+                </td>
+              </tr>-->
+              </tbody>
+            </template>
+          </v-simple-table>
+        </v-alert>
       </v-alert>
 
     </v-col>
@@ -163,10 +224,10 @@ export default {
       },
       legend: {
         show: true,
-        position: 'bottom', // Coloca as legendas à direita
+        position: 'top', // Coloca as legendas à direita
         floating: false, // Mantém as legendas não flutuantes
-        horizontalAlign: 'left', // Alinha as legendas à esquerda da posição
-        fontSize: '13px', // Aumenta o tamanho da fonte das legendas
+        horizontalAlign: 'center', // Alinha as legendas à esquerda da posição
+        fontSize: '18px', // Aumenta o tamanho da fonte das legendas
         labels: {
           colors: ['#263238'], // Cor das legendas
           useSeriesColors: false
@@ -182,12 +243,6 @@ export default {
           offsetX: 0,
           offsetY: 0
         },
-        onItemClick: {
-          toggleDataSeries: true
-        },
-        onItemHover: {
-          highlightDataSeries: true
-        },
         itemMargin: {
           horizontal: 20, // Ajusta para que as legendas fiquem uma abaixo da outra
           vertical: 5 // Espaçamento entre as legendas
@@ -198,8 +253,10 @@ export default {
         }
       }
     },
+    loadedData: false,
     loadingBtn: false,
     dialogSaveTela: false,
+    mostraTable: false,
     objTela: {
       nome: '',
       pesquisaFeita: {}
@@ -229,17 +286,131 @@ export default {
             try {
               this.$http.post('/tela/montatela', this.objetoPesquisa.objetoPesquisa)
                 .then(response => {
+                  this.loadedData = true
                   this.resultado = response.data
                   if (this.objetoPesquisa.tipoGraph === 'pie') {
-                    this.chartOptions.chart.height = 1000
-                    // Para gráficos do tipo "pie"
-                    this.series = this.resultado.map(r => r.valor)
-                    this.chartOptions.labels = this.resultado.map(r => ` ${r.indicador.categoria.nome} - ${r.indicador.nome}  `)
-                    this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' \n-X-\n ').split('\n')
+                    if (this.objetoPesquisa.objetoPesquisa.forma === 'Total de um ano específico') {
+                      // Agrupar e calcular valores por indicador com base em 'mapeamento_total_anual'
+                      const valoresPorIndicador = this.resultado.reduce((acc, r) => {
+                        const nomeIndicador = r.indicador.nome
+                        const mapeamento = r.indicador.categoria.mapeamento_total_anual
+
+                        if (!acc[nomeIndicador]) {
+                          acc[nomeIndicador] = {valores: [], total: 0}
+                        }
+
+                        acc[nomeIndicador].valores.push(r.valor)
+
+                        if (mapeamento === 'Somatório') {
+                          acc[nomeIndicador].total += r.valor
+                        } else if (mapeamento === 'Máximo') {
+                          acc[nomeIndicador].total = Math.max(acc[nomeIndicador].total, r.valor)
+                        } else if (mapeamento === 'Mínimo') {
+                          acc[nomeIndicador].total = (acc[nomeIndicador].total === 0) ? r.valor : Math.min(acc[nomeIndicador].total, r.valor)
+                        }
+
+                        return acc
+                      }, {})
+
+                      // Calculando médias nos casos em que é necessário
+                      Object.keys(valoresPorIndicador).forEach(indicador => {
+                        const mapeamento = this.resultado.find(r => r.indicador.nome === indicador).indicador.categoria.mapeamento_total_anual
+                        if (mapeamento === 'Média') {
+                          const soma = valoresPorIndicador[indicador].valores.reduce((a, b) => a + b, 0)
+                          valoresPorIndicador[indicador].total = soma / valoresPorIndicador[indicador].valores.length
+                        }
+                      })
+
+                      // Preparando os dados para o gráfico
+                      this.series = Object.values(valoresPorIndicador).map(v => v.total)
+                      this.chartOptions.labels = Object.keys(valoresPorIndicador)
+
+                      // Habilitando dataLabels globalmente
+                      this.chartOptions.dataLabels = {
+                        enabled: true,
+                        offsetY: -20, // Ajuste para posicionamento dos labels
+                        style: {
+                          fontSize: '20px',
+                          colors: ['#ffffff']
+                        },
+                        formatter: function (val, opts) {
+                          const label = opts.w.config.labels[opts.seriesIndex]
+                          const absoluteValue = opts.w.config.series[opts.seriesIndex]
+
+                          const formattedValue = Number.isInteger(absoluteValue)
+                            ? absoluteValue.toLocaleString('pt-BR')
+                            : absoluteValue.toLocaleString('pt-BR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })
+
+                          return `${label}: ${val.toFixed(2)}% (${formattedValue})`
+                        }
+                      }
+
+                      // Título do gráfico considerando anos da pesquisa
+                      this.chartOptions.title.text =
+                        'Total no ano: ' +
+                        [...new Set(this.resultado.map(r => r.ano))].sort().join(', ') +
+                        ' - ' +
+                        [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(', ') +
+                        ' - ' +
+                        [...new Set(this.resultado.map(r => r.indicador.nome))].join(', ')
+
+                      this.chartOptions.tooltip = {
+                        y: {
+                          formatter: function (value) {
+                            // Verifica se o valor é um inteiro
+                            const formattedValue = Number.isInteger(value)
+                              ? value.toLocaleString('pt-BR')
+                              : value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+
+                            // Retorna o valor formatado
+                            return formattedValue
+                          }
+                        }
+                      }
+                    } else {
+                      this.series = this.resultado.map(r => r.valor)
+                      this.chartOptions.labels = this.resultado.map(r => ` ${r.indicador.categoria.nome} - ${r.indicador.nome}  `)
+                      this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' -X- ')
+
+                      // Habilitando dataLabels globalmente
+                      this.chartOptions.dataLabels = {
+                        enabled: true,
+                        offsetY: -20, // Ajuste para posicionamento dos labels
+                        style: {
+                          fontSize: '20px',
+                          colors: ['#ffffff']
+                        },
+                        dropShadow: {
+                          enabled: true,
+                          top: 2,
+                          left: 2,
+                          right: 2,
+                          bottom: 2,
+                          blur: 5,
+                          opacity: 1
+                        },
+                        formatter: function (val, opts) {
+                          const label = opts.w.config.labels[opts.seriesIndex]
+                          const absoluteValue = opts.w.config.series[opts.seriesIndex]
+
+                          const formattedValue = Number.isInteger(absoluteValue)
+                            ? absoluteValue.toLocaleString('pt-BR')
+                            : absoluteValue.toLocaleString('pt-BR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })
+
+                          return `${label}: ${val.toFixed(2)}% (${formattedValue})`
+                        }
+                      }
+                    }
                   } else if (this.objetoPesquisa.tipoGraph === 'bar') {
                     if (this.objetoPesquisa.objetoPesquisa.forma === 'Ano específico') {
                       // Para gráficos do tipo "bar"
-                      this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' \n-X-\n ').split('\n')
+                      this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' -X- ')
 
                       // Preparando a lista única de meses e ordenando
                       const meses = [...new Set(this.resultado.map(r => r.mes))].sort((a, b) => a - b)
@@ -256,6 +427,7 @@ export default {
                             })
                           }
                         })
+
                       // Função para gerar uma cor aleatória em formato hexadecimal
                       // eslint-disable-next-line no-inner-declarations
                       function generateRandomColor () {
@@ -276,6 +448,24 @@ export default {
                           const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
                           return nomesMeses[mes - 1]
                         })
+                      }
+
+                      this.chartOptions.yaxis = {
+                        labels: {
+                          formatter: function (value) {
+                            // Verifica se o valor é um inteiro
+                            const formattedValue = Number.isInteger(value)
+                              ? value.toLocaleString('pt-BR')
+                              : value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+
+                            // Retorna o valor formatado
+                            return formattedValue
+                          },
+                          style: {
+                            fontSize: '12px',
+                            colors: ['#304758']
+                          }
+                        }
                       }
 
                       // Configurações para exibir as informações diretamente no gráfico do tipo "bar"
@@ -301,11 +491,30 @@ export default {
                         style: {
                           fontSize: '12px',
                           colors: ['#304758']
+                        },
+                        formatter: function (val, opts) {
+                          return Number.isInteger(val)
+                            ? val.toLocaleString('pt-BR') // Inteiros sem casas decimais
+                            : val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) // Decimais com duas casas
+                        }
+                      }
+
+                      this.chartOptions.tooltip = {
+                        y: {
+                          formatter: function (value) {
+                            // Verifica se o valor é um inteiro
+                            const formattedValue = Number.isInteger(value)
+                              ? value.toLocaleString('pt-BR')
+                              : value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+
+                            // Retorna o valor formatado
+                            return formattedValue
+                          }
                         }
                       }
                     } else if (this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de anos' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de meses de um ano específico' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de meses de um intervalo de anos') {
                       // Para gráficos do tipo "bar"
-                      this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' \n-X-\n ').split('\n')
+                      this.chartOptions.title.text = [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(' -X- ')
 
                       // Preparando uma lista única de anos e meses com dados, sem valores vazios
                       const mesesAnos = [...new Set(this.resultado.map(r => `${r.mes}-${r.ano}`))].sort((a, b) => {
@@ -374,6 +583,168 @@ export default {
                         style: {
                           fontSize: '12px',
                           colors: ['#304758']
+                        },
+                        formatter: function (value) {
+                          // Verifica se o valor é um inteiro
+                          const formattedValue = Number.isInteger(value)
+                            ? value.toLocaleString('pt-BR')
+                            : value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+
+                          // Retorna o valor formatado
+                          return formattedValue
+                        }
+                      }
+
+                      this.chartOptions.tooltip = {
+                        y: {
+                          formatter: function (value) {
+                            // Verifica se o valor é um inteiro
+                            const formattedValue = Number.isInteger(value)
+                              ? value.toLocaleString('pt-BR')
+                              : value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+
+                            // Retorna o valor formatado
+                            return formattedValue
+                          }
+                        }
+                      }
+
+                      this.chartOptions.yaxis = {
+                        labels: {
+                          formatter: function (value) {
+                            // Verifica se o valor é um inteiro
+                            const formattedValue = Number.isInteger(value)
+                              ? value.toLocaleString('pt-BR')
+                              : value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+
+                            // Retorna o valor formatado
+                            return formattedValue
+                          },
+                          style: {
+                            fontSize: '12px',
+                            colors: ['#304758']
+                          }
+                        }
+                      }
+                    } else if (this.objetoPesquisa.objetoPesquisa.forma === 'Total de um intervalo de anos') {
+                      let valoresPorAnoEIndicador = {}
+                      // Agrupar os dados por ano e indicador
+                      valoresPorAnoEIndicador = this.resultado.reduce((acc, r) => {
+                        const ano = r.ano
+                        const indicador = r.indicador.nome
+                        const mapeamento = r.indicador.categoria.mapeamento_total_anual
+
+                        // Inicializar o objeto se não existir
+                        if (!acc[ano]) acc[ano] = {}
+                        if (!acc[ano][indicador]) {
+                          acc[ano][indicador] = {valores: [], total: 0}
+                        }
+
+                        // Armazenar valor
+                        acc[ano][indicador].valores.push(r.valor)
+
+                        // Processar de acordo com o mapeamentoTotalAnual
+                        if (mapeamento === 'Somatório') {
+                          acc[ano][indicador].total += r.valor
+                        } else if (mapeamento === 'Máximo') {
+                          acc[ano][indicador].total = Math.max(acc[ano][indicador].total, r.valor)
+                        } else if (mapeamento === 'Mínimo') {
+                          acc[ano][indicador].total = (acc[ano][indicador].total === 0) ? r.valor : Math.min(acc[ano][indicador].total, r.valor)
+                        }
+
+                        return acc
+                      }, {})
+
+                      // Calculando médias onde necessário
+                      Object.keys(valoresPorAnoEIndicador).forEach(ano => {
+                        Object.keys(valoresPorAnoEIndicador[ano]).forEach(indicador => {
+                          const mapeamento = this.resultado.find(r => r.indicador.nome === indicador && r.ano === parseInt(ano)).indicador.categoria.mapeamento_total_anual
+                          if (mapeamento === 'Média') {
+                            const dados = valoresPorAnoEIndicador[ano][indicador]
+                            const soma = dados.valores.reduce((a, b) => a + b, 0)
+                            dados.total = soma / dados.valores.length
+                          }
+                        })
+                      })
+
+                      this.chartOptions.xaxis = {
+                        categories: [...new Set(this.resultado.map(r => r.indicador.nome))]
+                      }
+
+                      // Título do gráfico considerando anos da pesquisa
+                      this.chartOptions.title.text =
+                        'Totais por Indicador no intervalo: ' +
+                        [...new Set(this.resultado.map(r => r.ano))].sort().join(' a ') +
+                        ' - ' +
+                        [...new Set(this.resultado.map(r => r.indicador.categoria.nome))].join(', ') +
+                        ' - ' +
+                        [...new Set(this.resultado.map(r => r.indicador.nome))].join(', ')
+
+                      this.chartOptions.tooltip = {
+                        y: {
+                          formatter: function (value) {
+                            // Verifica se o valor é um inteiro
+                            const formattedValue = Number.isInteger(value)
+                              ? value.toLocaleString('pt-BR')
+                              : value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+
+                            // Retorna o valor formatado
+                            return formattedValue
+                          }
+                        }
+                      }
+
+                      this.series = Object.keys(valoresPorAnoEIndicador).map(ano => ({
+                        name: ano,
+                        data: Object.values(valoresPorAnoEIndicador[ano]).map(dados => dados.total)
+                      }))
+
+                      // Configurações para exibir as informações diretamente no gráfico do tipo "bar"
+                      this.chartOptions.plotOptions = {
+                        bar: {
+                          dataLabels: {
+                            position: 'top', // Coloca os valores no topo das barras
+                            formatter: function (val, opts) {
+                              return Number.isInteger(val) ? val.toString() : val.toFixed(2) // Exibe sem casas decimais se for inteiro, senão com duas casas
+                            },
+                            style: {
+                              fontSize: '12px',
+                              colors: ['#000']
+                            }
+                          }
+                        }
+                      }
+
+                      // Habilitando dataLabels globalmente
+                      this.chartOptions.dataLabels = {
+                        enabled: true,
+                        offsetY: -20, // Ajuste para posicionamento dos labels
+                        style: {
+                          fontSize: '12px',
+                          colors: ['#304758']
+                        },
+                        formatter: function (val, opts) {
+                          return Number.isInteger(val)
+                            ? val.toLocaleString('pt-BR') // Inteiros sem casas decimais
+                            : val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) // Decimais com duas casas
+                        }
+                      }
+
+                      this.chartOptions.yaxis = {
+                        labels: {
+                          formatter: function (value) {
+                            // Verifica se o valor é um inteiro
+                            const formattedValue = Number.isInteger(value)
+                              ? value.toLocaleString('pt-BR')
+                              : value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+
+                            // Retorna o valor formatado
+                            return formattedValue
+                          },
+                          style: {
+                            fontSize: '12px',
+                            colors: ['#304758']
+                          }
                         }
                       }
                     }
@@ -405,6 +776,8 @@ export default {
       Ano específico
       Intervalo de anos
       Intervalo de meses de um intervalo de anos
+      Total de um ano específico
+      Total de um intervalo de anos
       */
       if (tipo === 'Mês') {
         if (this.objetoPesquisa.objetoPesquisa.forma === 'Mês de um ano específico') {
@@ -418,14 +791,14 @@ export default {
           }
           return '<b>Meses:</b> ' + meses
         }
-        if (this.objetoPesquisa.objetoPesquisa.forma === 'Ano específico' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de anos') {
+        if (this.objetoPesquisa.objetoPesquisa.forma === 'Ano específico' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de anos' || this.objetoPesquisa.objetoPesquisa.forma === 'Total de um intervalo de anos' || this.objetoPesquisa.objetoPesquisa.forma === 'Total de um ano específico') {
           return '<b>Meses:</b> Todos'
         }
       } else {
-        if (this.objetoPesquisa.objetoPesquisa.forma === 'Mês de um ano específico' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de meses de um ano específico' || this.objetoPesquisa.objetoPesquisa.forma === 'Ano específico') {
+        if (this.objetoPesquisa.objetoPesquisa.forma === 'Mês de um ano específico' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de meses de um ano específico' || this.objetoPesquisa.objetoPesquisa.forma === 'Ano específico' || this.objetoPesquisa.objetoPesquisa.forma === 'Total de um ano específico') {
           return '<b>Ano:</b> ' + this.objetoPesquisa.objetoPesquisa.ano_verifica_inicio
         }
-        if (this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de meses de um intervalo de anos' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de anos') {
+        if (this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de meses de um intervalo de anos' || this.objetoPesquisa.objetoPesquisa.forma === 'Intervalo de anos' || this.objetoPesquisa.objetoPesquisa.forma === 'Total de um intervalo de anos') {
           let anos = 'entre: ' + this.objetoPesquisa.objetoPesquisa.ano_verifica_inicio + ' e ' + this.objetoPesquisa.objetoPesquisa.ano_verifica_fim
           return '<b>Anos:</b> ' + anos
         }
@@ -435,6 +808,7 @@ export default {
     openDialogSaveTela () {
       this.dialogSaveTela = true
     },
+
     doSaveTela () {
       if (this.objTela.nome === '') {
         this.$toastr.e(
@@ -463,7 +837,68 @@ export default {
           console.log(e)
         }
       }
+    },
+
+    // Novos métodos seguros e compatíveis para a tabela
+    getRowCount () {
+      if (!this.series.length) return []
+
+      // Se temos categories definidas, use seu comprimento
+      if (this.chartOptions && this.chartOptions.xaxis && this.chartOptions.xaxis.categories) {
+        return Array(this.chartOptions.xaxis.categories.length).fill(null)
+      }
+
+      // Caso contrário, use o comprimento do primeiro conjunto de dados
+      return Array((this.series[0] && this.series[0].data && this.series[0].data.length) || 0).fill(null)
+    },
+
+    getLabel (index) {
+      if (this.chartOptions && this.chartOptions.labels && this.chartOptions.labels[index]) {
+        return this.chartOptions.labels[index]
+      }
+      return `Indicador ${index + 1}`
+    },
+
+    getCategory (index) {
+      if (this.chartOptions && this.chartOptions.xaxis && this.chartOptions.xaxis.categories) {
+        return this.chartOptions.xaxis.categories[index] || `Período ${index + 1}`
+      }
+      return `Período ${index + 1}`
+    },
+
+    getSerieValue (serie, index) {
+      if (serie && serie.data && serie.data[index] !== undefined) {
+        return serie.data[index]
+      }
+      return null
+    },
+
+    formatValue (value) {
+      if (value === null || value === undefined) return '-'
+      return Number.isInteger(value)
+        ? value.toLocaleString('pt-BR')
+        : value.toLocaleString('pt-BR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })
+    },
+
+    calculateTotal () {
+      if (!Array.isArray(this.series)) return 0
+      return this.series.reduce((acc, curr) => acc + (Number(curr) || 0), 0)
+    },
+
+    calculateSeriesTotal (data) {
+      if (!Array.isArray(data)) return 0
+      return data.reduce((acc, curr) => acc + (Number(curr) || 0), 0)
+    },
+
+    calculatePercentage (value) {
+      const total = this.calculateTotal()
+      if (total === 0) return '0,00'
+      return ((value / total) * 100).toFixed(2).replace('.', ',')
     }
+
   }
 }
 </script>
@@ -471,5 +906,19 @@ export default {
 <style>
 .apexcharts-toolbar {
   display: flex !important;
+}
+
+/* Adicione estes estilos para melhorar a aparência da tabela */
+.v-data-table {
+  background-color: white !important;
+}
+
+.v-data-table th {
+  font-weight: bold !important;
+  background-color: #f5f5f5 !important;
+}
+
+.v-data-table td, .v-data-table th {
+  padding: 8px 16px !important;
 }
 </style>

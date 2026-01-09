@@ -32,7 +32,7 @@
         </div>
       </template>
 
-      <!--configurações básicas-->
+      <!--telas e dashboards-->
       <template v-if="usuarioEstaLogado && usuarioResetado">
         <div class="text-center">
           <v-menu
@@ -48,19 +48,11 @@
                      v-bind="attrs"
                      v-on="on"
               >
-                <v-icon class="mr-3" small>mdi-cogs</v-icon>
-                Configurações Básicas
+                <v-icon class="mr-3" small>mdi-podium-gold</v-icon>
+                Telas e Dashboards
               </v-btn>
             </template>
             <v-list>
-
-              <!-- gerenciamento de indicadores-->
-              <v-list-item to="/gerindicadores" v-if="usuarioLogado.tipo !== 'Auditor'">
-                <v-list-item-title>
-                  <v-icon class="mr-3" small>mdi-finance</v-icon>
-                  Configurações de Indicadores
-                </v-list-item-title>
-              </v-list-item>
 
               <!-- montagem de telas-->
               <v-list-item to="/telas">
@@ -77,6 +69,50 @@
                   Gerenciamento de Dashboards
                 </v-list-item-title>
               </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
+      </template>
+
+      <!--configurações básicas-->
+      <template v-if="usuarioEstaLogado && usuarioResetado">
+        <div class="text-center">
+          <v-menu
+            bottom
+            offset-y
+            open-on-hover
+            rounded="xl"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn color="black"
+                     dark
+                     rounded
+                     v-bind="attrs"
+                     v-on="on"
+                     class="ml-5"
+              >
+                <v-icon class="mr-3" small>mdi-cogs</v-icon>
+                Configurações
+              </v-btn>
+            </template>
+            <v-list>
+
+              <!-- gerenciamento de categorias-->
+              <v-list-item to="/gercategorias" v-if="usuarioLogado.tipo !== 'Auditor'">
+                <v-list-item-title>
+                  <v-icon class="mr-3" small>mdi-clipboard-list-outline</v-icon>
+                  Configurações de Categorias
+                </v-list-item-title>
+              </v-list-item>
+
+              <!-- gerenciamento de indicadores-->
+              <v-list-item to="/gerindicadores" v-if="usuarioLogado.tipo !== 'Auditor'">
+                <v-list-item-title>
+                  <v-icon class="mr-3" small>mdi-finance</v-icon>
+                  Configurações de Indicadores
+                </v-list-item-title>
+              </v-list-item>
+
             </v-list>
           </v-menu>
         </div>
@@ -100,7 +136,7 @@
                      v-on="on"
               >
                 <v-icon class="mr-3" small>mdi-wrench</v-icon>
-                Ferramentas Administrativas
+                Administração
               </v-btn>
             </template>
 

@@ -1,13 +1,28 @@
-// const urlDownload = 'http://localhost:8000/'
-const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
+const urlDownload = 'http://localhost:8000/'
+// const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
+// const urlDownload = 'http://newcmaemnumerosapi.cma.eb.mil.br/'
 
 const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.7.0',
+    release: '636',
+    latest: true,
+    data: '03/12/2024',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Agora é possível gerar telas com totais anuais',
+      'Agora é possível gerar telas com totais referentes a intervalos de anos',
+      'Agora as telas podem exibir os dados tabelares dos gráficos',
+      'Foi reajustado o menu top para que seja mais intuitivo',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.6.0',
     release: '614',
-    latest: true,
+    latest: false,
     data: '11/09/2024',
     detalhesVisiveis: false,
     detalhes: [

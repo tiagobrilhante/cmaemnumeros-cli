@@ -152,7 +152,7 @@
 
     <v-container v-if="mostraDash" class="mt-0 pt-0" fluid>
       <v-alert elevation="12">
-      <Dashboards :dados="dashboards"/>
+        <Dashboards :dados="dashboards"/>
       </v-alert>
     </v-container>
 
@@ -789,10 +789,21 @@ export default {
     },
 
     checaMesDisabled (index) {
+      console.log('this.anoBase: ' + this.anoBase)
+      console.log('this.anoCorrente: ' + this.anoCorrente)
+      console.log('this.capturaIndexMes: ' + this.capturaIndexMes)
+      console.log('index: ' + index)
+
       if (this.anoBase === this.anoCorrente) {
-        return this.capturaIndexMes < index
-      } else {
+        // Mesmo ano: meses anteriores ao atual ficam disponíveis (enabled)
+        // Mês atual e posteriores ficam desabilitados (disabled)
+        return index > this.capturaIndexMes
+      } else if (this.anoCorrente < this.anoBase) {
+        // Ano atual menor que o ano selecionado: TODOS os meses ficam disponíveis
         return false
+      } else {
+        // Ano futuro: todos os meses ficam desabilitados
+        return true
       }
     },
 
@@ -809,13 +820,17 @@ export default {
       this.diaCorrente = currentDate.getDate()
 
       // Calcula o mês e ano de referência
-      let mesIndex = currentDate.getMonth() - 1
+      let mesIndex = currentDate.getMonth()
       let anoRef = currentDate.getFullYear()
 
       // Ajusta o ano se o mês for janeiro
       if (mesIndex === 0) {
         mesIndex = 11
         anoRef -= 1
+      }
+
+      if (mesIndex >= 1) {
+        mesIndex--
       }
 
       this.capturaIndexMes = mesIndex
