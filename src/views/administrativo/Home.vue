@@ -795,9 +795,9 @@ export default {
       console.log('index: ' + index)
 
       if (this.anoBase === this.anoCorrente) {
-        // Mesmo ano: meses anteriores ao atual ficam disponíveis (enabled)
-        // Mês atual e posteriores ficam desabilitados (disabled)
-        return index > this.capturaIndexMes
+        // Mesmo ano: mês atual, anteriores e o próximo ficam disponíveis (enabled)
+        // Demais meses posteriores ficam desabilitados (disabled)
+        return index > (this.capturaIndexMes + 1)
       } else if (this.anoCorrente < this.anoBase) {
         // Ano atual menor que o ano selecionado: TODOS os meses ficam disponíveis
         return false
@@ -825,17 +825,15 @@ export default {
 
       // Ajusta o ano se o mês for janeiro
       if (mesIndex === 0) {
-        mesIndex = 11
+        // Se estamos em janeiro, o mês de trabalho é dezembro do ano anterior
+        this.mesCorrente = 'Dezembro'
+        this.capturaIndexMes = 10 // novembro (para permitir até dezembro)
         anoRef -= 1
+      } else {
+        // Para outros meses, o mês de trabalho é o mês atual
+        this.capturaIndexMes = mesIndex - 1
+        this.mesCorrente = months[mesIndex] // Mês atual
       }
-
-      if (mesIndex >= 1) {
-        mesIndex--
-      }
-
-      this.capturaIndexMes = mesIndex
-
-      this.mesCorrente = months[mesIndex] // Retorna o mês anterior como texto
       this.anoCorrente = anoRef // Retorna o ano de referência
       this.anoBase = anoRef // Retorna o ano de referência
     },
