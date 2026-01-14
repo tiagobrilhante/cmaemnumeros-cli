@@ -369,6 +369,7 @@ const versoes = [
 ]
 
 const nomeSis = 'CMA em Números'
+const logoSis = 'logoCMA.png'
 const versaoSis = versoes[0].id
 const labelSis = 'Sistema de Gerenciamento de Indicadores do CMA'
 const criador = 'TC Brilhante'
@@ -379,6 +380,7 @@ export default {
   urlDownload,
   baseURL,
   nomeSis,
+  logoSis,
   versaoSis,
   labelSis,
   criador,

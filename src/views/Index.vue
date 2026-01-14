@@ -18,7 +18,7 @@
 
                 <v-row>
                   <v-col cols="2" class="text-left align-self-start align-content-start">
-                    <img alt="Logo CMA" :src="require('@/assets/img/logoCMA.png')" width="70px">
+                    <img alt="Logo CMA" :src="require(`@/assets/img/${configSis.logoSis}`)" width="70px">
                   </v-col>
                   <v-col class="text-center" cols="8">
                     <h1>{{ configSis.nomeSis }}</h1><br>
