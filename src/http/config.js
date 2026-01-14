@@ -381,13 +381,13 @@ const versoes = [
   }
 ]
 
-// const nomeSis = 'CMA em Números'
-const nomeSis = 'Base em Números'
-const logoSis = 'logoBaseFor.png'
-// const logoSis = 'logoCMA.png'
+const nomeSis = 'CMA em Números'
+const logoSis = 'logoCMA.png'
+const labelSis = 'Sistema de Gerenciamento de Indicadores do CMA'
+// const nomeSis = 'Base em Números'
+// const logoSis = 'logoBaseFor.png'
+// const labelSis = 'Sistema de Gerenciamento de Indicadores da Base Adm'
 const versaoSis = versoes[0].id
-const labelSis = 'Sistema de Gerenciamento de Indicadores da Base Adm'
-// const labelSis = 'Sistema de Gerenciamento de Indicadores do CMA'
 const criador = 'TC Brilhante'
 // info geral
 const revisarForm = 'Revise os campos do formulário.'
