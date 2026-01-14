@@ -311,9 +311,6 @@ export default {
         this.$http.get('secao/simples')
           .then(response => {
             this.secoes = response.data
-            console.log('this.secoes (ao carregar a página)')
-            console.log(this.secoes)
-            console.log('this.secoes')
             this.selectedSecao = this.secoes[0]
             this.initMostraGrafico()
             this.awaitData = false
@@ -337,7 +334,6 @@ export default {
     },
 
     getIndicadoresVigentes (secaoId, mes, ano, tipo, objeto) {
-      console.log('estouaqui')
       if (tipo === 'consulta') {
         let objetoParaEnvio = {
           mes: mes,

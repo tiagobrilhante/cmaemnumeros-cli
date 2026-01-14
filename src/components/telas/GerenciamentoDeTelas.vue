@@ -886,7 +886,6 @@ export default {
 
     // ajustar o reset efetivo de tela
     handleResetaTela () {
-      console.log('Ajustando o estado da aplicação')
       this.arrayIndGeral = []
       this.resultadoMontagem = {}
       this.tipoGraph = ''

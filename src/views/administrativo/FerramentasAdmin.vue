@@ -47,7 +47,7 @@
                   <!-- explicação-->
                   <h3>A análise de integridade do banco, pesquisa se existem valores duplicados no mesmo mês e ano para
                     um determinado indicador</h3>
-                  <h4>O Sistema CMA em números entende que para cada indicador, só pode existir um lançamento único em
+                  <h4>O Sistema {{configSis.nomeSis}} entende que para cada indicador, só pode existir um lançamento único em
                     cada mês de cada ano.</h4>
                   <p>Preencha o intervalo no qual você deseja realizar uma varredura do banco de dados. </p>
                   <p>Caso você deseje verificar apenas um ano, coloque o mesmo valor no "Ano Inicial" e "Ano Final".</p>

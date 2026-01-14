@@ -15,6 +15,7 @@ export default {
     return {}
   },
   created () {
+    document.title = this.$configSis.nomeSis
   },
   computed: {},
   methods: {}

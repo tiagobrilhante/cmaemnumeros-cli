@@ -16,7 +16,7 @@
             <v-row>
               <v-col cols="10" offset="1">
                 <div class="text-center pt-5">
-                  <h1>Bem-vindo ao sistema CMA em Números!</h1>
+                  <h1>Bem-vindo ao sistema {{configSis.nomeSis}}!</h1>
                   <p>Sistema de Gerenciamento de Indicadores do CMA</p>
                   <p>Você precisa alterar a senha para efetuar o primeiro acesso</p>
                 </div>
@@ -120,11 +120,13 @@ import {validationMixin} from 'vuelidate'
 import {required} from 'vuelidate/lib/validators'
 import {mapGetters} from 'vuex'
 import BarraNavegacao from '../../components/barra-navegacao/BarraNavegacao.vue'
+import config from '../../http/config'
 
 export default {
   components: {BarraNavegacao},
   data () {
     return {
+      configSis: config,
       show1: false,
       password: ''
     }

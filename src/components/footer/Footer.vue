@@ -39,7 +39,7 @@
         <v-card-text>
 
           <v-alert class="text-justify" color="cyan">
-            <p>O Sistema CMA em Números, foi criado a pedido do Comando do CMA, para compor uma ferramenta de suporte a decisão, utilizando os conceitos de BIG DATA e gerenciamento de estatísticas.</p>
+            <p>O Sistema {{configSis.nomeSis}}, foi criado a pedido do Comando do CMA, para compor uma ferramenta de suporte a decisão, utilizando os conceitos de BIG DATA e gerenciamento de estatísticas.</p>
             <p>Trata-se de um sistema que foi projetado para propiciar o consumo de indicadores relevantes de acordo com as necessidades do Comando, além de estabelecer como esses indicadores se relacionar.</p>
             <p>O conteúdo é inserido pelos administradores cadastrados no sistema, que possui a capacidade de gerenciar de forma ativa qualquer tipo de métrica necessária ao processo decisório.</p>
             <p><b>Abaixo é possivel acompanhar o histórico de alterações das versões lançadas ao longo do tempo.</b></p>
@@ -146,10 +146,6 @@ export default {
   }),
   computed: {},
   methods: {
-    mostraDetalhesVersao (versao) {
-      console.log(versao)
-    },
-
     toggleDetalhes (id) {
       const versao = this.versoes.find(v => v.id === id)
       if (versao) {

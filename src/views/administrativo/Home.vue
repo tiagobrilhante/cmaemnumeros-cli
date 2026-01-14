@@ -88,7 +88,7 @@
                     size="36">
                     mdi-monitor-dashboard
                   </v-icon>
-                  CMA em Números - Central de Dashboards
+                  {{configSis.nomeSis}} - Central de Dashboards
                 </h2>
               </v-col>
 
@@ -789,11 +789,6 @@ export default {
     },
 
     checaMesDisabled (index) {
-      console.log('this.anoBase: ' + this.anoBase)
-      console.log('this.anoCorrente: ' + this.anoCorrente)
-      console.log('this.capturaIndexMes: ' + this.capturaIndexMes)
-      console.log('index: ' + index)
-
       if (this.anoBase === this.anoCorrente) {
         // Mesmo ano: mês atual, anteriores e o próximo ficam disponíveis (enabled)
         // Demais meses posteriores ficam desabilitados (disabled)

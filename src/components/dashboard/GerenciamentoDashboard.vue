@@ -753,7 +753,6 @@ export default {
     },
 
     handleResetaDashSalva () {
-      console.log('entrei aqui')
       this.getDashCadastrado()
       this.dialogVerDashBoard = false
     }
