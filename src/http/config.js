@@ -1,14 +1,27 @@
 const urlDownload = 'http://localhost:8000/'
 // const urlDownload = 'http://cmaemnumerosapi.cma.eb.mil.br/'
+// const urlDownload = 'http://baseemnumeros.badmguf.eb.mil.br/'
 // const urlDownload = 'http://newcmaemnumerosapi.cma.eb.mil.br/'
 
 const baseURL = urlDownload + 'api/'
 
 const versoes = [
   {
+    id: '1.7.1',
+    release: '674',
+    latest: true,
+    data: '14/01/2026',
+    detalhesVisiveis: false,
+    detalhes: [
+      'Corrigido o bug que trava o menu de seleção de mês quando da virada de um ano',
+      'Agora é possível personalizar o sistema de forma mais simplificada no arquivo config.js',
+      'Correção de bugs'
+    ]
+  },
+  {
     id: '1.7.0',
     release: '636',
-    latest: true,
+    latest: false,
     data: '03/12/2024',
     detalhesVisiveis: false,
     detalhes: [
@@ -368,10 +381,13 @@ const versoes = [
   }
 ]
 
-const nomeSis = 'CMA em Números'
-const logoSis = 'logoCMA.png'
+// const nomeSis = 'CMA em Números'
+const nomeSis = 'Base em Números'
+const logoSis = 'logoBaseFor.png'
+// const logoSis = 'logoCMA.png'
 const versaoSis = versoes[0].id
-const labelSis = 'Sistema de Gerenciamento de Indicadores do CMA'
+const labelSis = 'Sistema de Gerenciamento de Indicadores da Base Adm'
+// const labelSis = 'Sistema de Gerenciamento de Indicadores do CMA'
 const criador = 'TC Brilhante'
 // info geral
 const revisarForm = 'Revise os campos do formulário.'
