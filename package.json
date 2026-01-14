@@ -1,9 +1,9 @@
 {
-  "name": "CMAEmNumeros",
-  "version": "1.4.3",
+  "name": "cmaemnumeros",
+  "version": "1.7.1",
   "private": true,
   "description": "CMA em Números",
-  "author": "tiagobrilhante <codebrilhante>",
+  "author": "TC Brilhante",
   "scripts": {
     "build": "node build/build.js",
     "lint": "eslint --ext .js,.vue src test/unit test/e2e/specs",
